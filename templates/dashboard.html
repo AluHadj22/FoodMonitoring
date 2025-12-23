@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-8">
+    <div class="bg-white p-8 rounded-3xl shadow-xl border-l-8 border-indigo-600 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-800">{{ user.unit_name }}</h1>
+            <p class="text-indigo-600 font-medium uppercase text-xs tracking-widest">{{ user.district }} | {{ user.food_type }}</p>
+            <div class="mt-4 p-3 bg-indigo-50 border border-indigo-100 rounded-xl inline-block font-mono text-xs">
+                Внешний путь: <span class="text-indigo-600 font-bold select-all">{{ monitoring_url }}</span>
+            </div>
+        </div>
+        <div class="text-right">
+             <a href="https://мониторингпитание.рф/#/home" target="_blank" class="inline-block bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-black transition shadow-lg">мониторингпитания.рф</a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+            <h3 class="text-xl font-bold mb-6 text-slate-800">Настройка периода</h3>
+            <form action="/dashboard" method="get" class="flex gap-2 mb-8 bg-slate-50 p-4 rounded-2xl">
+                <input type="hidden" name="uid" value="{{ user.id }}">
+                <input type="number" name="year" value="{{ year }}" class="w-24 border-0 bg-white p-3 rounded-xl shadow-inner focus:ring-2 focus:ring-indigo-500 outline-none">
+                <select name="month" class="flex-1 border-0 bg-white p-3 rounded-xl shadow-inner focus:ring-2 focus:ring-indigo-500 outline-none">
+                    {% for m_id, m_name in months.items() %}
+                    <option value="{{ m_id }}" {% if m_id == month %}selected{% endif %}>{{ m_name }}</option>
+                    {% endfor %}
+                </select>
+                <button class="bg-indigo-600 text-white px-6 rounded-xl font-bold hover:bg-indigo-700 transition shadow-md">ОК</button>
+            </form>
+
+            <h3 class="text-lg font-bold mb-4 text-slate-700">Загрузить файлы в этот период</h3>
+            <form action="/upload" method="post" enctype="multipart/form-data" class="space-y-4">
+                <input type="hidden" name="uid" value="{{ user.id }}">
+                <input type="hidden" name="year" value="{{ year }}">
+                <input type="hidden" name="month" value="{{ month }}">
+                <div class="border-2 border-dashed border-slate-200 p-6 rounded-2xl text-center hover:border-indigo-400 transition cursor-pointer">
+                    <input type="file" name="files" multiple required class="w-full text-sm file:bg-indigo-50 file:border-0 file:rounded-lg file:px-4 file:py-2 file:text-indigo-600 file:font-bold cursor-pointer">
+                </div>
+                <button class="w-full bg-slate-800 text-white p-4 rounded-2xl font-bold hover:bg-black transition shadow-xl">Загрузить</button>
+            </form>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+            <h3 class="text-xl font-bold mb-6 text-slate-800 flex justify-between items-center">
+                <span>Файлы месяца</span>
+                <span class="text-sm bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full uppercase tracking-widest">{{ months[month] }}</span>
+            </h3>
+            <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                {% if files %}
+                    {% for f in files %}
+                    <div class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-indigo-300 transition">
+                        <span class="text-sm font-semibold text-slate-700 truncate mr-4">{{ f }}</span>
+                        <div class="flex space-x-2">
+                            <a href="/{{ user.id }}/food/{{ f }}" class="bg-white p-2 rounded-lg shadow-sm hover:bg-indigo-50 transition" title="Скачать">⏬</a>
+                            <a href="/delete-file?uid={{ user.id }}&year={{ year }}&month={{ month }}&filename={{ f }}" 
+                               class="bg-white p-2 rounded-lg shadow-sm hover:bg-red-50 text-red-500 transition" 
+                               onclick="return confirm('Удалить файл из системы?')">❌</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-20">
+                        <div class="text-4xl mb-4">📂</div>
+                        <p class="text-slate-400 italic">На {{ months[month] }} {{ year }} файлов нет</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

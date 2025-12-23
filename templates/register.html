@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="max-w-xl mx-auto bg-white p-10 rounded-3xl shadow-2xl">
+    <h2 class="text-3xl font-extrabold text-center mb-8 text-gray-800">Регистрация</h2>
+    <form action="/register" method="post" class="space-y-5">
+        <input type="email" name="email" placeholder="Email" required class="w-full border-2 p-3 rounded-xl outline-none focus:border-indigo-500">
+        <input type="password" name="password" placeholder="Пароль" required class="w-full border-2 p-3 rounded-xl outline-none focus:border-indigo-500">
+        <input type="text" name="unit_name" placeholder="Название учреждения" required class="w-full border-2 p-3 rounded-xl outline-none focus:border-indigo-500">
+
+        <label class="block font-semibold">Ваш район:</label>
+        <select name="district" class="w-full border-2 p-3 rounded-xl">
+            {% for d in districts %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+        </select>
+
+        <label class="block font-semibold">Тип питания:</label>
+        <select name="food_type" class="w-full border-2 p-3 rounded-xl">
+            {% for ft in food_types %}<option value="{{ ft }}">{{ ft }}</option>{% endfor %}
+        </select>
+
+        <div class="pt-4 border-t">
+            <label class="block text-sm text-gray-500 mb-1">Код доступа (только для админов):</label>
+            <input type="text" name="secret_code" placeholder="Введите код..." class="w-full border-2 p-3 rounded-xl outline-none bg-gray-50">
+        </div>
+
+        <button class="w-full bg-indigo-700 text-white p-4 rounded-xl font-bold text-lg hover:shadow-lg hover:bg-indigo-800 transition">Зарегистрироваться</button>
+    </form>
+</div>
+{% endblock %}

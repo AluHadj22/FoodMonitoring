@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>ЕЦМП ЧР</title>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans">
+    <nav class="bg-slate-900 text-white p-4 shadow-2xl">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold tracking-widest text-emerald-400">ЕЦМП ЧР</h1>
+            <div class="flex space-x-6 items-center text-sm font-medium">
+                <a href="/login" class="hover:text-emerald-400">ВЫХОД / ВХОД</a>
+                <a href="/register" class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-500 transition">РЕГИСТРАЦИЯ</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container mx-auto py-8 px-4">{% block content %}{% endblock %}</div>
+</body>
+</html>

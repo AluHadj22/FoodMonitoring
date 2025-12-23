@@ -1,0 +1,99 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="grid grid-cols-1 xl:grid-cols-4 gap-8">
+    <!-- Боковая панель -->
+    <aside class="xl:col-span-1 space-y-6">
+        <div class="bg-white p-6 rounded-3xl shadow-xl border-t-8 border-indigo-600">
+            <h2 class="text-xl font-bold mb-4">Управление</h2>
+            <p class="text-[10px] text-gray-400 mb-4 uppercase font-bold tracking-widest border-b pb-2">
+                Уровень: {{ 'Региональный' if admin.role == 'regional_admin' else 'Районный (' + admin.district + ')' }}
+            </p>
+
+            <a href="{{ admin.url_1c }}" target="_blank" class="block w-full bg-orange-500 text-white text-center p-3 rounded-xl font-bold hover:bg-orange-600 transition mb-6 shadow-md shadow-orange-100 italic">1С: Питание (Web)</a>
+
+            <h3 class="font-bold text-sm mb-3">Массовая рассылка</h3>
+            <form action="/bulk-upload" method="post" enctype="multipart/form-data" class="space-y-4">
+                <input type="hidden" name="admin_id" value="{{ admin.id }}">
+                <select name="target_type" class="w-full border-2 p-3 rounded-xl text-sm focus:border-indigo-500 outline-none">
+                    {% for ft in food_types %}<option value="{{ ft }}">{{ ft }}</option>{% endfor %}
+                </select>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" name="year" value="2025" class="border-2 p-3 rounded-xl text-sm">
+                    <select name="month" class="border-2 p-3 rounded-xl text-sm">
+                        {% for m_id, m_name in months.items() %}<option value="{{ m_id }}">{{ m_name }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="p-2 bg-slate-50 rounded-xl border-2 border-dashed">
+                    <input type="file" name="files" multiple required class="text-[10px] w-full">
+                </div>
+                <button class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold hover:bg-indigo-700 transition">Запустить рассылку</button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Основной контент -->
+    <div class="xl:col-span-3 space-y-6">
+        <!-- Блок поиска -->
+        <div class="bg-white p-4 rounded-3xl shadow-lg border border-slate-100">
+            <form action="/admin" method="get" class="flex gap-3">
+                <input type="hidden" name="admin_id" value="{{ admin.id }}">
+                <div class="relative flex-1">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                        🔍
+                    </span>
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="Поиск учреждения по названию..." 
+                           class="w-full pl-10 pr-4 py-3 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                </div>
+                <button type="submit" class="bg-slate-800 text-white px-8 py-3 rounded-2xl font-bold hover:bg-black transition">Найти</button>
+                {% if search_query %}
+                    <a href="/admin?admin_id={{ admin.id }}" class="bg-red-50 text-red-500 px-4 py-3 rounded-2xl font-bold hover:bg-red-100 transition flex items-center">Сброс</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Таблица -->
+        <div class="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-gray-800">Список учреждений</h2>
+                <span class="text-xs font-bold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full uppercase">Найдено: {{ schools|length }}</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase tracking-widest border-b">
+                        <tr>
+                            <th class="p-4">Название</th>
+                            <th class="p-4">Район</th>
+                            <th class="p-4">Тип питания</th>
+                            <th class="p-4">Ссылка робота</th>
+                            <th class="p-4 text-center">Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        {% for school in schools %}
+                        <tr class="hover:bg-indigo-50/30 transition group">
+                            <td class="p-4 font-bold text-slate-700 group-hover:text-indigo-600">{{ school.unit_name }}</td>
+                            <td class="p-4">
+                                <span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-[10px] font-bold">{{ school.district }}</span>
+                            </td>
+                            <td class="p-4 text-xs text-slate-500">{{ school.food_type }}</td>
+                            <td class="p-4">
+                                <code class="text-[10px] text-indigo-400 bg-indigo-50 px-2 py-1 rounded">/{{ school.id }}/food/</code>
+                            </td>
+                            <td class="p-4 text-center">
+                                <a href="/dashboard?uid={{ school.id }}" class="inline-block bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition shadow-sm">Управление</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if not schools %}
+                    <div class="text-center py-20">
+                        <p class="text-slate-400 italic">По вашему запросу ничего не найдено</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
