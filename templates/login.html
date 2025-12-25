@@ -1,11 +1,99 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-xl">
-    <h2 class="text-2xl font-bold mb-6 text-center text-slate-800">Вход в систему</h2>
-    <form action="/login" method="post" class="space-y-4">
-        <input type="email" name="email" placeholder="Email" required class="w-full border p-3 rounded-lg outline-none">
-        <input type="password" name="password" placeholder="Пароль" required class="w-full border p-3 rounded-lg outline-none">
-        <button class="w-full bg-slate-800 text-white p-3 rounded-lg font-bold hover:bg-slate-900 transition">Войти</button>
-    </form>
+<style>
+:root{
+  --indigo:#4f46e5;
+  --indigo-dark:#3730a3;
+  --slate-700:#334155;
+  --radius:1rem;
+}
+.auth-card{
+  width:100%;
+  max-width:460px; /* была 400px — увеличено */
+  background:#fff;
+  padding:2.5rem;
+  border-radius:var(--radius);
+  box-shadow:0 15px 35px rgba(0,0,0,0.08);
+  animation:fadeIn .6s ease;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.auth-card h2{
+  text-align:center;
+  font-weight:800;
+  font-size:1.7rem;
+  color:var(--slate-700);
+  margin-bottom:1.6rem;
+}
+.field{position:relative;margin-bottom:1.1rem;}
+.field input{
+  width:90%;
+  padding:.9rem 1rem .9rem 2.8rem;
+  border:1px solid #e2e8f0;
+  border-radius:.8rem;
+  font-size:1rem;
+  transition:all .25s ease;
+  background-color:#fff;
+}
+.field input:focus{
+  border-color:var(--indigo);
+  box-shadow:0 0 0 3px rgba(79,70,229,.2);
+  outline:none;
+}
+.field svg{
+  position:absolute;
+  left:.8rem;
+  top:50%;
+  transform:translateY(-50%);
+  width:19px;
+  height:19px;
+  color:#94a3b8;
+}
+button{
+  width:100%;
+  padding:1rem;
+  border:none;
+  border-radius:.8rem;
+  background:var(--indigo);
+  color:#fff;
+  font-weight:700;
+  font-size:1.05rem;
+  box-shadow:0 10px 25px rgba(79,70,229,.25);
+  transition:all .25s ease;
+  cursor:pointer;
+}
+button:hover{background:var(--indigo-dark);}
+.switch-link{text-align:center;margin-top:1.3rem;font-size:.9rem;}
+.switch-link a{color:var(--indigo);text-decoration:none;font-weight:600;}
+.switch-link a:hover{text-decoration:underline;}
+.lock-icon{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#eef2ff;
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  margin:0 auto 1.3rem;
+}
+.lock-icon svg{width:30px;height:30px;color:var(--indigo);}
+</style>
+
+<div class="auth-card">
+  <div class="lock-icon">
+    <svg fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a4 4 0 00-4 4v3H5a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zm0 2a2 2 0 012 2v3H8V6a2 2 0 012-2z"/></svg>
+  </div>
+  <h2>Вход в систему</h2>
+  <form action="/login" method="post">
+    <div class="field">
+      <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 19c0-2.21 3.58-4 8-4s8 1.79 8 4v1H4v-1z"/></svg>
+      <input type="email" name="email" placeholder="Email" required>
+    </div>
+    <div class="field">
+      <svg fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a4 4 0 00-4 4v3H5a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zm0 2a2 2 0 012 2v3H8V6a2 2 0 012-2z"/></svg>
+      <input type="password" name="password" placeholder="Пароль" required>
+    </div>
+    <button type="submit">Войти</button>
+  </form>
+  <div class="switch-link">Ещё нет аккаунта? <a href="/register">Регистрация</a></div>
 </div>
 {% endblock %}

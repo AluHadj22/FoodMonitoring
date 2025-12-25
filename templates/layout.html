@@ -1,20 +1,101 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <title>ЕЦМП ЧР</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ЕЦМП ЧР</title>
+  <style>
+    :root {
+      --indigo: #4f46e5;
+      --indigo-dark: #3730a3;
+      --slate-50: #f8fafc;
+      --slate-800: #1e293b;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: "Inter", system-ui, sans-serif;
+      background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+      color: var(--slate-800);
+    }
+
+    /* Навигация */
+    nav {
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .navbar-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .navbar-container h1 {
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: var(--indigo);
+      margin: 0;
+      letter-spacing: .5px;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .nav-link, .nav-button {
+      text-decoration: none;
+      font-weight: 600;
+      font-size: .95rem;
+      padding: .6rem 1.1rem;
+      border-radius: .6rem;
+      transition: all .25s ease;
+    }
+    .nav-link {
+      color: var(--slate-800);
+      background: #f1f5f9;
+    }
+    .nav-link:hover {
+      background: #e2e8f0;
+      color: var(--indigo-dark);
+    }
+    .nav-button {
+      background: var(--indigo);
+      color: #fff;
+    }
+    .nav-button:hover {
+      background: var(--indigo-dark);
+      box-shadow: 0 5px 15px rgba(79,70,229,.25);
+    }
+
+    /* Контейнер страницы */
+    .page-container {
+      padding: 2rem 1rem;
+      min-height: calc(100vh - 70px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
 </head>
-<body class="bg-slate-50 min-h-screen font-sans">
-    <nav class="bg-slate-900 text-white p-4 shadow-2xl">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold tracking-widest text-emerald-400">ЕЦМП ЧР</h1>
-            <div class="flex space-x-6 items-center text-sm font-medium">
-                <a href="/login" class="hover:text-emerald-400">ВЫХОД / ВХОД</a>
-                <a href="/register" class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-500 transition">РЕГИСТРАЦИЯ</a>
-            </div>
-        </div>
-    </nav>
-    <div class="container mx-auto py-8 px-4">{% block content %}{% endblock %}</div>
+<body>
+  <nav>
+    <div class="navbar-container">
+      <h1>ЕЦМП&nbsp;ЧР</h1>
+      <div class="nav-links">
+        <a href="/login" class="nav-link">ВХОД/ВЫХОД</a>
+        <a href="/register" class="nav-button">РЕГИСТРАЦИЯ</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page-container">
+    {% block content %}{% endblock %}
+  </div>
 </body>
 </html>

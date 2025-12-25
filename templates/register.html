@@ -1,28 +1,136 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="max-w-xl mx-auto bg-white p-10 rounded-3xl shadow-2xl">
-    <h2 class="text-3xl font-extrabold text-center mb-8 text-gray-800">Регистрация</h2>
-    <form action="/register" method="post" class="space-y-5">
-        <input type="email" name="email" placeholder="Email" required class="w-full border-2 p-3 rounded-xl outline-none focus:border-indigo-500">
-        <input type="password" name="password" placeholder="Пароль" required class="w-full border-2 p-3 rounded-xl outline-none focus:border-indigo-500">
-        <input type="text" name="unit_name" placeholder="Название учреждения" required class="w-full border-2 p-3 rounded-xl outline-none focus:border-indigo-500">
+<style>
+:root {
+  --indigo:#4f46e5;
+  --indigo-dark:#3730a3;
+  --slate-700:#334155;
+  --radius:1rem;
+}
+body {
+  font-family:"Inter",system-ui,sans-serif;
+  background:linear-gradient(135deg,#eef2ff 0%,#e0e7ff 100%);
+  min-height:100vh;
+  margin:0;
+}
+.page-container {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:calc(100vh - 80px);
+}
+.auth-card {
+  width:100%;
+  max-width:480px;
+  background:#fff;
+  padding:2.5rem;
+  border-radius:var(--radius);
+  box-shadow:0 15px 35px rgba(0,0,0,0.08);
+  animation:fadeIn .6s ease;
+}
+@keyframes fadeIn {
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.auth-card h2 {
+  text-align:center;
+  font-weight:800;
+  font-size:1.8rem;
+  color:var(--slate-700);
+  margin-bottom:1.2rem;
+}
+.input, select {
+  width:100%;
+  border:1px solid #e2e8f0;
+  padding:.8rem 1rem;
+  border-radius:.8rem;
+  font-size:.95rem;
+  transition:all .25s ease;
+  margin-bottom:1rem;
+}
+.input:focus, select:focus {
+  border-color:var(--indigo);
+  box-shadow:0 0 0 3px rgba(79,70,229,.2);
+  outline:none;
+}
+label {
+  display:block;
+  margin-bottom:.3rem;
+  font-weight:600;
+  color:var(--slate-700);
+  font-size:.9rem;
+}
+button {
+  width:100%;
+  padding:1rem;
+  border:none;
+  border-radius:.9rem;
+  background:var(--indigo);
+  color:#fff;
+  font-weight:700;
+  font-size:1rem;
+  box-shadow:0 10px 25px rgba(79,70,229,.25);
+  transition:all .25s ease;
+  cursor:pointer;
+}
+button:hover { background:var(--indigo-dark); }
+.switch-link { text-align:center; margin-top:1rem; font-size:.9rem; }
+.switch-link a {
+  color:var(--indigo);
+  text-decoration:none;
+  font-weight:600;
+}
+.switch-link a:hover { text-decoration:underline; }
+.icon-top {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#eef2ff;
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  margin:0 auto 1rem;
+}
+.icon-top svg { width:30px; height:30px; color:var(--indigo); }
+.section-meta {
+  padding-top:1rem;
+  border-top:1px solid #e5e7eb;
+  margin-top:1rem;
+}
+.section-meta label {
+  font-weight:500;
+  font-size:.85rem;
+  color:#6b7280;
+}
+</style>
 
-        <label class="block font-semibold">Ваш район:</label>
-        <select name="district" class="w-full border-2 p-3 rounded-xl">
-            {% for d in districts %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
-        </select>
+<div class="auth-card">
+  <div class="icon-top">
+    <svg fill="currentColor" viewBox="0 0 20 20"><path d="M13 7H7v6h6V7z"/><path fill-rule="evenodd" d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v10H5V5z" clip-rule="evenodd"/></svg>
+  </div>
+  <h2>Регистрация</h2>
+  <form action="/register" method="post">
+    <input type="email" name="email" placeholder="Email" required class="input">
+    <input type="password" name="password" placeholder="Пароль" required class="input">
+    <input type="text" name="unit_name" placeholder="Название учреждения" required class="input">
 
-        <label class="block font-semibold">Тип питания:</label>
-        <select name="food_type" class="w-full border-2 p-3 rounded-xl">
-            {% for ft in food_types %}<option value="{{ ft }}">{{ ft }}</option>{% endfor %}
-        </select>
+    <label>Ваш район:</label>
+    <select name="district" required>
+      {% for d in districts %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+    </select>
 
-        <div class="pt-4 border-t">
-            <label class="block text-sm text-gray-500 mb-1">Код доступа (только для админов):</label>
-            <input type="text" name="secret_code" placeholder="Введите код..." class="w-full border-2 p-3 rounded-xl outline-none bg-gray-50">
-        </div>
+    <label>Тип питания:</label>
+    <select name="food_type" required>
+      {% for ft in food_types %}<option value="{{ ft }}">{{ ft }}</option>{% endfor %}
+    </select>
 
-        <button class="w-full bg-indigo-700 text-white p-4 rounded-xl font-bold text-lg hover:shadow-lg hover:bg-indigo-800 transition">Зарегистрироваться</button>
-    </form>
+    <div class="section-meta">
+      <label>Код доступа (только для админов):</label>
+      <input type="text" name="secret_code" placeholder="Введите код..." class="input" style="background:#f9fafb;">
+    </div>
+
+    <button type="submit">Зарегистрироваться</button>
+  </form>
+  <div class="switch-link">Уже есть аккаунт? <a href="/login">Войти</a></div>
 </div>
 {% endblock %}

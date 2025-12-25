@@ -1,71 +1,131 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="max-w-5xl mx-auto space-y-8">
-    <div class="bg-white p-8 rounded-3xl shadow-xl border-l-8 border-indigo-600 flex justify-between items-center">
-        <div>
-            <h1 class="text-3xl font-bold text-slate-800">{{ user.unit_name }}</h1>
-            <p class="text-indigo-600 font-medium uppercase text-xs tracking-widest">{{ user.district }} | {{ user.food_type }}</p>
-            <div class="mt-4 p-3 bg-indigo-50 border border-indigo-100 rounded-xl inline-block font-mono text-xs">
-                Внешний путь: <span class="text-indigo-600 font-bold select-all">{{ monitoring_url }}</span>
-            </div>
+<style>
+:root {
+  --indigo:#4f46e5;
+  --indigo-dark:#3730a3;
+  --slate-50:#f8fafc;
+  --slate-100:#f1f5f9;
+  --slate-200:#e2e8f0;
+  --slate-400:#94a3b8;
+  --slate-700:#334155;
+  --slate-800:#1e293b;
+  --radius:1.25rem;
+}
+body{font-family:"Inter",system-ui,sans-serif;background:#eef2ff;}
+h1,h3{margin:0;}
+.container{max-width:1100px;margin:auto;padding:1.5rem;display:flex;flex-direction:column;gap:2rem;}
+.card{background:#fff;border-radius:1.5rem;padding:2rem;box-shadow:0 5px 20px rgba(0,0,0,.05);}
+.btn{cursor:pointer;display:inline-block;padding:.8rem 1.2rem;border-radius:.9rem;font-weight:700;text-align:center;text-decoration:none;transition:all .25s ease;}
+.btn-indigo{background:var(--indigo);color:#fff;}
+.btn-indigo:hover{background:var(--indigo-dark);}
+.btn-dark{background:var(--slate-800);color:#fff;}
+.btn-dark:hover{background:black;}
+
+form{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem;}
+input,select{padding:.7rem .9rem;border-radius:.8rem;border:1px solid var(--slate-200);transition:all .25s ease;}
+input:focus,select:focus{border-color:var(--indigo);outline:none;box-shadow:0 0 0 3px rgba(79,70,229,.2);}
+input[type="number"]{width:80px;}
+
+.upload-box{border:2px dashed var(--slate-200);border-radius:1rem;padding:1rem;text-align:center;transition:border-color .25s ease;}
+.upload-box:hover{border-color:var(--indigo);}
+.upload-box input[type=file]{width:100%;cursor:pointer;}
+
+.file-list{max-height:500px;overflow-y:auto;display:flex;flex-direction:column;gap:.6rem;}
+.file-item{display:flex;justify-content:space-between;align-items:center;padding:.9rem 1rem;background:var(--slate-50);border:1px solid var(--slate-100);border-radius:1rem;transition:all .25s ease;}
+.file-item:hover{background:#eef2ff;border-color:#c7d2fe;}
+.file-name{display:flex;align-items:center;gap:.6rem;color:var(--slate-700);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.file-name svg{width:20px;height:20px;flex-shrink:0;color:var(--indigo);}
+.file-actions{display:flex;gap:.4rem;}
+.file-actions a{padding:.5rem;border-radius:.6rem;transition:background .25s ease;display:inline-flex;}
+.file-actions a svg{width:18px;height:18px;}
+.file-actions a.download svg{color:var(--indigo);}
+.file-actions a.download:hover{background:#e0e7ff;}
+.file-actions a.delete svg{color:#dc2626;}
+.file-actions a.delete:hover{background:#fee2e2;}
+.nofiles{text-align:center;padding:3rem 0;color:var(--slate-400);font-style:italic;}
+.nofiles svg{width:48px;height:48px;margin-bottom:.5rem;color:var(--slate-400);}
+</style>
+
+<div class="container">
+
+  <!-- Заголовок учреждения -->
+  <div class="card" style="border-left:6px solid var(--indigo);display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <h1 style="font-size:1.8rem;color:var(--slate-800);font-weight:800;">{{ user.unit_name }}</h1>
+      <p style="color:var(--indigo);font-size:.75rem;letter-spacing:.05em;font-weight:600;text-transform:uppercase;">
+        {{ user.district }} | {{ user.food_type }}
+      </p>
+      <div style="margin-top:.6rem;padding:.5rem .8rem;background:#eef2ff;border-radius:.6rem;font-family:monospace;font-size:.8rem;">
+        Внешний путь: <span style="color:var(--indigo);font-weight:700;">{{ monitoring_url }}</span>
+      </div>
+    </div>
+    <a href="https://мониторингпитание.рф/#/home" target="_blank" class="btn btn-dark">мониторингпитания.рф</a>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr;gap:2rem;">
+    <div class="card">
+      <h3 style="font-size:1.1rem;color:var(--slate-800);font-weight:800;margin-bottom:1rem;">Настройка периода</h3>
+      <form action="/dashboard" method="get">
+        <input type="hidden" name="uid" value="{{ user.id }}">
+        <input type="number" name="year" value="{{ year }}">
+        <select name="month">
+          {% for m_id, m_name in months.items() %}
+          <option value="{{ m_id }}" {% if m_id == month %}selected{% endif %}>{{ m_name }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-indigo" type="submit">ОК</button>
+      </form>
+
+      <h3 style="font-size:1rem;color:var(--slate-700);font-weight:700;margin-top:1.8rem;">Загрузить файлы в этот период</h3>
+      <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="uid" value="{{ user.id }}">
+        <input type="hidden" name="year" value="{{ year }}">
+        <input type="hidden" name="month" value="{{ month }}">
+        <div class="upload-box">
+          <input type="file" name="files" multiple required>
         </div>
-        <div class="text-right">
-             <a href="https://мониторингпитание.рф/#/home" target="_blank" class="inline-block bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-black transition shadow-lg">мониторингпитания.рф</a>
-        </div>
+        <button class="btn btn-dark" type="submit" style="width:100%;margin-top:1rem;">Загрузить</button>
+      </form>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
-            <h3 class="text-xl font-bold mb-6 text-slate-800">Настройка периода</h3>
-            <form action="/dashboard" method="get" class="flex gap-2 mb-8 bg-slate-50 p-4 rounded-2xl">
-                <input type="hidden" name="uid" value="{{ user.id }}">
-                <input type="number" name="year" value="{{ year }}" class="w-24 border-0 bg-white p-3 rounded-xl shadow-inner focus:ring-2 focus:ring-indigo-500 outline-none">
-                <select name="month" class="flex-1 border-0 bg-white p-3 rounded-xl shadow-inner focus:ring-2 focus:ring-indigo-500 outline-none">
-                    {% for m_id, m_name in months.items() %}
-                    <option value="{{ m_id }}" {% if m_id == month %}selected{% endif %}>{{ m_name }}</option>
-                    {% endfor %}
-                </select>
-                <button class="bg-indigo-600 text-white px-6 rounded-xl font-bold hover:bg-indigo-700 transition shadow-md">ОК</button>
-            </form>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h3 style="font-size:1.1rem;color:var(--slate-800);font-weight:800;">Файлы месяца</h3>
+        <span style="font-size:.8rem;background:#e0e7ff;color:var(--indigo-dark);padding:.3rem .8rem;border-radius:9999px;text-transform:uppercase;font-weight:700;">
+          {{ months[month] }}
+        </span>
+      </div>
 
-            <h3 class="text-lg font-bold mb-4 text-slate-700">Загрузить файлы в этот период</h3>
-            <form action="/upload" method="post" enctype="multipart/form-data" class="space-y-4">
-                <input type="hidden" name="uid" value="{{ user.id }}">
-                <input type="hidden" name="year" value="{{ year }}">
-                <input type="hidden" name="month" value="{{ month }}">
-                <div class="border-2 border-dashed border-slate-200 p-6 rounded-2xl text-center hover:border-indigo-400 transition cursor-pointer">
-                    <input type="file" name="files" multiple required class="w-full text-sm file:bg-indigo-50 file:border-0 file:rounded-lg file:px-4 file:py-2 file:text-indigo-600 file:font-bold cursor-pointer">
-                </div>
-                <button class="w-full bg-slate-800 text-white p-4 rounded-2xl font-bold hover:bg-black transition shadow-xl">Загрузить</button>
-            </form>
-        </div>
-
-        <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
-            <h3 class="text-xl font-bold mb-6 text-slate-800 flex justify-between items-center">
-                <span>Файлы месяца</span>
-                <span class="text-sm bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full uppercase tracking-widest">{{ months[month] }}</span>
-            </h3>
-            <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-                {% if files %}
-                    {% for f in files %}
-                    <div class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-indigo-300 transition">
-                        <span class="text-sm font-semibold text-slate-700 truncate mr-4">{{ f }}</span>
-                        <div class="flex space-x-2">
-                            <a href="/{{ user.id }}/food/{{ f }}" class="bg-white p-2 rounded-lg shadow-sm hover:bg-indigo-50 transition" title="Скачать">⏬</a>
-                            <a href="/delete-file?uid={{ user.id }}&year={{ year }}&month={{ month }}&filename={{ f }}" 
-                               class="bg-white p-2 rounded-lg shadow-sm hover:bg-red-50 text-red-500 transition" 
-                               onclick="return confirm('Удалить файл из системы?')">❌</a>
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="text-center py-20">
-                        <div class="text-4xl mb-4">📂</div>
-                        <p class="text-slate-400 italic">На {{ months[month] }} {{ year }} файлов нет</p>
-                    </div>
-                {% endif %}
+      <div class="file-list">
+        {% if files %}
+          {% for f in files %}
+          <div class="file-item">
+            <div class="file-name">
+              <svg fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+              {{ f }}
             </div>
-        </div>
+            <div class="file-actions">
+              <a href="/{{ user.id }}/food/{{ f }}" class="download" title="Скачать" style="display: inline-flex; align-items: center; justify-content: center; width: 0px; height: 0px; border-radius: 0%; background-color: #1976d2;
+ border: none; cursor: pointer; text-decoration: none;">
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v12m0 0l4-4m-4 4l-4-4m8 7H8"/></svg>
+              </a>
+              <a href="/delete-file?uid={{ user.id }}&year={{ year }}&month={{ month }}&filename={{ f }}" class="delete"
+                 onclick="return confirm('Удалить файл из системы?')" title="Удалить">
+                <svg fill="currentColor" viewBox="0 0 20 20"><path d="M6 6l8 8m0-8l-8 8"/><path d="M4 5h12l-1 10a2 2 0 01-2 2H7a2 2 0 01-2-2L4 5z"/></svg>
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="nofiles">
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M4 3h8l4 4v10a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1z"/></svg>
+            На {{ months[month] }} {{ year }} файлов нет
+          </div>
+        {% endif %}
+      </div>
     </div>
+  </div>
 </div>
+
 {% endblock %}
