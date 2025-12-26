@@ -36,11 +36,17 @@ MUNICIPAL_CODE = "rayonadmin3377%"
 
 # --- ФЕДЕРАЛЬНЫЙ МОНИТОРИНГ (РОБОТ) ---
 
+from pathlib import Path
+from fastapi.responses import FileResponse
+from fastapi import HTTPException
+
 @app.get("/{uid}/food/", response_class=HTMLResponse)
 async def federal_index(uid: int):
     """Выдаёт список всех файлов учреждения для федерального центра"""
-    base_path = UPLOAD_DIR / str(uid) / "food"
-    if not base_path.exists():
+    BASE_DIR = Path(__file__).resolve().parent
+    base_path = BASE_DIR / str(uid) / "food"
+
+    if not base_path.exists() or not any(base_path.iterdir()):
         return "<html><body><h1>Нет доступных файлов</h1></body></html>"
 
     links = "".join([
@@ -48,14 +54,30 @@ async def federal_index(uid: int):
         for f in sorted(base_path.iterdir(), reverse=True)
         if f.is_file()
     ])
-    return f"<html><body><h1>Index of /{uid}/food/</h1><hr><ul>{links}</ul></body></html>"
+
+    return f"""
+    <html>
+        <body>
+            <h1>Index of /{uid}/food/</h1>
+            <hr>
+            <ul>{links}</ul>
+        </body>
+    </html>
+    """
 
 @app.get("/{uid}/food/{filename}")
 async def get_federal_file(uid: int, filename: str):
-    """Отдает файл федеральному центру"""
-    file_path = UPLOAD_DIR / str(uid) / "food" / filename
+    """Отдаёт файл федеральному центру"""
+    from pathlib import Path
+    from fastapi.responses import FileResponse
+    from fastapi import HTTPException
+
+    BASE_DIR = Path(__file__).resolve().parent
+    file_path = BASE_DIR / str(uid) / "food" / filename
+
     if file_path.exists():
-        return FileResponse(file_path)
+        return FileResponse(file_path, filename=filename)
+
     raise HTTPException(status_code=404, detail="Файл не найден")
 
 # --- РЕГИСТРАЦИЯ И АВТОРИЗАЦИЯ ---
@@ -99,6 +121,16 @@ def register(
     )
     db.add(new_user)
     db.commit()
+    db.refresh(new_user)
+
+    # --- Создание структуры папок в корне проекта ---
+    from pathlib import Path
+    BASE_DIR = Path(__file__).resolve().parent
+    school_dir = BASE_DIR / str(new_user.id)
+    food_dir = school_dir / "food"
+    food_dir.mkdir(parents=True, exist_ok=True)
+    # -----------------------------------------------
+
     return RedirectResponse("/login", status_code=303)
 
 @app.get("/login", response_class=HTMLResponse)
@@ -149,6 +181,9 @@ async def bulk_upload(
     files: List[UploadFile] = File(...),
     db: Session = Depends(get_db)
 ):
+    from pathlib import Path
+    import shutil
+
     admin = db.query(models.User).get(admin_id)
     period = f"{year}-{month}"
 
@@ -157,40 +192,58 @@ async def bulk_upload(
         query = query.filter(models.User.district == admin.district)
 
     targets = query.all()
+
+    BASE_DIR = Path(__file__).resolve().parent
+
     for school in targets:
-        monthly_path = UPLOAD_DIR / str(school.id) / period / "food"
-        monthly_path.mkdir(parents=True, exist_ok=True)
+        # Путь к папке food каждой школы
+        food_path = BASE_DIR / str(school.id) / "food"
+        food_path.mkdir(parents=True, exist_ok=True)
 
-        federal_path = UPLOAD_DIR / str(school.id) / "food"
-        federal_path.mkdir(parents=True, exist_ok=True)
-
+        # Копируем каждый файл, отправленный администратором, в папку food школы
         for f in files:
-            if f.filename:
-                f.file.seek(0)
-                with open(monthly_path / f.filename, "wb") as buffer:
-                    shutil.copyfileobj(f.file, buffer)
-                f.file.seek(0)
-                with open(federal_path / f.filename, "wb") as buffer:
-                    shutil.copyfileobj(f.file, buffer)
+            if not f.filename:
+                continue
+            dest_path = food_path / f.filename
+            f.file.seek(0)
+            with open(dest_path, "wb") as buffer:
+                shutil.copyfileobj(f.file, buffer)
 
     return RedirectResponse(f"/admin?admin_id={admin_id}", status_code=303)
 
 # --- ЛИЧНЫЙ КАБИНЕТ ШКОЛЫ ---
 
 @app.get("/dashboard", response_class=HTMLResponse)
-def dashboard(request: Request, uid: int, year: str = "2025", month: str = "05", db: Session = Depends(get_db)):
-    user = db.query(models.User).get(uid)
-    period = f"{year}-{month}"
-    path = UPLOAD_DIR / str(uid) / period / "food"
+def dashboard(
+    request: Request,
+    uid: int,
+    year: str = "2025",
+    month: str = "05",
+    db: Session = Depends(get_db)
+):
+    from pathlib import Path
+    import os
 
-    files = os.listdir(path) if path.exists() else []
+    user = db.query(models.User).get(uid)
+    if not user:
+        return RedirectResponse("/login")
+
+    # Физический путь к папке food конкретной школы
+    BASE_DIR = Path(__file__).resolve().parent
+    food_path = BASE_DIR / str(uid) / "food"
+    food_path.mkdir(parents=True, exist_ok=True)
+
+    # Список файлов из физической папки food
+    files = os.listdir(food_path) if food_path.exists() else []
+
+    # URL для мониторинга (оставляем как у тебя, чтобы шаблон работал)
     monitoring_url = f"{request.base_url}{uid}/food/"
 
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "user": user,
         "files": files,
-        "period": period,
+        "period": f"{year}-{month}",
         "year": year,
         "month": month,
         "months": MONTHS,
@@ -204,35 +257,34 @@ async def upload_files(
     month: str = Form(...),
     files: List[UploadFile] = File(...)
 ):
-    period = f"{year}-{month}"
-    monthly_path = UPLOAD_DIR / str(uid) / period / "food"
-    monthly_path.mkdir(parents=True, exist_ok=True)
+    from pathlib import Path
+    import shutil
 
-    federal_path = UPLOAD_DIR / str(uid) / "food"
-    federal_path.mkdir(parents=True, exist_ok=True)
+    # Путь к папке food учреждения
+    BASE_DIR = Path(__file__).resolve().parent
+    food_path = BASE_DIR / str(uid) / "food"
+    food_path.mkdir(parents=True, exist_ok=True)
 
+    # Файлы сохраняем только сюда
     for f in files:
-        if f.filename:
-            with open(monthly_path / f.filename, "wb") as buffer:
-                shutil.copyfileobj(f.file, buffer)
-            f.file.seek(0)
-            with open(federal_path / f.filename, "wb") as buffer:
-                shutil.copyfileobj(f.file, buffer)
+        if not f.filename:
+            continue
+        dest_path = food_path / f.filename
+        f.file.seek(0)
+        with open(dest_path, "wb") as buffer:
+            shutil.copyfileobj(f.file, buffer)
 
     return RedirectResponse(f"/dashboard?uid={uid}&year={year}&month={month}", status_code=303)
 
 @app.get("/delete-file")
 def delete_file(uid: int, year: str, month: str, filename: str):
-    period = f"{year}-{month}"
+    from pathlib import Path
+    import os
 
-    # Удаляем из месячного архива
-    monthly_path = UPLOAD_DIR / str(uid) / period / "food" / filename
-    if monthly_path.exists():
-        os.remove(monthly_path)
+    BASE_DIR = Path(__file__).resolve().parent
+    file_path = BASE_DIR / str(uid) / "food" / filename
 
-    # Удаляем из зеркала федерального центра
-    federal_path = UPLOAD_DIR / str(uid) / "food" / filename
-    if federal_path.exists():
-        os.remove(federal_path)
+    if file_path.exists():
+        os.remove(file_path)
 
     return RedirectResponse(f"/dashboard?uid={uid}&year={year}&month={month}", status_code=303)
