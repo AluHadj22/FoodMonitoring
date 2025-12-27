@@ -86,40 +86,6 @@ input[type="number"] {
   width:90px;
 }
 
-.upload-box {
-  border:2px dashed var(--slate-200);
-  border-radius:1rem;
-  padding:1rem;
-  text-align:center;
-  transition:all .3s ease;
-  position:relative;
-}
-
-.upload-box:hover {
-  border-color:var(--indigo);
-  background:#f8fafc;
-  transform:translateY(-2px);
-  box-shadow:0 4px 12px rgba(79,70,229,0.1);
-}
-
-.upload-box.highlight {
-  border-color:var(--indigo);
-  background:#f0f4ff;
-  box-shadow:0 0 0 3px rgba(79,70,229,0.2);
-}
-
-.upload-box input[type=file] {
-  width:100%;
-  cursor:pointer;
-  opacity:0;
-  position:absolute;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  cursor:pointer;
-}
-
 .file-list {
   max-height:500px;
   overflow-y:auto;
@@ -221,103 +187,6 @@ input[type="number"] {
   color:var(--slate-400);
 }
 
-/* Анимации и эффекты */
-.checkbox-container {
-  display:flex;
-  align-items:center;
-  gap:.6rem;
-  cursor:pointer;
-  transition:all .2s ease;
-}
-
-.checkbox-container:hover {
-  transform:translateY(-1px);
-}
-
-.checkbox-container input[type="checkbox"] {
-  transform:scale(1.2);
-  cursor:pointer;
-  transition:all .2s ease;
-}
-
-.checkbox-container input[type="checkbox"]:hover {
-  transform:scale(1.3);
-}
-
-.delete-btn {
-  background:#dc2626;
-  color:#fff;
-  border:none;
-  padding:.5rem 1rem;
-  border-radius:.5rem;
-  cursor:pointer;
-  font-size:.85rem;
-  font-weight:500;
-  display:flex;
-  align-items:center;
-  gap:.4rem;
-  transition:all .2s ease;
-}
-
-.delete-btn:hover {
-  background:#b91c1c;
-  transform:translateY(-1px);
-  box-shadow:0 4px 8px rgba(220,38,38,0.3);
-}
-
-.download-btn {
-  background:#059669;
-  color:#fff;
-  border:none;
-  padding:.5rem 1rem;
-  border-radius:.5rem;
-  cursor:pointer;
-  font-size:.85rem;
-  font-weight:500;
-  display:flex;
-  align-items:center;
-  gap:.4rem;
-  transition:all .2s ease;
-}
-
-.download-btn:hover {
-  background:#047857;
-  transform:translateY(-1px);
-  box-shadow:0 4px 8px rgba(5,150,105,0.3);
-}
-
-.file-link {
-  color:#1e293b;
-  text-decoration:none;
-  font-weight:500;
-  font-size:1rem;
-  transition:all .2s ease;
-}
-
-.file-link:hover {
-  color:var(--indigo);
-  text-decoration:underline;
-}
-
-.delete-link {
-  color:#dc2626;
-  font-size:.85rem;
-  padding:.5rem 1rem;
-  border:1px solid #fecaca;
-  border-radius:.4rem;
-  text-decoration:none;
-  white-space:nowrap;
-  background:#fef2f2;
-  transition:all .2s ease;
-  font-weight:500;
-}
-
-.delete-link:hover {
-  background:#fecaca;
-  transform:translateY(-1px);
-  box-shadow:0 2px 4px rgba(220,38,38,0.2);
-}
-
 /* Модальное окно */
 .modal-overlay {
   position:fixed;
@@ -394,111 +263,7 @@ input[type="number"] {
   to { opacity:1; transform:scale(1) translateY(0); }
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
-  .container > div:first-child {
-    flex-direction:column;
-    align-items:flex-start;
-  }
-  
-  .file-item {
-    flex-direction:column;
-    align-items:flex-start;
-    gap:1rem;
-  }
-  
-  .file-item a {
-    align-self:flex-end;
-  }
-}
-
-/* Новые стили для кнопок управления */
-.controls-container {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:1.5rem;
-  padding:1.5rem;
-  background:#f8fafc;
-  border-radius:.75rem;
-  border:1px solid #e2e8f0;
-  box-shadow:0 2px 8px rgba(0,0,0,0.05);
-}
-
-.controls-left {
-  display:flex;
-  align-items:center;
-  gap:1rem;
-}
-
-.controls-right {
-  display:flex;
-  align-items:center;
-  gap:1rem;
-}
-
-.upload-btn {
-  background:var(--indigo);
-  color:#fff;
-  border:none;
-  padding:.7rem 1.5rem;
-  border-radius:.7rem;
-  cursor:pointer;
-  font-weight:600;
-  transition:all .3s ease;
-  display:flex;
-  align-items:center;
-  gap:.5rem;
-}
-
-.upload-btn:hover {
-  background:var(--indigo-dark);
-  transform:translateY(-2px);
-  box-shadow:0 4px 12px rgba(79,70,229,0.3);
-}
-
-.upload-btn:active {
-  transform:translateY(0);
-}
-
-.file-input-label {
-  display:inline-flex;
-  align-items:center;
-  gap:.5rem;
-  padding:.7rem 1.5rem;
-  background:#f1f5f9;
-  border:2px dashed #cbd5e1;
-  border-radius:.7rem;
-  cursor:pointer;
-  font-weight:600;
-  color:#475569;
-  transition:all .3s ease;
-}
-
-.file-input-label:hover {
-  background:#e2e8f0;
-  border-color:#94a3b8;
-  transform:translateY(-1px);
-}
-
-.file-input-label.highlight {
-  background:#e0e7ff;
-  border-color:var(--indigo);
-  color:var(--indigo);
-  box-shadow:0 0 0 3px rgba(79,70,229,0.1);
-}
-
-.upload-area {
-  position:relative;
-  display:inline-block;
-}
-
-.action-buttons {
-  display:flex;
-  gap:.8rem;
-}
-
-/* Стили для панели управления рядом с загрузкой */
+/* Управление файлами */
 .upload-controls {
   display:flex;
   justify-content:space-between;
@@ -519,7 +284,6 @@ input[type="number"] {
   gap:.8rem;
 }
 
-/* Уменьшенные стили для кнопок управления */
 .small-checkbox-label {
   font-size:.9rem;
   color:#475569;
@@ -571,7 +335,6 @@ input[type="number"] {
   height:14px;
 }
 
-/* Стили для ссылки с копированием */
 .copy-link {
   cursor:pointer;
   transition:all .2s ease;
@@ -613,6 +376,104 @@ input[type="number"] {
   border:.4rem solid transparent;
   border-top-color:#1f2937;
 }
+
+.file-meta {
+  font-size:.8rem;
+  color:#64748b;
+  margin-top:.3rem;
+}
+
+/* Стили для области выбора файлов */
+.file-upload-area {
+  border:2px dashed #d1d5db;
+  border-radius:.75rem;
+  padding:1.5rem;
+  text-align:center;
+  margin-bottom:1rem;
+  transition:all .3s ease;
+  position:relative;
+}
+
+.file-upload-area:hover {
+  border-color:var(--indigo);
+  background-color:rgba(79,70,229,0.05);
+  box-shadow:0 0 0 3px rgba(79,70,229,0.1);
+}
+
+.file-upload-area::before {
+  content:'';
+  position:absolute;
+  top:-4px;
+  left:-4px;
+  right:-4px;
+  bottom:-4px;
+  border-radius:.85rem;
+  background:linear-gradient(45deg, var(--indigo), transparent);
+  opacity:0;
+  transition:opacity .3s ease;
+  z-index:-1;
+}
+
+.file-upload-area:hover::before {
+  opacity:0.1;
+}
+
+.file-input-wrapper {
+  position:relative;
+  width:100%;
+}
+
+.file-input-wrapper input[type="file"] {
+  width:100%;
+  padding:.5rem;
+  opacity:0;
+  position:absolute;
+  top:0;
+  left:0;
+  z-index:2;
+  cursor:pointer;
+  height:100%;
+}
+
+.file-input-label {
+  display:block;
+  padding:1rem;
+  background:var(--slate-100);
+  border-radius:.5rem;
+  color:var(--slate-700);
+  font-weight:500;
+  transition:all .2s ease;
+  border:2px solid transparent;
+}
+
+.file-upload-area:hover .file-input-label {
+  background:var(--indigo);
+  color:white;
+  transform:translateY(-1px);
+  box-shadow:0 4px 8px rgba(79,70,229,0.2);
+}
+
+/* Уведомление о копировании */
+.copy-notification {
+  position:fixed;
+  top:20px;
+  right:20px;
+  background:var(--slate-800);
+  color:white;
+  padding:.8rem 1.2rem;
+  border-radius:.5rem;
+  font-weight:500;
+  z-index:10000;
+  opacity:0;
+  transform:translateY(-10px);
+  transition:all .3s ease;
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
+}
+
+.copy-notification.show {
+  opacity:1;
+  transform:translateY(0);
+}
 </style>
 
 <div class="container">
@@ -628,7 +489,7 @@ input[type="number"] {
         <span id="monitoringUrl" class="copy-link" style="color:var(--indigo);font-weight:700;">
           {{ monitoring_url.rstrip('/') }}
         </span>
-        <div class="copy-tooltip" id="copyTooltip">Скопировано!</div>
+        <div class="copy-tooltip" id="copyTooltip">Ссылка скопирована!</div>
       </div>
     </div>
     <a href="https://мониторингпитание.рф/#/home" target="_blank" class="btn btn-dark">мониторингпитания.рф</a>
@@ -660,31 +521,20 @@ input[type="number"] {
         <input type="hidden" name="uid" value="{{ user.id }}">
         <input type="hidden" name="year" value="{{ year }}">
         <input type="hidden" name="month" value="{{ month }}">
-        <div class="upload-area">
-          <label for="fileInput" class="file-input-label" id="fileInputLabel">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-            Выбрать файлы
-          </label>
-          <input type="file" name="files" id="fileInput" multiple required style="display:none;">
+        
+        <div class="file-upload-area">
+          <div class="file-input-wrapper">
+            <input type="file" name="files" id="fileInput" multiple required>
+            <label for="fileInput" class="file-input-label">Выберите файлы или перетащите их сюда</label>
+          </div>
         </div>
-        <div id="fileNames" style="margin-top:.5rem;font-size:.9rem;color:#64748b;"></div>
-        <button class="upload-btn" type="submit" style="margin-top:1rem;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
+        
+        <button class="btn btn-indigo" type="submit" style="width:100%;">
           Загрузить файлы
         </button>
       </form>
 
-      <!-- Кнопки управления рядом с панелью загрузки -->
+      <!-- Кнопки управления -->
       {% if files_grouped and files_grouped.get(year) and files_grouped[year].get(months[month]) %}
       <div class="upload-controls">
         <div class="upload-checkbox">
@@ -695,17 +545,9 @@ input[type="number"] {
         </div>
         <div class="upload-actions">
           <button type="button" id="downloadSelected" class="small-action-btn small-download-btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
             Скачать выделенные
           </button>
           <button type="button" id="openConfirm" class="small-action-btn small-delete-btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            </svg>
             Удалить выделенные
           </button>
         </div>
@@ -722,58 +564,57 @@ input[type="number"] {
         </span>
       </div>
 
-      <form id="multiDeleteForm" action="/delete-files" method="post">
-        <input type="hidden" name="uid" value="{{ user.id }}">
-        <input type="hidden" name="year" value="{{ year }}">
-        <input type="hidden" name="month" value="{{ month }}">
-
-        {% if files_grouped and files_grouped.get(year) and files_grouped[year].get(months[month]) %}
-          {% set files = files_grouped[year][months[month]] %}
-          
-          <!-- Контейнер для файлов в столбик -->
-          <div style="display:flex;flex-direction:column;gap:1rem;">
-            {% for f in files %}
-            <div class="file-item">
-              <label class="checkbox-container" style="width:100%;">
-                <input type="checkbox" name="files" value="{{ f.filename }}" data-file-url="{{ monitoring_url.rstrip('/') }}{{ f.filename }}">
-                <div class="file-name">
-                  <svg fill="currentColor" viewBox="0 0 20 20" width="24" height="24" style="color:#4f46e5;flex-shrink:0;">
-                    <path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/>
-                  </svg>
-                  <div style="display:flex;flex-direction:column;">
-                    <a href="{{ monitoring_url.rstrip('/') }}{{ f.filename }}" 
-                       class="file-link" 
-                       target="_blank">
-                      {{ f.filename }}
-                    </a>
-                    <span style="color:#64748b;font-size:.85rem;margin-top:4px;">Загружен: {{ f.date }}</span>
-                  </div>
-                </div>
-              </label>
-
-              <a href="/delete-file?uid={{ user.id }}&year={{ year }}&month={{ month }}&filename={{ f.filename }}"
-                 class="delete-link">
-                Удалить
-              </a>
+      {% if files_grouped and files_grouped.get(year) and files_grouped[year].get(months[month]) %}
+      <div class="file-list" id="fileList">
+        {% for file_info in files_grouped[year][months[month]] %}
+        <div class="file-item">
+          <div style="display:flex;flex-direction:column;flex:1;">
+            <div class="file-name">
+              <input type="checkbox" class="file-checkbox" data-filename="{{ file_info.filename }}">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              <span>{{ file_info.filename }}</span>
             </div>
-            {% endfor %}
+            <div class="file-meta">
+              Загружено: {{ file_info.date }} | {{ file_info.uploader }}
+            </div>
           </div>
-        {% else %}
-          <div style="color:#64748b;text-align:center;padding:3rem;border:2px dashed #e2e8f0;border-radius:.75rem;background:#f8fafc;">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#9ca3af;margin-bottom:1rem;">
-              <path d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-            </svg>
-            <p style="font-size:1rem;margin-bottom:.5rem;">Файлов не найдено</p>
-            <p style="font-size:.9rem;">На {{ months[month] }} {{ year }} файлы еще не загружены</p>
+          <div class="file-actions">
+            <a href="/{{ user.id }}/food/{{ file_info.filename }}" class="download" download>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Скачать
+            </a>
+            <a href="/delete-file?uid={{ user.id }}&year={{ year }}&month={{ month }}&filename={{ file_info.filename }}" class="delete" onclick="return confirm('Удалить файл {{ file_info.filename }}?')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              Удалить
+            </a>
           </div>
-        {% endif %}
-      </form>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="nofiles">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+        <p>Нет файлов за {{ months[month] }} {{ year }} год</p>
+      </div>
+      {% endif %}
     </div>
   </div>
 </div>
 
-<!-- Модалка подтверждения -->
-<div id="confirmModal" class="modal-overlay">
+<!-- Модальное окно подтверждения удаления -->
+<div class="modal-overlay" id="deleteModal">
   <div class="modal-window">
     <h3>Подтверждение удаления</h3>
     <p>Вы действительно хотите удалить выбранные файлы?</p>
@@ -784,201 +625,185 @@ input[type="number"] {
   </div>
 </div>
 
+<!-- Уведомление о копировании -->
+<div class="copy-notification" id="copyNotification">Ссылка скопирована!</div>
+
 <script>
-// Функция для копирования текста в буфер обмена
-function copyToClipboard(text) {
+// Функция показа уведомления
+function showCopyNotification() {
+  const notification = document.getElementById('copyNotification');
+  notification.classList.add('show');
+  setTimeout(() => {
+    notification.classList.remove('show');
+  }, 2000);
+}
+
+// Копирование ссылки
+document.getElementById('monitoringUrl').addEventListener('click', function() {
+  const text = this.textContent;
   navigator.clipboard.writeText(text).then(() => {
-    // Показываем tooltip
+    showCopyNotification();
+    
+    // Также показываем тултип (на всякий случай)
     const tooltip = document.getElementById('copyTooltip');
     tooltip.style.opacity = '1';
-    
-    // Меняем стиль ссылки
-    const link = document.getElementById('monitoringUrl');
-    link.classList.add('copied');
-    
     setTimeout(() => {
       tooltip.style.opacity = '0';
-      link.classList.remove('copied');
     }, 2000);
   }).catch(err => {
-    console.error('Ошибка копирования: ', err);
-    alert('Не удалось скопировать ссылку');
+    // Fallback для старых браузеров
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    showCopyNotification();
   });
-}
+});
 
-// Обработчик клика по ссылке мониторинга
-const monitoringUrl = document.getElementById('monitoringUrl');
-if (monitoringUrl) {
-  monitoringUrl.addEventListener('click', (e) => {
-    e.preventDefault();
-    const url = monitoringUrl.textContent.trim();
-    copyToClipboard(url);
-  });
-}
-
+// Управление checkbox'ами
 const checkAll = document.getElementById('checkAll');
+const fileCheckboxes = document.querySelectorAll('.file-checkbox');
+
 if (checkAll) {
-  checkAll.addEventListener('change', e => {
-    document.querySelectorAll('input[name="files"]').forEach(cb => cb.checked = e.target.checked);
-  });
-}
-
-const modal = document.getElementById('confirmModal');
-const openBtn = document.getElementById('openConfirm');
-const cancelBtn = document.getElementById('cancelDelete');
-const confirmBtn = document.getElementById('confirmDelete');
-const form = document.getElementById('multiDeleteForm');
-const downloadBtn = document.getElementById('downloadSelected');
-
-// Функция для скачивания выделенных файлов (исправленная)
-if (downloadBtn) {
-  downloadBtn.addEventListener('click', () => {
-    const checkedFiles = Array.from(document.querySelectorAll('input[name="files"]:checked'));
-    
-    if (checkedFiles.length === 0) {
-      alert('Выберите хотя бы один файл для скачивания.');
-      return;
-    }
-    
-    // Создаем скрытый iframe для каждого файла и запускаем скачивание
-    checkedFiles.forEach(checkbox => {
-      const fileUrl = checkbox.getAttribute('data-file-url');
-      if (fileUrl) {
-        // Создаем временную ссылку и кликаем по ней
-        const link = document.createElement('a');
-        link.href = fileUrl;
-        link.target = '_blank';
-        link.download = checkbox.value;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+  checkAll.addEventListener('change', function() {
+    fileCheckboxes.forEach(checkbox => {
+      checkbox.checked = this.checked;
     });
-    
-    // Показываем уведомление о количестве скачанных файлов
-    if (checkedFiles.length === 1) {
-      alert('Файл отправлен на скачивание.');
-    } else {
-      alert(`${checkedFiles.length} файлов отправлены на скачивание.`);
-    }
   });
 }
 
-if (openBtn) {
-  openBtn.addEventListener('click', () => {
-    const checked = Array.from(document.querySelectorAll('input[name="files"]:checked'));
-    if (checked.length === 0) {
-      alert('Выберите хотя бы один файл для удаления.');
-      return;
-    }
-    modal.style.display = 'flex';
+if (fileCheckboxes.length > 0) {
+  fileCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      const allChecked = Array.from(fileCheckboxes).every(cb => cb.checked);
+      checkAll.checked = allChecked;
+    });
   });
 }
 
-if (cancelBtn) {
-  cancelBtn.addEventListener('click', () => {
-    modal.style.display = 'none';
-  });
-}
+// Скачивание выделенных файлов
+document.getElementById('downloadSelected')?.addEventListener('click', function() {
+  const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'))
+    .map(checkbox => checkbox.dataset.filename);
+  
+  if (selectedFiles.length === 0) {
+    alert('Выберите файлы для скачивания');
+    return;
+  }
 
-if (confirmBtn) {
-  confirmBtn.addEventListener('click', () => {
-    form.submit();
+  // Скачиваем каждый файл по отдельности
+  selectedFiles.forEach(filename => {
+    window.open(`/{{ user.id }}/food/${filename}`, '_blank');
   });
-}
+});
 
-// Закрытие модалки по клику вне окна
-modal.addEventListener('click', (e) => {
-  if (e.target === modal) {
-    modal.style.display = 'none';
+// Удаление выделенных файлов
+const deleteModal = document.getElementById('deleteModal');
+const openConfirmBtn = document.getElementById('openConfirm');
+const cancelDeleteBtn = document.getElementById('cancelDelete');
+const confirmDeleteBtn = document.getElementById('confirmDelete');
+
+openConfirmBtn?.addEventListener('click', function() {
+  const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'))
+    .map(checkbox => checkbox.dataset.filename);
+  
+  if (selectedFiles.length === 0) {
+    alert('Выберите файлы для удаления');
+    return;
+  }
+
+  deleteModal.style.display = 'flex';
+});
+
+cancelDeleteBtn?.addEventListener('click', function() {
+  deleteModal.style.display = 'none';
+});
+
+confirmDeleteBtn?.addEventListener('click', function() {
+  const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'))
+    .map(checkbox => checkbox.dataset.filename);
+  
+  // Создаем форму для массового удаления
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '/delete-files';
+  
+  // Добавляем скрытые поля
+  const uidInput = document.createElement('input');
+  uidInput.type = 'hidden';
+  uidInput.name = 'uid';
+  uidInput.value = '{{ user.id }}';
+  form.appendChild(uidInput);
+  
+  const yearInput = document.createElement('input');
+  yearInput.type = 'hidden';
+  yearInput.name = 'year';
+  yearInput.value = '{{ year }}';
+  form.appendChild(yearInput);
+  
+  const monthInput = document.createElement('input');
+  monthInput.type = 'hidden';
+  monthInput.name = 'month';
+  monthInput.value = '{{ month }}';
+  form.appendChild(monthInput);
+  
+  // Добавляем файлы для удаления
+  selectedFiles.forEach(filename => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'hidden';
+    fileInput.name = 'files';
+    fileInput.value = filename;
+    form.appendChild(fileInput);
+  });
+  
+  // Отправляем форму
+  document.body.appendChild(form);
+  form.submit();
+});
+
+// Закрытие модального окна по клику вне его
+deleteModal?.addEventListener('click', function(e) {
+  if (e.target === deleteModal) {
+    deleteModal.style.display = 'none';
   }
 });
 
-// Добавляем эффекты при наведении на элементы
-document.querySelectorAll('.file-item, .checkbox-container, .delete-link').forEach(el => {
-  el.addEventListener('mouseenter', function() {
-    this.style.transform = 'translateY(-1px)';
-  });
-  
-  el.addEventListener('mouseleave', function() {
-    this.style.transform = 'translateY(0)';
-  });
-});
-
-// Эффекты для кнопки выбора файлов
+// Drag and drop функциональность для области загрузки файлов
+const fileUploadArea = document.querySelector('.file-upload-area');
 const fileInput = document.getElementById('fileInput');
-const fileInputLabel = document.getElementById('fileInputLabel');
-const fileNames = document.getElementById('fileNames');
 
-if (fileInput && fileInputLabel) {
-  // Подсветка при наведении
-  fileInputLabel.addEventListener('mouseenter', () => {
-    fileInputLabel.classList.add('highlight');
+if (fileUploadArea && fileInput) {
+  // Подсветка при перетаскивании
+  ['dragenter', 'dragover'].forEach(eventName => {
+    fileUploadArea.addEventListener(eventName, function(e) {
+      e.preventDefault();
+      this.style.borderColor = 'var(--indigo)';
+      this.style.backgroundColor = 'rgba(79,70,229,0.1)';
+    });
   });
-  
-  fileInputLabel.addEventListener('mouseleave', () => {
-    if (!fileInput.files.length) {
-      fileInputLabel.classList.remove('highlight');
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    fileUploadArea.addEventListener(eventName, function(e) {
+      e.preventDefault();
+      this.style.borderColor = '#d1d5db';
+      this.style.backgroundColor = '';
+    });
+  });
+
+  // Обработка drop
+  fileUploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    fileInput.files = e.dataTransfer.files;
+    
+    // Обновляем текст лейбла
+    const label = document.querySelector('.file-input-label');
+    if (e.dataTransfer.files.length > 0) {
+      label.textContent = `Выбрано файлов: ${e.dataTransfer.files.length}`;
     }
-  });
-  
-  // Подсветка при фокусе
-  fileInput.addEventListener('focus', () => {
-    fileInputLabel.classList.add('highlight');
-  });
-  
-  fileInput.addEventListener('blur', () => {
-    if (!fileInput.files.length) {
-      fileInputLabel.classList.remove('highlight');
-    }
-  });
-  
-  // Подсветка при выборе файлов
-  fileInput.addEventListener('change', function() {
-    if (this.files.length > 0) {
-      fileInputLabel.classList.add('highlight');
-      fileInputLabel.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="16" y1="13" x2="8" y2="13"></line>
-          <line x1="16" y1="17" x2="8" y2="17"></line>
-          <polyline points="10 9 9 9 8 9"></polyline>
-        </svg>
-        Выбрано файлов: ${this.files.length}
-      `;
-      
-      if (fileNames) {
-        const names = Array.from(this.files).map(file => file.name).join(', ');
-        fileNames.textContent = `Выбранные файлы: ${names}`;
-      }
-    } else {
-      fileInputLabel.classList.remove('highlight');
-      fileInputLabel.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="16" y1="13" x2="8" y2="13"></line>
-          <line x1="16" y1="17" x2="8" y2="17"></line>
-          <polyline points="10 9 9 9 8 9"></polyline>
-        </svg>
-        Выбрать файлы
-      `;
-      
-      if (fileNames) {
-        fileNames.textContent = '';
-      }
-    }
-  });
-  
-  // Анимация при клике
-  fileInputLabel.addEventListener('mousedown', () => {
-    fileInputLabel.style.transform = 'scale(0.95)';
-  });
-  
-  fileInputLabel.addEventListener('mouseup', () => {
-    fileInputLabel.style.transform = 'scale(1)';
   });
 }
 </script>
 {% endblock %}
+
