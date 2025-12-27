@@ -216,40 +216,72 @@ def admin_panel(request: Request, admin_id: int, q: str = "", db: Session = Depe
 
 @app.post("/bulk-upload")
 async def bulk_upload(
+    request: Request,
     admin_id: int = Form(...),
-    target_type: str = Form(...),
+    target_type: str = Form(...),  # завтрак / обед / завтрак и обед / интернат
     year: str = Form(...),
     month: str = Form(...),
     files: List[UploadFile] = File(...),
     db: Session = Depends(get_db)
 ):
     from pathlib import Path
-    import shutil
+    import shutil, json
+    from datetime import datetime
 
+    BASE_DIR = Path(__file__).resolve().parent
     admin = db.query(models.User).get(admin_id)
-    period = f"{year}-{month}"
+    if not admin:
+        return RedirectResponse("/login")
 
-    query = db.query(models.User).filter(models.User.food_type == target_type, models.User.role == "user")
+    # фильтруем только нужные учреждения
+    query = db.query(models.User).filter(
+        models.User.food_type == target_type,
+        models.User.role == "user"
+    )
     if admin.role == "municipal_admin":
         query = query.filter(models.User.district == admin.district)
 
-    targets = query.all()
+    schools = query.all()
 
-    BASE_DIR = Path(__file__).resolve().parent
+    uploader_name = admin.unit_name if admin else f"ADMIN {admin_id}"
+    uploader_ip = request.client.host if request.client else "—"
 
-    for school in targets:
-        # Путь к папке food каждой школы
+    for school in schools:
         food_path = BASE_DIR / str(school.id) / "food"
         food_path.mkdir(parents=True, exist_ok=True)
+        manifest_path = food_path / "manifest.json"
 
-        # Копируем каждый файл, отправленный администратором, в папку food школы
+        # читаем manifest.json
+        if manifest_path.exists():
+            try:
+                with open(manifest_path, "r", encoding="utf-8") as mf:
+                    manifest = json.load(mf)
+            except Exception:
+                manifest = {}
+        else:
+            manifest = {}
+
+        # копируем файлы и записываем метаданные
         for f in files:
             if not f.filename:
                 continue
+
             dest_path = food_path / f.filename
             f.file.seek(0)
             with open(dest_path, "wb") as buffer:
                 shutil.copyfileobj(f.file, buffer)
+
+            manifest[f.filename] = {
+                "assigned_year": year,
+                "assigned_month": month,
+                "uploader_name": uploader_name,
+                "uploader_ip": uploader_ip,
+                "upload_datetime": datetime.now().strftime("%d.%m.%Y %H:%M")
+            }
+
+        # сохраняем обновлённый manifest.json
+        with open(manifest_path, "w", encoding="utf-8") as mf:
+            json.dump(manifest, mf, ensure_ascii=False, indent=2)
 
     return RedirectResponse(f"/admin?admin_id={admin_id}", status_code=303)
 
