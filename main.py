@@ -5,6 +5,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from pathlib import Path
+from fastapi.responses import JSONResponse
 
 import models, auth
 from database import engine, get_db
@@ -42,28 +43,69 @@ from fastapi import HTTPException
 
 @app.get("/{uid}/food/", response_class=HTMLResponse)
 async def federal_index(uid: int):
-    """Выдаёт список всех файлов учреждения для федерального центра"""
+    """
+    Показывает все файлы учреждения, сгруппированные по году и месяцу,
+    но физически всё лежит в одной папке /{uid}/food.
+    """
+    from datetime import datetime
+
     BASE_DIR = Path(__file__).resolve().parent
     base_path = BASE_DIR / str(uid) / "food"
 
     if not base_path.exists() or not any(base_path.iterdir()):
         return "<html><body><h1>Нет доступных файлов</h1></body></html>"
 
-    links = "".join([
-        f'<li><a href="{f.name}">{f.name}</a></li>'
-        for f in sorted(base_path.iterdir(), reverse=True)
-        if f.is_file()
-    ])
+    # Сбор всех файлов с датами
+    grouped_files = {}
+    for f in sorted(base_path.iterdir(), reverse=True):
+        if not f.is_file():
+            continue
+        stat = f.stat()
+        dt = datetime.fromtimestamp(stat.st_mtime)
+        year = str(dt.year)
+        month_num = dt.strftime("%m")
+        month_name = MONTHS.get(month_num, month_num)
 
-    return f"""
+        grouped_files.setdefault(year, {}).setdefault(month_name, []).append({
+            "filename": f.name,
+            "date": dt.strftime("%d.%m.%Y %H:%M")
+        })
+
+    # Формируем HTML
+    html = f"""
     <html>
+        <head>
+            <meta charset="utf-8">
+            <title>Файлы учреждения {uid}</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 20px; }}
+                h1, h2, h3 {{ color: #333; }}
+                ul {{ list-style-type: none; padding-left: 20px; }}
+                li {{ margin-bottom: 4px; }}
+                a {{ text-decoration: none; color: #0066cc; }}
+                a:hover {{ text-decoration: underline; }}
+                .date {{ color: gray; font-size: 0.9em; margin-left: 8px; }}
+            </style>
+        </head>
         <body>
-            <h1>Index of /{uid}/food/</h1>
+            <h1>Файлы учреждения {uid}</h1>
             <hr>
-            <ul>{links}</ul>
-        </body>
-    </html>
     """
+
+    for year in sorted(grouped_files.keys(), reverse=True):
+        html += f"<h2>{year}</h2>"
+        for month in sorted(grouped_files[year].keys(), reverse=True):
+            html += f"<h3>{month}</h3><ul>"
+            for file_info in grouped_files[year][month]:
+                html += (
+                    f'<li><a href="{file_info["filename"]}">'
+                    f'{file_info["filename"]}</a>'
+                    f'<span class="date">{file_info["date"]}</span></li>'
+                )
+            html += "</ul>"
+    html += "</body></html>"
+
+    return HTMLResponse(content=html)
 
 @app.get("/{uid}/food/{filename}")
 async def get_federal_file(uid: int, filename: str):
@@ -222,27 +264,61 @@ def dashboard(
     db: Session = Depends(get_db)
 ):
     from pathlib import Path
-    import os
+    import os, json
+    from datetime import datetime
 
     user = db.query(models.User).get(uid)
     if not user:
         return RedirectResponse("/login")
 
-    # Физический путь к папке food конкретной школы
+    # --- Путь к папке учреждения ---
     BASE_DIR = Path(__file__).resolve().parent
     food_path = BASE_DIR / str(uid) / "food"
     food_path.mkdir(parents=True, exist_ok=True)
 
-    # Список файлов из физической папки food
-    files = os.listdir(food_path) if food_path.exists() else []
+    # --- Загружаем manifest.json, если он есть ---
+    manifest_path = food_path / "manifest.json"
+    manifest = {}
+    if manifest_path.exists():
+        try:
+            with open(manifest_path, "r", encoding="utf-8") as mf:
+                manifest = json.load(mf)
+        except Exception:
+            manifest = {}
 
-    # URL для мониторинга (оставляем как у тебя, чтобы шаблон работал)
+    # --- Формируем группировку по назначенным периодам ---
+    grouped_files = {}
+
+    for f in sorted(food_path.iterdir(), reverse=True):
+        if not f.is_file() or f.name == "manifest.json":
+            continue
+
+        stat = f.stat()
+        dt = datetime.fromtimestamp(stat.st_mtime)
+
+        file_meta = manifest.get(f.name, {})
+
+        # Берём назначенные значения, если они есть
+        assigned_year = file_meta.get("assigned_year", str(dt.year))
+        assigned_month = file_meta.get("assigned_month", dt.strftime("%m"))
+        uploader_name = file_meta.get("uploader_name", user.unit_name)
+        upload_time = file_meta.get("upload_datetime", dt.strftime("%d.%m.%Y %H:%M"))
+        uploader_ip = file_meta.get("uploader_ip", "—")
+        month_name = MONTHS.get(assigned_month, assigned_month)
+
+        grouped_files.setdefault(assigned_year, {}).setdefault(month_name, []).append({
+            "filename": f.name,
+            "date": upload_time,
+            "uploader": uploader_name,
+            "ip": uploader_ip,
+        })
+
     monitoring_url = f"{request.base_url}{uid}/food/"
 
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "user": user,
-        "files": files,
+        "files_grouped": grouped_files,
         "period": f"{year}-{month}",
         "year": year,
         "month": month,
@@ -250,22 +326,44 @@ def dashboard(
         "monitoring_url": monitoring_url
     })
 
+
 @app.post("/upload")
 async def upload_files(
+    request: Request,
     uid: int = Form(...),
     year: str = Form(...),
     month: str = Form(...),
-    files: List[UploadFile] = File(...)
+    files: List[UploadFile] = File(...),
+    db: Session = Depends(get_db)
 ):
     from pathlib import Path
-    import shutil
+    import shutil, json
+    from datetime import datetime
 
     # Путь к папке food учреждения
     BASE_DIR = Path(__file__).resolve().parent
     food_path = BASE_DIR / str(uid) / "food"
     food_path.mkdir(parents=True, exist_ok=True)
 
-    # Файлы сохраняем только сюда
+    # Путь к manifest.json
+    manifest_path = food_path / "manifest.json"
+
+    # Загружаем существующий manifest
+    if manifest_path.exists():
+        try:
+            with open(manifest_path, "r", encoding="utf-8") as mf:
+                manifest = json.load(mf)
+        except Exception:
+            manifest = {}
+    else:
+        manifest = {}
+
+    # Получаем данные пользователя и IP
+    user = db.query(models.User).get(uid)
+    uploader_name = user.unit_name if user else f"UID {uid}"
+    client_ip = request.client.host if request.client else "—"
+
+    # Обработка файлов
     for f in files:
         if not f.filename:
             continue
@@ -274,17 +372,50 @@ async def upload_files(
         with open(dest_path, "wb") as buffer:
             shutil.copyfileobj(f.file, buffer)
 
+        # Запись метаданных
+        manifest[f.filename] = {
+            "assigned_year": year,
+            "assigned_month": month,
+            "uploader_name": uploader_name,
+            "uploader_ip": client_ip,
+            "upload_datetime": datetime.now().strftime("%d.%m.%Y %H:%M")
+        }
+
+    # Сохраняем обновлённый manifest.json
+    with open(manifest_path, "w", encoding="utf-8") as mf:
+        json.dump(manifest, mf, ensure_ascii=False, indent=2)
+
     return RedirectResponse(f"/dashboard?uid={uid}&year={year}&month={month}", status_code=303)
+
 
 @app.get("/delete-file")
 def delete_file(uid: int, year: str, month: str, filename: str):
     from pathlib import Path
-    import os
+    import os, json
 
     BASE_DIR = Path(__file__).resolve().parent
-    file_path = BASE_DIR / str(uid) / "food" / filename
+    food_path = BASE_DIR / str(uid) / "food"
+    file_path = food_path / filename
+    manifest_path = food_path / "manifest.json"
 
+    # Удаляем сам файл
     if file_path.exists():
         os.remove(file_path)
 
-    return RedirectResponse(f"/dashboard?uid={uid}&year={year}&month={month}", status_code=303)
+    # Чистим запись в manifest.json
+    if manifest_path.exists():
+        try:
+            with open(manifest_path, "r", encoding="utf-8") as mf:
+                manifest = json.load(mf)
+        except Exception:
+            manifest = {}
+        if filename in manifest:
+            del manifest[filename]
+            with open(manifest_path, "w", encoding="utf-8") as mf:
+                json.dump(manifest, mf, ensure_ascii=False, indent=2)
+
+    # 👇 Возвращаем редирект на тот же период
+    return RedirectResponse(
+        f"/dashboard?uid={uid}&year={year}&month={month}",
+        status_code=303
+    )

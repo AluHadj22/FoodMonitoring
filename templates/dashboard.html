@@ -10,10 +10,8 @@
   --slate-400:#94a3b8;
   --slate-700:#334155;
   --slate-800:#1e293b;
-  --radius:1.25rem;
 }
 body{font-family:"Inter",system-ui,sans-serif;background:#eef2ff;}
-h1,h3{margin:0;}
 .container{max-width:1100px;margin:auto;padding:1.5rem;display:flex;flex-direction:column;gap:2rem;}
 .card{background:#fff;border-radius:1.5rem;padding:2rem;box-shadow:0 5px 20px rgba(0,0,0,.05);}
 .btn{cursor:pointer;display:inline-block;padding:.8rem 1.2rem;border-radius:.9rem;font-weight:700;text-align:center;text-decoration:none;transition:all .25s ease;}
@@ -21,28 +19,25 @@ h1,h3{margin:0;}
 .btn-indigo:hover{background:var(--indigo-dark);}
 .btn-dark{background:var(--slate-800);color:#fff;}
 .btn-dark:hover{background:black;}
-
 form{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem;}
 input,select{padding:.7rem .9rem;border-radius:.8rem;border:1px solid var(--slate-200);transition:all .25s ease;}
 input:focus,select:focus{border-color:var(--indigo);outline:none;box-shadow:0 0 0 3px rgba(79,70,229,.2);}
-input[type="number"]{width:80px;}
-
+input[type="number"]{width:90px;}
 .upload-box{border:2px dashed var(--slate-200);border-radius:1rem;padding:1rem;text-align:center;transition:border-color .25s ease;}
 .upload-box:hover{border-color:var(--indigo);}
 .upload-box input[type=file]{width:100%;cursor:pointer;}
-
 .file-list{max-height:500px;overflow-y:auto;display:flex;flex-direction:column;gap:.6rem;}
 .file-item{display:flex;justify-content:space-between;align-items:center;padding:.9rem 1rem;background:var(--slate-50);border:1px solid var(--slate-100);border-radius:1rem;transition:all .25s ease;}
 .file-item:hover{background:#eef2ff;border-color:#c7d2fe;}
 .file-name{display:flex;align-items:center;gap:.6rem;color:var(--slate-700);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .file-name svg{width:20px;height:20px;flex-shrink:0;color:var(--indigo);}
-.file-actions{display:flex;gap:.4rem;}
-.file-actions a{padding:.5rem;border-radius:.6rem;transition:background .25s ease;display:inline-flex;}
-.file-actions a svg{width:18px;height:18px;}
-.file-actions a.download svg{color:var(--indigo);}
-.file-actions a.download:hover{background:#e0e7ff;}
-.file-actions a.delete svg{color:#dc2626;}
-.file-actions a.delete:hover{background:#fee2e2;}
+.file-actions{display:flex;gap:.5rem;}
+.file-actions a{display:inline-flex;align-items:center;justify-content:center;padding:.45rem .9rem;border-radius:.6rem;font-weight:600;text-decoration:none;transition:background .25s ease,transform .1s ease;}
+.file-actions a svg{width:18px;height:18px;margin-right:.4rem;}
+.file-actions a.download{background:var(--indigo);color:#fff;}
+.file-actions a.download:hover{background:var(--indigo-dark);transform:translateY(-1px);}
+.file-actions a.delete{background:#fee2e2;color:#b91c1c;}
+.file-actions a.delete:hover{background:#fca5a5;}
 .nofiles{text-align:center;padding:3rem 0;color:var(--slate-400);font-style:italic;}
 .nofiles svg{width:48px;height:48px;margin-bottom:.5rem;color:var(--slate-400);}
 </style>
@@ -50,7 +45,7 @@ input[type="number"]{width:80px;}
 <div class="container">
 
   <!-- Заголовок учреждения -->
-  <div class="card" style="border-left:6px solid var(--indigo);display:flex;justify-content:space-between;align-items:center;">
+  <div class="card" style="border-left:6px solid var(--indigo);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
     <div>
       <h1 style="font-size:1.8rem;color:var(--slate-800);font-weight:800;">{{ user.unit_name }}</h1>
       <p style="color:var(--indigo);font-size:.75rem;letter-spacing:.05em;font-weight:600;text-transform:uppercase;">
@@ -63,6 +58,7 @@ input[type="number"]{width:80px;}
     <a href="https://мониторингпитание.рф/#/home" target="_blank" class="btn btn-dark">мониторингпитания.рф</a>
   </div>
 
+  <!-- Настройка периода -->
   <div style="display:grid;grid-template-columns:1fr;gap:2rem;">
     <div class="card">
       <h3 style="font-size:1.1rem;color:var(--slate-800);font-weight:800;margin-bottom:1rem;">Настройка периода</h3>
@@ -89,43 +85,52 @@ input[type="number"]{width:80px;}
       </form>
     </div>
 
+    <!-- Файлы месяца -->
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
         <h3 style="font-size:1.1rem;color:var(--slate-800);font-weight:800;">Файлы месяца</h3>
         <span style="font-size:.8rem;background:#e0e7ff;color:var(--indigo-dark);padding:.3rem .8rem;border-radius:9999px;text-transform:uppercase;font-weight:700;">
-          {{ months[month] }}
+          {{ months[month] }} {{ year }}
         </span>
       </div>
 
       <div class="file-list">
-        {% if files %}
-          {% for f in files %}
-          <div class="file-item">
-            <div class="file-name">
-              <svg fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
-              {{ f }}
-            </div>
-            <div class="file-actions">
-              <a href="/{{ user.id }}/food/{{ f }}" class="download" title="Скачать" style="display: inline-flex; align-items: center; justify-content: center; width: 0px; height: 0px; border-radius: 0%; background-color: #1976d2;
- border: none; cursor: pointer; text-decoration: none;">
-                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v12m0 0l4-4m-4 4l-4-4m8 7H8"/></svg>
-              </a>
-              <a href="/delete-file?uid={{ user.id }}&year={{ year }}&month={{ month }}&filename={{ f }}" class="delete"
-                 onclick="return confirm('Удалить файл из системы?')" title="Удалить">
-                <svg fill="currentColor" viewBox="0 0 20 20"><path d="M6 6l8 8m0-8l-8 8"/><path d="M4 5h12l-1 10a2 2 0 01-2 2H7a2 2 0 01-2-2L4 5z"/></svg>
-              </a>
-            </div>
-          </div>
+        {% set found = false %}
+        {% if files_grouped %}
+          {% for year_key, months_data in files_grouped.items() %}
+            {% if year_key == year %}
+              {% for m_name, files in months_data.items() %}
+                {% if m_name == months[month] %}
+                  {% set found = true %}
+                  <h3 style="margin-top:1rem;color:var(--slate-800);">{{ year_key }}</h3>
+                  <h4 style="margin:.5rem 0;color:var(--slate-600);">{{ m_name }}</h4>
+                  {% for f in files %}
+                    <div class="file-item">
+                      <div class="file-name">
+                        <svg fill="currentColor" viewBox="0 0 20 20" width="18" height="18" style="margin-right:6px;">
+                          <path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/>
+                        </svg>
+                        <a href="{{ monitoring_url }}{{ f.filename }}" style="color:var(--indigo-dark);text-decoration:none;">
+                          {{ f.filename }}
+                        </a>
+                        <span style="color:#999;font-size:.8rem;margin-left:8px;">{{ f.date }}</span>
+                      </div>
+                      <!-- ✅ month исправлен: теперь не сбрасывается -->
+                      <a href="/delete-file?uid={{ user.id }}&year={{ year }}&month={{ month }}&filename={{ f.filename }}"
+                         style="color:red;font-size:.85rem;">Удалить</a>
+                    </div>
+                  {% endfor %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
           {% endfor %}
-        {% else %}
-          <div class="nofiles">
-            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M4 3h8l4 4v10a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1z"/></svg>
-            На {{ months[month] }} {{ year }} файлов нет
-          </div>
+        {% endif %}
+
+        {% if not found %}
+          <div style="color:gray;">На {{ months[month] }} {{ year }} файлов нет</div>
         {% endif %}
       </div>
     </div>
   </div>
 </div>
-
 {% endblock %}

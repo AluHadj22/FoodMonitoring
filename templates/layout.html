@@ -47,6 +47,8 @@
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
     .nav-link, .nav-button {
       text-decoration: none;
@@ -55,6 +57,7 @@
       padding: .6rem 1.1rem;
       border-radius: .6rem;
       transition: all .25s ease;
+      white-space: nowrap;
     }
     .nav-link {
       color: var(--slate-800);
@@ -90,6 +93,12 @@
       <div class="nav-links">
         <a href="/login" class="nav-link">ВХОД/ВЫХОД</a>
         <a href="/register" class="nav-button">РЕГИСТРАЦИЯ</a>
+        <!-- 👇 добавленная кнопка -->
+        <a href="https://disk.yandex.ru/d/uFHZVxtzycJrRw" target="_blank" 
+           class="nav-link" 
+           style="background:#eef2ff;border:1px solid #c7d2fe;">
+           💾&nbsp;Скачать доп.&nbsp;утилиты ЕЦМП
+        </a>
       </div>
     </div>
   </nav>
