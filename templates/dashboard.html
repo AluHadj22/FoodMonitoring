@@ -11,39 +11,611 @@
   --slate-700:#334155;
   --slate-800:#1e293b;
 }
-body{font-family:"Inter",system-ui,sans-serif;background:#eef2ff;}
-.container{max-width:1100px;margin:auto;padding:1.5rem;display:flex;flex-direction:column;gap:2rem;}
-.card{background:#fff;border-radius:1.5rem;padding:2rem;box-shadow:0 5px 20px rgba(0,0,0,.05);}
-.btn{cursor:pointer;display:inline-block;padding:.8rem 1.2rem;border-radius:.9rem;font-weight:700;text-align:center;text-decoration:none;transition:all .25s ease;}
-.btn-indigo{background:var(--indigo);color:#fff;}
-.btn-indigo:hover{background:var(--indigo-dark);}
-.btn-dark{background:var(--slate-800);color:#fff;}
-.btn-dark:hover{background:black;}
-form{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem;}
-input,select{padding:.7rem .9rem;border-radius:.8rem;border:1px solid var(--slate-200);transition:all .25s ease;}
-input:focus,select:focus{border-color:var(--indigo);outline:none;box-shadow:0 0 0 3px rgba(79,70,229,.2);}
-input[type="number"]{width:90px;}
-.upload-box{border:2px dashed var(--slate-200);border-radius:1rem;padding:1rem;text-align:center;transition:border-color .25s ease;}
-.upload-box:hover{border-color:var(--indigo);}
-.upload-box input[type=file]{width:100%;cursor:pointer;}
-.file-list{max-height:500px;overflow-y:auto;display:flex;flex-direction:column;gap:.6rem;}
-.file-item{display:flex;justify-content:space-between;align-items:center;padding:.9rem 1rem;background:var(--slate-50);border:1px solid var(--slate-100);border-radius:1rem;transition:all .25s ease;}
-.file-item:hover{background:#eef2ff;border-color:#c7d2fe;}
-.file-name{display:flex;align-items:center;gap:.6rem;color:var(--slate-700);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.file-name svg{width:20px;height:20px;flex-shrink:0;color:var(--indigo);}
-.file-actions{display:flex;gap:.5rem;}
-.file-actions a{display:inline-flex;align-items:center;justify-content:center;padding:.45rem .9rem;border-radius:.6rem;font-weight:600;text-decoration:none;transition:background .25s ease,transform .1s ease;}
-.file-actions a svg{width:18px;height:18px;margin-right:.4rem;}
-.file-actions a.download{background:var(--indigo);color:#fff;}
-.file-actions a.download:hover{background:var(--indigo-dark);transform:translateY(-1px);}
-.file-actions a.delete{background:#fee2e2;color:#b91c1c;}
-.file-actions a.delete:hover{background:#fca5a5;}
-.nofiles{text-align:center;padding:3rem 0;color:var(--slate-400);font-style:italic;}
-.nofiles svg{width:48px;height:48px;margin-bottom:.5rem;color:var(--slate-400);}
+
+body {
+  font-family:"Inter",system-ui,sans-serif;
+  background:#eef2ff;
+}
+
+.container {
+  max-width:1100px;
+  margin:auto;
+  padding:1.5rem;
+  display:flex;
+  flex-direction:column;
+  gap:2rem;
+}
+
+.card {
+  background:#fff;
+  border-radius:1.5rem;
+  padding:2rem;
+  box-shadow:0 5px 20px rgba(0,0,0,.05);
+}
+
+.btn {
+  cursor:pointer;
+  display:inline-block;
+  padding:.8rem 1.2rem;
+  border-radius:.9rem;
+  font-weight:700;
+  text-align:center;
+  text-decoration:none;
+  transition:all .25s ease;
+}
+
+.btn-indigo {
+  background:var(--indigo);
+  color:#fff;
+}
+
+.btn-indigo:hover {
+  background:var(--indigo-dark);
+}
+
+.btn-dark {
+  background:var(--slate-800);
+  color:#fff;
+}
+
+.btn-dark:hover {
+  background:black;
+}
+
+form {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:.8rem;
+}
+
+input, select {
+  padding:.7rem .9rem;
+  border-radius:.8rem;
+  border:1px solid var(--slate-200);
+  transition:all .25s ease;
+}
+
+input:focus, select:focus {
+  border-color:var(--indigo);
+  outline:none;
+  box-shadow:0 0 0 3px rgba(79,70,229,.2);
+}
+
+input[type="number"] {
+  width:90px;
+}
+
+.upload-box {
+  border:2px dashed var(--slate-200);
+  border-radius:1rem;
+  padding:1rem;
+  text-align:center;
+  transition:all .3s ease;
+  position:relative;
+}
+
+.upload-box:hover {
+  border-color:var(--indigo);
+  background:#f8fafc;
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(79,70,229,0.1);
+}
+
+.upload-box.highlight {
+  border-color:var(--indigo);
+  background:#f0f4ff;
+  box-shadow:0 0 0 3px rgba(79,70,229,0.2);
+}
+
+.upload-box input[type=file] {
+  width:100%;
+  cursor:pointer;
+  opacity:0;
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  cursor:pointer;
+}
+
+.file-list {
+  max-height:500px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:.6rem;
+}
+
+.file-item {
+  display:flex !important;
+  justify-content:space-between !important;
+  align-items:center !important;
+  padding:.9rem 1rem;
+  background:var(--slate-50);
+  border:1px solid var(--slate-100);
+  border-radius:1rem;
+  transition:all .25s ease;
+}
+
+.file-item:hover {
+  background:#eef2ff !important;
+  border-color:#c7d2fe !important;
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+
+.file-name {
+  display:flex !important;
+  align-items:center !important;
+  gap:.6rem;
+  color:var(--slate-700);
+  font-weight:600;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:normal !important;
+  word-break:break-word !important;
+  flex:1 !important;
+}
+
+.file-name svg {
+  width:20px;
+  height:20px;
+  flex-shrink:0;
+  color:var(--indigo);
+}
+
+.file-actions {
+  display:flex;
+  gap:.5rem;
+}
+
+.file-actions a {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:.45rem .9rem;
+  border-radius:.6rem;
+  font-weight:600;
+  text-decoration:none;
+  transition:all .25s ease;
+}
+
+.file-actions a svg {
+  width:18px;
+  height:18px;
+  margin-right:.4rem;
+}
+
+.file-actions a.download {
+  background:var(--indigo);
+  color:#fff;
+}
+
+.file-actions a.download:hover {
+  background:var(--indigo-dark);
+  transform:translateY(-1px);
+}
+
+.file-actions a.delete {
+  background:#fee2e2;
+  color:#b91c1c;
+}
+
+.file-actions a.delete:hover {
+  background:#fca5a5;
+}
+
+.nofiles {
+  text-align:center;
+  padding:3rem 0;
+  color:var(--slate-400);
+  font-style:italic;
+}
+
+.nofiles svg {
+  width:48px;
+  height:48px;
+  margin-bottom:.5rem;
+  color:var(--slate-400);
+}
+
+/* Анимации и эффекты */
+.checkbox-container {
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+  cursor:pointer;
+  transition:all .2s ease;
+}
+
+.checkbox-container:hover {
+  transform:translateY(-1px);
+}
+
+.checkbox-container input[type="checkbox"] {
+  transform:scale(1.2);
+  cursor:pointer;
+  transition:all .2s ease;
+}
+
+.checkbox-container input[type="checkbox"]:hover {
+  transform:scale(1.3);
+}
+
+.delete-btn {
+  background:#dc2626;
+  color:#fff;
+  border:none;
+  padding:.5rem 1rem;
+  border-radius:.5rem;
+  cursor:pointer;
+  font-size:.85rem;
+  font-weight:500;
+  display:flex;
+  align-items:center;
+  gap:.4rem;
+  transition:all .2s ease;
+}
+
+.delete-btn:hover {
+  background:#b91c1c;
+  transform:translateY(-1px);
+  box-shadow:0 4px 8px rgba(220,38,38,0.3);
+}
+
+.download-btn {
+  background:#059669;
+  color:#fff;
+  border:none;
+  padding:.5rem 1rem;
+  border-radius:.5rem;
+  cursor:pointer;
+  font-size:.85rem;
+  font-weight:500;
+  display:flex;
+  align-items:center;
+  gap:.4rem;
+  transition:all .2s ease;
+}
+
+.download-btn:hover {
+  background:#047857;
+  transform:translateY(-1px);
+  box-shadow:0 4px 8px rgba(5,150,105,0.3);
+}
+
+.file-link {
+  color:#1e293b;
+  text-decoration:none;
+  font-weight:500;
+  font-size:1rem;
+  transition:all .2s ease;
+}
+
+.file-link:hover {
+  color:var(--indigo);
+  text-decoration:underline;
+}
+
+.delete-link {
+  color:#dc2626;
+  font-size:.85rem;
+  padding:.5rem 1rem;
+  border:1px solid #fecaca;
+  border-radius:.4rem;
+  text-decoration:none;
+  white-space:nowrap;
+  background:#fef2f2;
+  transition:all .2s ease;
+  font-weight:500;
+}
+
+.delete-link:hover {
+  background:#fecaca;
+  transform:translateY(-1px);
+  box-shadow:0 2px 4px rgba(220,38,38,0.2);
+}
+
+/* Модальное окно */
+.modal-overlay {
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.5);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+}
+
+.modal-window {
+  background:#fff;
+  border-radius:12px;
+  padding:2rem;
+  min-width:320px;
+  box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);
+  text-align:center;
+  animation:fadeIn .2s ease-out;
+}
+
+.modal-window h3 {
+  margin:0 0 1rem;
+  color:#1f2937;
+  font-size:1.2rem;
+  font-weight:600;
+}
+
+.modal-window p {
+  font-size:.95rem;
+  margin:0 0 1.5rem;
+  color:#6b7280;
+}
+
+.modal-buttons {
+  display:flex;
+  justify-content:center;
+  gap:1rem;
+}
+
+.modal-buttons button {
+  padding:.6rem 1.5rem;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:.9rem;
+  font-weight:500;
+  transition:all 0.2s;
+}
+
+#cancelDelete {
+  background:#f3f4f6;
+  color:#374151;
+}
+
+#cancelDelete:hover {
+  background:#e5e7eb;
+}
+
+#confirmDelete {
+  background:#dc2626;
+  color:#fff;
+}
+
+#confirmDelete:hover {
+  background:#b91c1c;
+}
+
+@keyframes fadeIn {
+  from { opacity:0; transform:scale(.95) translateY(-10px); }
+  to { opacity:1; transform:scale(1) translateY(0); }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .container > div:first-child {
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  
+  .file-item {
+    flex-direction:column;
+    align-items:flex-start;
+    gap:1rem;
+  }
+  
+  .file-item a {
+    align-self:flex-end;
+  }
+}
+
+/* Новые стили для кнопок управления */
+.controls-container {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:1.5rem;
+  padding:1.5rem;
+  background:#f8fafc;
+  border-radius:.75rem;
+  border:1px solid #e2e8f0;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+
+.controls-left {
+  display:flex;
+  align-items:center;
+  gap:1rem;
+}
+
+.controls-right {
+  display:flex;
+  align-items:center;
+  gap:1rem;
+}
+
+.upload-btn {
+  background:var(--indigo);
+  color:#fff;
+  border:none;
+  padding:.7rem 1.5rem;
+  border-radius:.7rem;
+  cursor:pointer;
+  font-weight:600;
+  transition:all .3s ease;
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+}
+
+.upload-btn:hover {
+  background:var(--indigo-dark);
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(79,70,229,0.3);
+}
+
+.upload-btn:active {
+  transform:translateY(0);
+}
+
+.file-input-label {
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  padding:.7rem 1.5rem;
+  background:#f1f5f9;
+  border:2px dashed #cbd5e1;
+  border-radius:.7rem;
+  cursor:pointer;
+  font-weight:600;
+  color:#475569;
+  transition:all .3s ease;
+}
+
+.file-input-label:hover {
+  background:#e2e8f0;
+  border-color:#94a3b8;
+  transform:translateY(-1px);
+}
+
+.file-input-label.highlight {
+  background:#e0e7ff;
+  border-color:var(--indigo);
+  color:var(--indigo);
+  box-shadow:0 0 0 3px rgba(79,70,229,0.1);
+}
+
+.upload-area {
+  position:relative;
+  display:inline-block;
+}
+
+.action-buttons {
+  display:flex;
+  gap:.8rem;
+}
+
+/* Стили для панели управления рядом с загрузкой */
+.upload-controls {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:1.5rem;
+  padding-top:1.5rem;
+  border-top:1px solid #e2e8f0;
+}
+
+.upload-checkbox {
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+}
+
+.upload-actions {
+  display:flex;
+  gap:.8rem;
+}
+
+/* Уменьшенные стили для кнопок управления */
+.small-checkbox-label {
+  font-size:.9rem;
+  color:#475569;
+  font-weight:500;
+}
+
+.small-checkbox-label input[type="checkbox"] {
+  transform:scale(1.1);
+  margin-right:.4rem;
+}
+
+.small-action-btn {
+  padding:.4rem .8rem;
+  border-radius:.4rem;
+  font-size:.8rem;
+  font-weight:500;
+  display:flex;
+  align-items:center;
+  gap:.3rem;
+  transition:all .2s ease;
+  border:none;
+  cursor:pointer;
+}
+
+.small-download-btn {
+  background:#059669;
+  color:#fff;
+}
+
+.small-download-btn:hover {
+  background:#047857;
+  transform:translateY(-1px);
+  box-shadow:0 2px 6px rgba(5,150,105,0.3);
+}
+
+.small-delete-btn {
+  background:#dc2626;
+  color:#fff;
+}
+
+.small-delete-btn:hover {
+  background:#b91c1c;
+  transform:translateY(-1px);
+  box-shadow:0 2px 6px rgba(220,38,38,0.3);
+}
+
+.small-action-btn svg {
+  width:14px;
+  height:14px;
+}
+
+/* Стили для ссылки с копированием */
+.copy-link {
+  cursor:pointer;
+  transition:all .2s ease;
+  position:relative;
+}
+
+.copy-link:hover {
+  color:var(--indigo-dark) !important;
+  text-decoration:underline !important;
+}
+
+.copy-link.copied {
+  color:#059669 !important;
+}
+
+.copy-tooltip {
+  position:absolute;
+  bottom:100%;
+  left:50%;
+  transform:translateX(-50%);
+  background:#1f2937;
+  color:#fff;
+  padding:.4rem .8rem;
+  border-radius:.4rem;
+  font-size:.75rem;
+  white-space:nowrap;
+  opacity:0;
+  transition:opacity .2s ease;
+  pointer-events:none;
+  margin-bottom:.5rem;
+}
+
+.copy-tooltip::after {
+  content:'';
+  position:absolute;
+  top:100%;
+  left:50%;
+  transform:translateX(-50%);
+  border:.4rem solid transparent;
+  border-top-color:#1f2937;
+}
 </style>
 
 <div class="container">
-
   <!-- Заголовок учреждения -->
   <div class="card" style="border-left:6px solid var(--indigo);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
     <div>
@@ -52,7 +624,11 @@ input[type="number"]{width:90px;}
         {{ user.district }} | {{ user.food_type }}
       </p>
       <div style="margin-top:.6rem;padding:.5rem .8rem;background:#eef2ff;border-radius:.6rem;font-family:monospace;font-size:.8rem;">
-        Внешний путь: <span style="color:var(--indigo);font-weight:700;">{{ monitoring_url }}</span>
+        Внешний путь: 
+        <span id="monitoringUrl" class="copy-link" style="color:var(--indigo);font-weight:700;">
+          {{ monitoring_url.rstrip('/') }}
+        </span>
+        <div class="copy-tooltip" id="copyTooltip">Скопировано!</div>
       </div>
     </div>
     <a href="https://мониторингпитание.рф/#/home" target="_blank" class="btn btn-dark">мониторингпитания.рф</a>
@@ -62,14 +638,20 @@ input[type="number"]{width:90px;}
   <div style="display:grid;grid-template-columns:1fr;gap:2rem;">
     <div class="card">
       <h3 style="font-size:1.1rem;color:var(--slate-800);font-weight:800;margin-bottom:1rem;">Настройка периода</h3>
-      <form action="/dashboard" method="get">
+      <form action="/dashboard" method="get" style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
         <input type="hidden" name="uid" value="{{ user.id }}">
-        <input type="number" name="year" value="{{ year }}">
-        <select name="month">
-          {% for m_id, m_name in months.items() %}
-          <option value="{{ m_id }}" {% if m_id == month %}selected{% endif %}>{{ m_name }}</option>
-          {% endfor %}
-        </select>
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          <label style="font-weight:500;color:var(--slate-700);">Год:</label>
+          <input type="number" name="year" value="{{ year }}" style="padding:.5rem .8rem;border:1px solid #d1d5db;border-radius:.375rem;width:80px;">
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          <label style="font-weight:500;color:var(--slate-700);">Месяц:</label>
+          <select name="month" style="padding:.5rem .8rem;border:1px solid #d1d5db;border-radius:.375rem;">
+            {% for m_id, m_name in months.items() %}
+            <option value="{{ m_id }}" {% if m_id == month %}selected{% endif %}>{{ m_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
         <button class="btn btn-indigo" type="submit">ОК</button>
       </form>
 
@@ -78,11 +660,57 @@ input[type="number"]{width:90px;}
         <input type="hidden" name="uid" value="{{ user.id }}">
         <input type="hidden" name="year" value="{{ year }}">
         <input type="hidden" name="month" value="{{ month }}">
-        <div class="upload-box">
-          <input type="file" name="files" multiple required>
+        <div class="upload-area">
+          <label for="fileInput" class="file-input-label" id="fileInputLabel">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            Выбрать файлы
+          </label>
+          <input type="file" name="files" id="fileInput" multiple required style="display:none;">
         </div>
-        <button class="btn btn-dark" type="submit" style="width:100%;margin-top:1rem;">Загрузить</button>
+        <div id="fileNames" style="margin-top:.5rem;font-size:.9rem;color:#64748b;"></div>
+        <button class="upload-btn" type="submit" style="margin-top:1rem;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          Загрузить файлы
+        </button>
       </form>
+
+      <!-- Кнопки управления рядом с панелью загрузки -->
+      {% if files_grouped and files_grouped.get(year) and files_grouped[year].get(months[month]) %}
+      <div class="upload-controls">
+        <div class="upload-checkbox">
+          <label class="small-checkbox-label">
+            <input type="checkbox" id="checkAll"> 
+            Отметить все файлы месяца
+          </label>
+        </div>
+        <div class="upload-actions">
+          <button type="button" id="downloadSelected" class="small-action-btn small-download-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Скачать выделенные
+          </button>
+          <button type="button" id="openConfirm" class="small-action-btn small-delete-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            Удалить выделенные
+          </button>
+        </div>
+      </div>
+      {% endif %}
     </div>
 
     <!-- Файлы месяца -->
@@ -94,43 +722,263 @@ input[type="number"]{width:90px;}
         </span>
       </div>
 
-      <div class="file-list">
-        {% set found = false %}
-        {% if files_grouped %}
-          {% for year_key, months_data in files_grouped.items() %}
-            {% if year_key == year %}
-              {% for m_name, files in months_data.items() %}
-                {% if m_name == months[month] %}
-                  {% set found = true %}
-                  <h3 style="margin-top:1rem;color:var(--slate-800);">{{ year_key }}</h3>
-                  <h4 style="margin:.5rem 0;color:var(--slate-600);">{{ m_name }}</h4>
-                  {% for f in files %}
-                    <div class="file-item">
-                      <div class="file-name">
-                        <svg fill="currentColor" viewBox="0 0 20 20" width="18" height="18" style="margin-right:6px;">
-                          <path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/>
-                        </svg>
-                        <a href="{{ monitoring_url }}{{ f.filename }}" style="color:var(--indigo-dark);text-decoration:none;">
-                          {{ f.filename }}
-                        </a>
-                        <span style="color:#999;font-size:.8rem;margin-left:8px;">{{ f.date }}</span>
-                      </div>
-                      <!-- ✅ month исправлен: теперь не сбрасывается -->
-                      <a href="/delete-file?uid={{ user.id }}&year={{ year }}&month={{ month }}&filename={{ f.filename }}"
-                         style="color:red;font-size:.85rem;">Удалить</a>
-                    </div>
-                  {% endfor %}
-                {% endif %}
-              {% endfor %}
-            {% endif %}
-          {% endfor %}
-        {% endif %}
+      <form id="multiDeleteForm" action="/delete-files" method="post">
+        <input type="hidden" name="uid" value="{{ user.id }}">
+        <input type="hidden" name="year" value="{{ year }}">
+        <input type="hidden" name="month" value="{{ month }}">
 
-        {% if not found %}
-          <div style="color:gray;">На {{ months[month] }} {{ year }} файлов нет</div>
+        {% if files_grouped and files_grouped.get(year) and files_grouped[year].get(months[month]) %}
+          {% set files = files_grouped[year][months[month]] %}
+          
+          <!-- Контейнер для файлов в столбик -->
+          <div style="display:flex;flex-direction:column;gap:1rem;">
+            {% for f in files %}
+            <div class="file-item">
+              <label class="checkbox-container" style="width:100%;">
+                <input type="checkbox" name="files" value="{{ f.filename }}" data-file-url="{{ monitoring_url.rstrip('/') }}{{ f.filename }}">
+                <div class="file-name">
+                  <svg fill="currentColor" viewBox="0 0 20 20" width="24" height="24" style="color:#4f46e5;flex-shrink:0;">
+                    <path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/>
+                  </svg>
+                  <div style="display:flex;flex-direction:column;">
+                    <a href="{{ monitoring_url.rstrip('/') }}{{ f.filename }}" 
+                       class="file-link" 
+                       target="_blank">
+                      {{ f.filename }}
+                    </a>
+                    <span style="color:#64748b;font-size:.85rem;margin-top:4px;">Загружен: {{ f.date }}</span>
+                  </div>
+                </div>
+              </label>
+
+              <a href="/delete-file?uid={{ user.id }}&year={{ year }}&month={{ month }}&filename={{ f.filename }}"
+                 class="delete-link">
+                Удалить
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div style="color:#64748b;text-align:center;padding:3rem;border:2px dashed #e2e8f0;border-radius:.75rem;background:#f8fafc;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#9ca3af;margin-bottom:1rem;">
+              <path d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+            </svg>
+            <p style="font-size:1rem;margin-bottom:.5rem;">Файлов не найдено</p>
+            <p style="font-size:.9rem;">На {{ months[month] }} {{ year }} файлы еще не загружены</p>
+          </div>
         {% endif %}
-      </div>
+      </form>
     </div>
   </div>
 </div>
+
+<!-- Модалка подтверждения -->
+<div id="confirmModal" class="modal-overlay">
+  <div class="modal-window">
+    <h3>Подтверждение удаления</h3>
+    <p>Вы действительно хотите удалить выбранные файлы?</p>
+    <div class="modal-buttons">
+      <button id="cancelDelete">Отмена</button>
+      <button id="confirmDelete">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Функция для копирования текста в буфер обмена
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    // Показываем tooltip
+    const tooltip = document.getElementById('copyTooltip');
+    tooltip.style.opacity = '1';
+    
+    // Меняем стиль ссылки
+    const link = document.getElementById('monitoringUrl');
+    link.classList.add('copied');
+    
+    setTimeout(() => {
+      tooltip.style.opacity = '0';
+      link.classList.remove('copied');
+    }, 2000);
+  }).catch(err => {
+    console.error('Ошибка копирования: ', err);
+    alert('Не удалось скопировать ссылку');
+  });
+}
+
+// Обработчик клика по ссылке мониторинга
+const monitoringUrl = document.getElementById('monitoringUrl');
+if (monitoringUrl) {
+  monitoringUrl.addEventListener('click', (e) => {
+    e.preventDefault();
+    const url = monitoringUrl.textContent.trim();
+    copyToClipboard(url);
+  });
+}
+
+const checkAll = document.getElementById('checkAll');
+if (checkAll) {
+  checkAll.addEventListener('change', e => {
+    document.querySelectorAll('input[name="files"]').forEach(cb => cb.checked = e.target.checked);
+  });
+}
+
+const modal = document.getElementById('confirmModal');
+const openBtn = document.getElementById('openConfirm');
+const cancelBtn = document.getElementById('cancelDelete');
+const confirmBtn = document.getElementById('confirmDelete');
+const form = document.getElementById('multiDeleteForm');
+const downloadBtn = document.getElementById('downloadSelected');
+
+// Функция для скачивания выделенных файлов (исправленная)
+if (downloadBtn) {
+  downloadBtn.addEventListener('click', () => {
+    const checkedFiles = Array.from(document.querySelectorAll('input[name="files"]:checked'));
+    
+    if (checkedFiles.length === 0) {
+      alert('Выберите хотя бы один файл для скачивания.');
+      return;
+    }
+    
+    // Создаем скрытый iframe для каждого файла и запускаем скачивание
+    checkedFiles.forEach(checkbox => {
+      const fileUrl = checkbox.getAttribute('data-file-url');
+      if (fileUrl) {
+        // Создаем временную ссылку и кликаем по ней
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.target = '_blank';
+        link.download = checkbox.value;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    });
+    
+    // Показываем уведомление о количестве скачанных файлов
+    if (checkedFiles.length === 1) {
+      alert('Файл отправлен на скачивание.');
+    } else {
+      alert(`${checkedFiles.length} файлов отправлены на скачивание.`);
+    }
+  });
+}
+
+if (openBtn) {
+  openBtn.addEventListener('click', () => {
+    const checked = Array.from(document.querySelectorAll('input[name="files"]:checked'));
+    if (checked.length === 0) {
+      alert('Выберите хотя бы один файл для удаления.');
+      return;
+    }
+    modal.style.display = 'flex';
+  });
+}
+
+if (cancelBtn) {
+  cancelBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+}
+
+if (confirmBtn) {
+  confirmBtn.addEventListener('click', () => {
+    form.submit();
+  });
+}
+
+// Закрытие модалки по клику вне окна
+modal.addEventListener('click', (e) => {
+  if (e.target === modal) {
+    modal.style.display = 'none';
+  }
+});
+
+// Добавляем эффекты при наведении на элементы
+document.querySelectorAll('.file-item, .checkbox-container, .delete-link').forEach(el => {
+  el.addEventListener('mouseenter', function() {
+    this.style.transform = 'translateY(-1px)';
+  });
+  
+  el.addEventListener('mouseleave', function() {
+    this.style.transform = 'translateY(0)';
+  });
+});
+
+// Эффекты для кнопки выбора файлов
+const fileInput = document.getElementById('fileInput');
+const fileInputLabel = document.getElementById('fileInputLabel');
+const fileNames = document.getElementById('fileNames');
+
+if (fileInput && fileInputLabel) {
+  // Подсветка при наведении
+  fileInputLabel.addEventListener('mouseenter', () => {
+    fileInputLabel.classList.add('highlight');
+  });
+  
+  fileInputLabel.addEventListener('mouseleave', () => {
+    if (!fileInput.files.length) {
+      fileInputLabel.classList.remove('highlight');
+    }
+  });
+  
+  // Подсветка при фокусе
+  fileInput.addEventListener('focus', () => {
+    fileInputLabel.classList.add('highlight');
+  });
+  
+  fileInput.addEventListener('blur', () => {
+    if (!fileInput.files.length) {
+      fileInputLabel.classList.remove('highlight');
+    }
+  });
+  
+  // Подсветка при выборе файлов
+  fileInput.addEventListener('change', function() {
+    if (this.files.length > 0) {
+      fileInputLabel.classList.add('highlight');
+      fileInputLabel.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        Выбрано файлов: ${this.files.length}
+      `;
+      
+      if (fileNames) {
+        const names = Array.from(this.files).map(file => file.name).join(', ');
+        fileNames.textContent = `Выбранные файлы: ${names}`;
+      }
+    } else {
+      fileInputLabel.classList.remove('highlight');
+      fileInputLabel.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        Выбрать файлы
+      `;
+      
+      if (fileNames) {
+        fileNames.textContent = '';
+      }
+    }
+  });
+  
+  // Анимация при клике
+  fileInputLabel.addEventListener('mousedown', () => {
+    fileInputLabel.style.transform = 'scale(0.95)';
+  });
+  
+  fileInputLabel.addEventListener('mouseup', () => {
+    fileInputLabel.style.transform = 'scale(1)';
+  });
+}
+</script>
 {% endblock %}

@@ -9,6 +9,12 @@ from fastapi.responses import JSONResponse
 
 import models, auth
 from database import engine, get_db
+from fastapi import Form
+from typing import List
+import os, json
+from pathlib import Path
+from fastapi.responses import RedirectResponse
+
 
 # Инициализация БД и приложения
 models.Base.metadata.create_all(bind=engine)
@@ -446,7 +452,37 @@ def delete_file(uid: int, year: str, month: str, filename: str):
             with open(manifest_path, "w", encoding="utf-8") as mf:
                 json.dump(manifest, mf, ensure_ascii=False, indent=2)
 
-    # 👇 Возвращаем редирект на тот же период
+    #  Возвращаем редирект на тот же период
+    return RedirectResponse(
+        f"/dashboard?uid={uid}&year={year}&month={month}",
+        status_code=303
+    )
+
+@app.post("/delete-files")
+def delete_files(uid: int = Form(...), year: str = Form(...), month: str = Form(...),
+                 files: List[str] = Form(...)):
+    BASE_DIR = Path(__file__).resolve().parent
+    folder = BASE_DIR / str(uid) / "food"
+    manifest_path = folder / "manifest.json"
+
+    if manifest_path.exists():
+        try:
+            with open(manifest_path, "r", encoding="utf-8") as f:
+                manifest = json.load(f)
+        except Exception:
+            manifest = {}
+    else:
+        manifest = {}
+
+    for fname in files:
+        file_path = folder / fname
+        if file_path.exists():
+            os.remove(file_path)
+        manifest.pop(fname, None)
+
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, ensure_ascii=False, indent=2)
+
     return RedirectResponse(
         f"/dashboard?uid={uid}&year={year}&month={month}",
         status_code=303
