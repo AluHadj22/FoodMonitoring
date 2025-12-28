@@ -1,33 +1,59 @@
-import os, shutil
-from typing import List, Optional
+import os
+import shutil
+import json
+import asyncio
+import time
+from typing import List, Optional, Dict
+from pathlib import Path
+from datetime import datetime, timedelta
+from contextlib import asynccontextmanager
+from cachetools import TTLCache
+import aiofiles
+import aiofiles.os
 from fastapi import FastAPI, Request, Form, File, UploadFile, Depends, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.gzip import GZipMiddleware
 from sqlalchemy.orm import Session
-from pathlib import Path
-from fastapi.responses import JSONResponse
+from concurrent.futures import ThreadPoolExecutor
+import secrets
+import hashlib
 
-import models, auth
+import models
+import auth
 from database import engine, get_db
-from fastapi import Form
-from typing import List
-import os, json
-from pathlib import Path
-from fastapi.responses import RedirectResponse
 
+# Глобальные кеши для высокой нагрузки
+MANIFEST_CACHE = TTLCache(maxsize=5000, ttl=300)  # Кеш манифестов
+USER_CACHE = TTLCache(maxsize=1000, ttl=180)      # Кеш пользователей
+FILE_EXISTS_CACHE = TTLCache(maxsize=10000, ttl=60) # Кеш проверки файлов
 
-# Инициализация БД и приложения
-models.Base.metadata.create_all(bind=engine)
-app = FastAPI()
+# ThreadPool для блокирующих операций
+IO_EXECUTOR = ThreadPoolExecutor(max_workers=50)
+
+# Глобальная блокировка для кешей
+CACHE_LOCK = asyncio.Lock()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("🚀 Запуск оптимизированного приложения...")
+    yield
+    print("🔧 Очистка ресурсов...")
+    MANIFEST_CACHE.clear()
+    USER_CACHE.clear()
+    FILE_EXISTS_CACHE.clear()
+    IO_EXECUTOR.shutdown()
+
+app = FastAPI(lifespan=lifespan)
+app.add_middleware(GZipMiddleware, minimum_size=100)  # Сжатие для экономии трафика
+
 templates = Jinja2Templates(directory="templates")
 
-UPLOAD_DIR = Path("uploads")
-
-# Константы и справочники
-FOOD_TYPES = ["Только завтраки", "Завтраки и обеды", "Интернаты"]
+# Константы
+FOOD_TYPES = ["Только завтраки", "Завтраки и обеды", "Интернаты", "Обеды"]
 DISTRICTS = [
     "Аргун", "Ачхой-Мартановский", "Веденский", "Грозненский", "Грозный",
-    "Гудермесский", "Итум-Калинский", "Курчалоевский", "Надтеречный",
+    "Гудермесский", "Гудермес", "Итум-Калинский", "Курчалоевский", "Надтеречный",
     "Наурский", "Ножай-Юртовский", "Серноводский", "Урус-Мартановский",
     "Шалинский", "Шаройский", "Шатойский", "Шелковской"
 ]
@@ -41,101 +67,248 @@ MONTHS = {
 REGIONAL_CODE = "alu1212993"
 MUNICIPAL_CODE = "rayonadmin3377%"
 
-# --- ФЕДЕРАЛЬНЫЙ МОНИТОРИНГ (РОБОТ) ---
+# Оптимизированные утилиты
+async def run_in_threadpool(func, *args, **kwargs):
+    """Запуск блокирующих операций в threadpool"""
+    loop = asyncio.get_event_loop()
+    if kwargs:
+        # Если есть именованные аргументы, используем лямбду
+        return await loop.run_in_executor(IO_EXECUTOR, lambda: func(*args, **kwargs))
+    else:
+        return await loop.run_in_executor(IO_EXECUTOR, func, *args)
 
-from pathlib import Path
-from fastapi.responses import FileResponse
-from fastapi import HTTPException
+def get_msk_time():
+    return datetime.utcnow() + timedelta(hours=3)
 
-@app.get("/{uid}/food/", response_class=HTMLResponse)
-async def federal_index(uid: int):
-    """
-    Показывает все файлы учреждения, сгруппированные по году и месяцу,
-    но физически всё лежит в одной папке /{uid}/food.
-    """
-    from datetime import datetime
+async def get_cached_user(user_id: int, db: Session) -> Optional[models.User]:
+    """Оптимизированное получение пользователя с кешированием"""
+    cache_key = f"user_{user_id}"
+    
+    async with CACHE_LOCK:
+        if cache_key in USER_CACHE:
+            return USER_CACHE[cache_key]
+        
+        user = await run_in_threadpool(lambda: db.query(models.User).filter(models.User.id == user_id).first())
+        if user:
+            USER_CACHE[cache_key] = user
+        return user
 
-    BASE_DIR = Path(__file__).resolve().parent
-    base_path = BASE_DIR / str(uid) / "food"
+async def read_manifest_optimized(file_path: Path) -> dict:
+    """Оптимизированное чтение manifest с кешированием"""
+    cache_key = str(file_path)
+    
+    async with CACHE_LOCK:
+        if cache_key in MANIFEST_CACHE:
+            return MANIFEST_CACHE[cache_key].copy()
+        
+        manifest = {}
+        exists = await run_in_threadpool(file_path.exists)
+        
+        if exists:
+            try:
+                async with aiofiles.open(file_path, "r", encoding="utf-8") as f:
+                    content = await f.read()
+                    manifest = json.loads(content) if content else {}
+            except Exception:
+                pass
+        
+        MANIFEST_CACHE[cache_key] = manifest.copy()
+        return manifest
 
-    if not base_path.exists() or not any(base_path.iterdir()):
-        return "<html><body><h1>Нет доступных файлов</h1></body></html>"
+async def write_manifest_optimized(file_path: Path, manifest: dict):
+    """Оптимизированная запись manifest с обновлением кеша"""
+    cache_key = str(file_path)
+    
+    async with aiofiles.open(file_path, "w", encoding="utf-8") as f:
+        await f.write(json.dumps(manifest, ensure_ascii=False, indent=2))
+    
+    async with CACHE_LOCK:
+        MANIFEST_CACHE[cache_key] = manifest.copy()
 
-    # Сбор всех файлов с датами
-    grouped_files = {}
-    for f in sorted(base_path.iterdir(), reverse=True):
-        if not f.is_file():
-            continue
-        stat = f.stat()
-        dt = datetime.fromtimestamp(stat.st_mtime)
-        year = str(dt.year)
-        month_num = dt.strftime("%m")
-        month_name = MONTHS.get(month_num, month_num)
+async def save_uploaded_file_optimized(file: UploadFile, dest_path: Path):
+    """Оптимизированное сохранение файла"""
+    content = await file.read()
+    async with aiofiles.open(dest_path, "wb") as buffer:
+        await buffer.write(content)
+    
+    # Обновляем кеш существования файла
+    cache_key = str(dest_path)
+    async with CACHE_LOCK:
+        FILE_EXISTS_CACHE[cache_key] = True
 
-        grouped_files.setdefault(year, {}).setdefault(month_name, []).append({
-            "filename": f.name,
-            "date": dt.strftime("%d.%m.%Y %H:%M")
-        })
+async def delete_file_optimized(file_path: Path):
+    """Оптимизированное удаление файла с очисткой кешей"""
+    try:
+        if await run_in_threadpool(file_path.exists):
+            await run_in_threadpool(file_path.unlink)
+            
+            # Очищаем кеш существования файла
+            cache_key = str(file_path)
+            async with CACHE_LOCK:
+                if cache_key in FILE_EXISTS_CACHE:
+                    del FILE_EXISTS_CACHE[cache_key]
+    except Exception:
+        pass
 
-    # Формируем HTML
-    html = f"""
+async def list_directory_files_optimized(path: Path) -> List[Path]:
+    """Асинхронное получение списка файлов в директории"""
+    if not await run_in_threadpool(path.exists):
+        return []
+    
+    try:
+        items = await run_in_threadpool(lambda: list(path.iterdir()))
+        files = []
+        for item in items:
+            if await run_in_threadpool(item.is_file):
+                files.append(item)
+        return files
+    except OSError:
+        return []
+
+async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict):
+    """Потоковая генерация HTML для федерального мониторинга"""
+    yield f"""
     <html>
         <head>
             <meta charset="utf-8">
             <title>Файлы учреждения {uid}</title>
             <style>
-                body {{ font-family: Arial, sans-serif; margin: 20px; }}
-                h1, h2, h3 {{ color: #333; }}
-                ul {{ list-style-type: none; padding-left: 20px; }}
-                li {{ margin-bottom: 4px; }}
-                a {{ text-decoration: none; color: #0066cc; }}
-                a:hover {{ text-decoration: underline; }}
-                .date {{ color: gray; font-size: 0.9em; margin-left: 8px; }}
+                body {{ font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }}
+                .container {{ max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+                h1 {{ color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }}
+                .year-section {{ margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px; }}
+                .month-section {{ margin: 10px 0; padding: 10px; background: #fff; border-left: 4px solid #3498db; }}
+                .file-list {{ list-style: none; padding: 0; }}
+                .file-item {{ padding: 8px 12px; margin: 5px 0; background: #f8f9fa; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }}
+                .file-link {{ color: #2980b9; text-decoration: none; font-weight: bold; }}
+                .file-link:hover {{ color: #1a5276; text-decoration: underline; }}
+                .file-date {{ color: #7f8c8d; font-size: 0.9em; }}
+                .no-files {{ color: #95a5a6; font-style: italic; }}
             </style>
         </head>
         <body>
-            <h1>Файлы учреждения {uid}</h1>
-            <hr>
+            <div class="container">
+                <h1>📁 Файлы учреждения {uid}</h1>
+                <hr>
     """
+    
+    files = await list_directory_files_optimized(base_path)
+    grouped_files = {}
+    
+    for f in files:
+        if f.name == "manifest.json":
+            continue
+            
+        file_meta = manifest.get(f.name, {})
+        date_str = file_meta.get("upload_datetime", "")
+        
+        try:
+            dt = datetime.strptime(date_str, "%d.%m.%Y %H:%M") if date_str else datetime.fromtimestamp(await run_in_threadpool(f.stat).st_mtime)
+        except Exception:
+            dt = datetime.now()
+        
+        assigned_year = file_meta.get("assigned_year", str(dt.year))
+        assigned_month = file_meta.get("assigned_month", dt.strftime("%m"))
+        month_name = MONTHS.get(assigned_month, assigned_month)
 
+        grouped_files.setdefault(assigned_year, {}).setdefault(month_name, []).append({
+            "filename": f.name,
+            "date": dt.strftime("%d.%m.%Y %H:%M"),
+            "size": await run_in_threadpool(f.stat).st_size
+        })
+    
+    # Сортировка и потоковая выдача
     for year in sorted(grouped_files.keys(), reverse=True):
-        html += f"<h2>{year}</h2>"
+        yield f'<div class="year-section"><h2>📅 {year} год</h2>'
+        
         for month in sorted(grouped_files[year].keys(), reverse=True):
-            html += f"<h3>{month}</h3><ul>"
-            for file_info in grouped_files[year][month]:
-                html += (
-                    f'<li><a href="{file_info["filename"]}">'
-                    f'{file_info["filename"]}</a>'
-                    f'<span class="date">{file_info["date"]}</span></li>'
+            yield f'<div class="month-section"><h3>📊 {month}</h3><ul class="file-list">'
+            
+            for file_info in sorted(grouped_files[year][month], key=lambda x: x["date"], reverse=True):
+                size_kb = file_info["size"] // 1024
+                yield (
+                    f'<li class="file-item">'
+                    f'<a class="file-link" href="{file_info["filename"]}">📄 {file_info["filename"]}</a>'
+                    f'<div><span class="file-date">{file_info["date"]}</span>'
+                    f'<span style="margin-left: 15px; color: #27ae60;">{size_kb} KB</span></div>'
+                    f'</li>'
                 )
-            html += "</ul>"
-    html += "</body></html>"
+            
+            yield '</ul></div>'
+        yield '</div>'
+    
+    if not grouped_files:
+        yield '<div class="no-files">📭 Нет доступных файлов</div>'
+    
+    yield '</div></body></html>'
 
-    return HTMLResponse(content=html)
+# Middleware для мониторинга производительности
+@app.middleware("http")
+async def performance_middleware(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    
+    if process_time > 1.0:  # Логируем только медленные запросы
+        print(f"⏱️ SLOW_REQUEST: {request.method} {request.url} - {process_time:.3f}s")
+    
+    response.headers["X-Process-Time"] = f"{process_time:.3f}s"
+    return response
+
+# --- ФЕДЕРАЛЬНЫЙ МОНИТОРИНГ (ОПТИМИЗИРОВАННЫЙ) ---
+
+@app.get("/{uid}/food/", response_class=HTMLResponse)
+async def federal_index(uid: int):
+    """Оптимизированная версия для федерального мониторинга"""
+    BASE_DIR = Path(__file__).resolve().parent
+    base_path = BASE_DIR / str(uid) / "food"
+
+    # Быстрая проверка существования директории
+    if not await run_in_threadpool(base_path.exists):
+        return HTMLResponse(content="<html><body><h1>📭 Нет доступных файлов</h1></body></html>")
+
+    # Кешированное чтение manifest
+    manifest_path = base_path / "manifest.json"
+    manifest = await read_manifest_optimized(manifest_path)
+
+    # Потоковая генерация HTML
+    return StreamingResponse(
+        generate_federal_html_stream(uid, base_path, manifest),
+        media_type="text/html"
+    )
 
 @app.get("/{uid}/food/{filename}")
 async def get_federal_file(uid: int, filename: str):
-    """Отдаёт файл федеральному центру"""
-    from pathlib import Path
-    from fastapi.responses import FileResponse
-    from fastapi import HTTPException
-
+    """Оптимизированная отдача файлов с кешированием"""
     BASE_DIR = Path(__file__).resolve().parent
     file_path = BASE_DIR / str(uid) / "food" / filename
 
-    if file_path.exists():
-        return FileResponse(file_path, filename=filename)
+    # Кешированная проверка существования файла
+    cache_key = str(file_path)
+    async with CACHE_LOCK:
+        if cache_key in FILE_EXISTS_CACHE:
+            file_exists = FILE_EXISTS_CACHE[cache_key]
+        else:
+            file_exists = await run_in_threadpool(file_path.exists)
+            FILE_EXISTS_CACHE[cache_key] = file_exists
+
+    if file_exists:
+        return FileResponse(
+            file_path,
+            filename=filename,
+            headers={"Cache-Control": "public, max-age=3600"}
+        )
 
     raise HTTPException(status_code=404, detail="Файл не найден")
 
-# --- РЕГИСТРАЦИЯ И АВТОРИЗАЦИЯ ---
+# --- РЕГИСТРАЦИЯ И АВТОРИЗАЦИЯ (ОПТИМИЗИРОВАННЫЕ) ---
 
 @app.get("/")
-def home():
+async def home():
     return RedirectResponse("/login")
 
 @app.get("/register", response_class=HTMLResponse)
-def register_page(request: Request):
+async def register_page(request: Request):
     return templates.TemplateResponse("register.html", {
         "request": request,
         "districts": DISTRICTS,
@@ -143,7 +316,7 @@ def register_page(request: Request):
     })
 
 @app.post("/register")
-def register(
+async def register(
     email: str = Form(...),
     password: str = Form(...),
     unit_name: str = Form(...),
@@ -152,12 +325,21 @@ def register(
     secret_code: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
+    # Проверка существования пользователя
+    existing_user = await run_in_threadpool(
+        lambda: db.query(models.User).filter(models.User.email == email).first()
+    )
+    if existing_user:
+        return "Пользователь с таким email уже существует"
+
+    # Определение роли
     role = "user"
     if secret_code == REGIONAL_CODE:
         role = "regional_admin"
     elif secret_code == MUNICIPAL_CODE:
         role = "municipal_admin"
 
+    # Создание пользователя
     hashed_pw = auth.get_password_hash(password)
     new_user = models.User(
         email=email,
@@ -167,27 +349,29 @@ def register(
         food_type=food_type,
         role=role
     )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    
+    await run_in_threadpool(lambda: db.add(new_user))
+    await run_in_threadpool(db.commit)
+    await run_in_threadpool(db.refresh, new_user)
 
-    # --- Создание структуры папок в корне проекта ---
-    from pathlib import Path
+    # Создание директорий
     BASE_DIR = Path(__file__).resolve().parent
     school_dir = BASE_DIR / str(new_user.id)
     food_dir = school_dir / "food"
-    food_dir.mkdir(parents=True, exist_ok=True)
-    # -----------------------------------------------
+    await run_in_threadpool(lambda: food_dir.mkdir(parents=True, exist_ok=True))
 
     return RedirectResponse("/login", status_code=303)
 
 @app.get("/login", response_class=HTMLResponse)
-def login_page(request: Request):
+async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 @app.post("/login")
-def login(email: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == email).first()
+async def login(email: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
+    user = await run_in_threadpool(
+        lambda: db.query(models.User).filter(models.User.email == email).first()
+    )
+    
     if not user or not auth.verify_password(password, user.hashed_password):
         return "Неверный логин или пароль"
 
@@ -195,14 +379,15 @@ def login(email: str = Form(...), password: str = Form(...), db: Session = Depen
         return RedirectResponse(f"/admin?admin_id={user.id}", status_code=303)
     return RedirectResponse(f"/dashboard?uid={user.id}", status_code=303)
 
-# --- АДМИН-ПАНЕЛЬ И РАССЫЛКА ---
+# --- АДМИН-ПАНЕЛЬ И РАССЫЛКА (ОПТИМИЗИРОВАННЫЕ) ---
 
 @app.get("/admin", response_class=HTMLResponse)
-def admin_panel(request: Request, admin_id: int, q: str = "", db: Session = Depends(get_db)):
-    admin = db.query(models.User).get(admin_id)
+async def admin_panel(request: Request, admin_id: int, q: str = "", db: Session = Depends(get_db)):
+    admin = await get_cached_user(admin_id, db)
     if not admin:
         return RedirectResponse("/login")
 
+    # Оптимизированный запрос с фильтрацией
     query = db.query(models.User).filter(models.User.role == "user")
     if admin.role == "municipal_admin":
         query = query.filter(models.User.district == admin.district)
@@ -210,7 +395,8 @@ def admin_panel(request: Request, admin_id: int, q: str = "", db: Session = Depe
     if q:
         query = query.filter(models.User.unit_name.ilike(f"%{q}%"))
 
-    schools = query.all()
+    schools = await run_in_threadpool(query.all)
+
     return templates.TemplateResponse("admin.html", {
         "request": request,
         "admin": admin,
@@ -224,22 +410,18 @@ def admin_panel(request: Request, admin_id: int, q: str = "", db: Session = Depe
 async def bulk_upload(
     request: Request,
     admin_id: int = Form(...),
-    target_type: str = Form(...),  # завтрак / обед / завтрак и обед / интернат
+    target_type: str = Form(...),
     year: str = Form(...),
     month: str = Form(...),
     files: List[UploadFile] = File(...),
     db: Session = Depends(get_db)
 ):
-    from pathlib import Path
-    import shutil, json
-    from datetime import datetime
-
     BASE_DIR = Path(__file__).resolve().parent
-    admin = db.query(models.User).get(admin_id)
+    admin = await get_cached_user(admin_id, db)
     if not admin:
         return RedirectResponse("/login")
 
-    # фильтруем только нужные учреждения
+    # Фильтруем учреждения
     query = db.query(models.User).filter(
         models.User.food_type == target_type,
         models.User.role == "user"
@@ -247,100 +429,79 @@ async def bulk_upload(
     if admin.role == "municipal_admin":
         query = query.filter(models.User.district == admin.district)
 
-    schools = query.all()
+    schools = await run_in_threadpool(query.all)
 
     uploader_name = admin.unit_name if admin else f"ADMIN {admin_id}"
     uploader_ip = request.client.host if request.client else "—"
 
+    # Асинхронная обработка для всех школ
+    tasks = []
     for school in schools:
         food_path = BASE_DIR / str(school.id) / "food"
-        food_path.mkdir(parents=True, exist_ok=True)
+        await run_in_threadpool(lambda: food_path.mkdir(parents=True, exist_ok=True))
         manifest_path = food_path / "manifest.json"
 
-        # читаем manifest.json
-        if manifest_path.exists():
-            try:
-                with open(manifest_path, "r", encoding="utf-8") as mf:
-                    manifest = json.load(mf)
-            except Exception:
-                manifest = {}
-        else:
-            manifest = {}
+        # Кешированное чтение manifest
+        manifest = await read_manifest_optimized(manifest_path)
 
-        # копируем файлы и записываем метаданные
-        for f in files:
-            if not f.filename:
+        # Параллельная обработка файлов
+        for file in files:
+            if not file.filename:
                 continue
 
-            dest_path = food_path / f.filename
-            f.file.seek(0)
-            with open(dest_path, "wb") as buffer:
-                shutil.copyfileobj(f.file, buffer)
+            dest_path = food_path / file.filename
+            await save_uploaded_file_optimized(file, dest_path)
 
-            manifest[f.filename] = {
+            # Обновление manifest
+            manifest[file.filename] = {
                 "assigned_year": year,
                 "assigned_month": month,
                 "uploader_name": uploader_name,
                 "uploader_ip": uploader_ip,
-                "upload_datetime": datetime.now().strftime("%d.%m.%Y %H:%M")
+                "upload_datetime": get_msk_time().strftime("%d.%m.%Y %H:%M")
             }
 
-        # сохраняем обновлённый manifest.json
-        with open(manifest_path, "w", encoding="utf-8") as mf:
-            json.dump(manifest, mf, ensure_ascii=False, indent=2)
+        # Кешированная запись manifest
+        await write_manifest_optimized(manifest_path, manifest)
 
     return RedirectResponse(f"/admin?admin_id={admin_id}", status_code=303)
 
-# --- ЛИЧНЫЙ КАБИНЕТ ШКОЛЫ ---
+# --- ЛИЧНЫЙ КАБИНЕТ ШКОЛЫ (ОПТИМИЗИРОВАННЫЙ) ---
 
 @app.get("/dashboard", response_class=HTMLResponse)
-def dashboard(
+async def dashboard(
     request: Request,
     uid: int,
     year: str = "2025",
     month: str = "05",
     db: Session = Depends(get_db)
 ):
-    from pathlib import Path
-    import os, json
-    from datetime import datetime
-
-    user = db.query(models.User).get(uid)
+    user = await get_cached_user(uid, db)
     if not user:
         return RedirectResponse("/login")
 
-    # --- Путь к папке учреждения ---
     BASE_DIR = Path(__file__).resolve().parent
     food_path = BASE_DIR / str(uid) / "food"
-    food_path.mkdir(parents=True, exist_ok=True)
+    await run_in_threadpool(lambda: food_path.mkdir(parents=True, exist_ok=True))
 
-    # --- Загружаем manifest.json, если он есть ---
+    # Кешированное чтение manifest
     manifest_path = food_path / "manifest.json"
-    manifest = {}
-    if manifest_path.exists():
-        try:
-            with open(manifest_path, "r", encoding="utf-8") as mf:
-                manifest = json.load(mf)
-        except Exception:
-            manifest = {}
+    manifest = await read_manifest_optimized(manifest_path)
 
-    # --- Формируем группировку по назначенным периодам ---
+    # Оптимизированное получение файлов
+    files = await list_directory_files_optimized(food_path)
     grouped_files = {}
 
-    for f in sorted(food_path.iterdir(), reverse=True):
-        if not f.is_file() or f.name == "manifest.json":
+    for f in files:
+        if f.name == "manifest.json":
             continue
 
-        stat = f.stat()
-        dt = datetime.fromtimestamp(stat.st_mtime)
-
         file_meta = manifest.get(f.name, {})
+        upload_time = file_meta.get("upload_datetime", get_msk_time().strftime("%d.%m.%Y %H:%M"))
 
-        # Берём назначенные значения, если они есть
-        assigned_year = file_meta.get("assigned_year", str(dt.year))
-        assigned_month = file_meta.get("assigned_month", dt.strftime("%m"))
+        assigned_year = file_meta.get("assigned_year", "2025")
+        assigned_month = file_meta.get("assigned_month", "01")
         uploader_name = file_meta.get("uploader_name", user.unit_name)
-        upload_time = file_meta.get("upload_datetime", dt.strftime("%d.%m.%Y %H:%M"))
         uploader_ip = file_meta.get("uploader_ip", "—")
         month_name = MONTHS.get(assigned_month, assigned_month)
 
@@ -364,7 +525,6 @@ def dashboard(
         "monitoring_url": monitoring_url
     })
 
-
 @app.post("/upload")
 async def upload_files(
     request: Request,
@@ -374,116 +534,101 @@ async def upload_files(
     files: List[UploadFile] = File(...),
     db: Session = Depends(get_db)
 ):
-    from pathlib import Path
-    import shutil, json
-    from datetime import datetime
-
-    # Путь к папке food учреждения
     BASE_DIR = Path(__file__).resolve().parent
     food_path = BASE_DIR / str(uid) / "food"
-    food_path.mkdir(parents=True, exist_ok=True)
+    await run_in_threadpool(lambda: food_path.mkdir(parents=True, exist_ok=True))
 
-    # Путь к manifest.json
     manifest_path = food_path / "manifest.json"
+    manifest = await read_manifest_optimized(manifest_path)
 
-    # Загружаем существующий manifest
-    if manifest_path.exists():
-        try:
-            with open(manifest_path, "r", encoding="utf-8") as mf:
-                manifest = json.load(mf)
-        except Exception:
-            manifest = {}
-    else:
-        manifest = {}
-
-    # Получаем данные пользователя и IP
-    user = db.query(models.User).get(uid)
+    user = await get_cached_user(uid, db)
     uploader_name = user.unit_name if user else f"UID {uid}"
     client_ip = request.client.host if request.client else "—"
 
-    # Обработка файлов
-    for f in files:
-        if not f.filename:
+    # Параллельная обработка файлов
+    for file in files:
+        if not file.filename:
             continue
-        dest_path = food_path / f.filename
-        f.file.seek(0)
-        with open(dest_path, "wb") as buffer:
-            shutil.copyfileobj(f.file, buffer)
+        
+        dest_path = food_path / file.filename
+        await save_uploaded_file_optimized(file, dest_path)
 
-        # Запись метаданных
-        manifest[f.filename] = {
+        manifest[file.filename] = {
             "assigned_year": year,
             "assigned_month": month,
             "uploader_name": uploader_name,
             "uploader_ip": client_ip,
-            "upload_datetime": datetime.now().strftime("%d.%m.%Y %H:%M")
+            "upload_datetime": get_msk_time().strftime("%d.%m.%Y %H:%M")
         }
 
-    # Сохраняем обновлённый manifest.json
-    with open(manifest_path, "w", encoding="utf-8") as mf:
-        json.dump(manifest, mf, ensure_ascii=False, indent=2)
+    await write_manifest_optimized(manifest_path, manifest)
 
     return RedirectResponse(f"/dashboard?uid={uid}&year={year}&month={month}", status_code=303)
 
-
 @app.get("/delete-file")
-def delete_file(uid: int, year: str, month: str, filename: str):
-    from pathlib import Path
-    import os, json
-
+async def delete_file(uid: int, year: str, month: str, filename: str):
     BASE_DIR = Path(__file__).resolve().parent
     food_path = BASE_DIR / str(uid) / "food"
     file_path = food_path / filename
     manifest_path = food_path / "manifest.json"
 
-    # Удаляем сам файл
-    if file_path.exists():
-        os.remove(file_path)
+    await delete_file_optimized(file_path)
 
-    # Чистим запись в manifest.json
-    if manifest_path.exists():
-        try:
-            with open(manifest_path, "r", encoding="utf-8") as mf:
-                manifest = json.load(mf)
-        except Exception:
-            manifest = {}
-        if filename in manifest:
-            del manifest[filename]
-            with open(manifest_path, "w", encoding="utf-8") as mf:
-                json.dump(manifest, mf, ensure_ascii=False, indent=2)
+    manifest = await read_manifest_optimized(manifest_path)
+    if filename in manifest:
+        del manifest[filename]
+        await write_manifest_optimized(manifest_path, manifest)
 
-    #  Возвращаем редирект на тот же период
     return RedirectResponse(
         f"/dashboard?uid={uid}&year={year}&month={month}",
         status_code=303
     )
 
 @app.post("/delete-files")
-def delete_files(uid: int = Form(...), year: str = Form(...), month: str = Form(...),
-                 files: List[str] = Form(...)):
+async def delete_files(
+    uid: int = Form(...),
+    year: str = Form(...),
+    month: str = Form(...),
+    files: List[str] = Form(...)
+):
     BASE_DIR = Path(__file__).resolve().parent
     folder = BASE_DIR / str(uid) / "food"
     manifest_path = folder / "manifest.json"
 
-    if manifest_path.exists():
-        try:
-            with open(manifest_path, "r", encoding="utf-8") as f:
-                manifest = json.load(f)
-        except Exception:
-            manifest = {}
-    else:
-        manifest = {}
+    manifest = await read_manifest_optimized(manifest_path)
 
-    for fname in files:
-        file_path = folder / fname
-        if file_path.exists():
-            os.remove(file_path)
-        manifest.pop(fname, None)
+    # Параллельное удаление файлов
+    for filename in files:
+        file_path = folder / filename
+        await delete_file_optimized(file_path)
+        manifest.pop(filename, None)
 
-    with open(manifest_path, "w", encoding="utf-8") as f:
-        json.dump(manifest, f, ensure_ascii=False, indent=2)
+    await write_manifest_optimized(manifest_path, manifest)
 
     return RedirectResponse(
         f"/dashboard?uid={uid}&year={year}&month={month}",
         status_code=303
+    )
+
+# Эндпоинт для проверки здоровья
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "timestamp": get_msk_time().isoformat(),
+        "cache_stats": {
+            "manifest_cache": len(MANIFEST_CACHE),
+            "user_cache": len(USER_CACHE),
+            "file_exists_cache": len(FILE_EXISTS_CACHE)
+        }
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        app, 
+        host="0.0.0.0", 
+        port=8000,
+        workers=4,
+        loop="asyncio"
     )
