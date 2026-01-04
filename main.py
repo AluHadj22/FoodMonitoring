@@ -152,18 +152,16 @@ async def update_excel_content(
     year: str,
     date_str: str = None
 ):
-    temp_path = None  # ← явно инициализируем как None
+    temp_path = None
 
     try:
-        # Временный файл для этой итерации
         temp_dir = file_path.parent
         temp_name = f"{file_path.stem}_temp_{os.getpid()}_{id(file_path)}{file_path.suffix}"
         temp_path = temp_dir / temp_name
 
-        # Копируем оригинал во временный файл
-        await asyncio.to_thread(lambda: shutil.copy2(file_path, temp_path))
+        # Исправлено: убираем lambda, передаём функцию напрямую
+        await asyncio.to_thread(shutil.copy2, file_path, temp_path)
 
-        # Открываем Excel
         wb = load_workbook(temp_path)
         for sheet in wb.worksheets:
             if file_path.name.startswith("tm") and file_path.name.endswith(".xlsx"):
@@ -184,31 +182,28 @@ async def update_excel_content(
                     if sheet["J1"].value is not None:
                         sheet["J1"] = date_str
 
-        # Сохраняем изменённую копию
         wb.save(temp_path)
         wb.close()
 
-        # Заменяем целевой файл (не оригинал!)
-        await asyncio.to_thread(lambda: shutil.move(temp_path, file_path))
+        # Исправлено: убираем lambda
+        await asyncio.to_thread(shutil.move, temp_path, file_path)
 
     except Exception as e:
         print(f"Ошибка при обновлении {file_path}: {e}")
-        # Проверяем, что temp_path создана и существует
-        if temp_path is not None and temp_path.exists():
+        if temp_path and temp_path.exists():
             try:
+                # Исправлено: убираем lambda
                 await asyncio.to_thread(temp_path.unlink)
             except Exception as del_err:
                 print(f"Не удалось удалить временный файл {temp_path}: {del_err}")
-        raise  # Переподнимаем исключение
+        raise
 
     finally:
-        # Дополнительная защита: если temp_path осталась, пытаемся удалить
-        if temp_path is not None and temp_path.exists():
+        if temp_path and temp_path.exists():
             try:
                 await asyncio.to_thread(temp_path.unlink)
             except:
                 pass
-
 
 
 # Оптимизированные утилиты
