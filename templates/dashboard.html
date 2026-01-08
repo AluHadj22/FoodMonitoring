@@ -587,12 +587,10 @@ input[type="number"] {
         </div>
 
         <div style="margin-top: 0.6rem; padding: 0.5rem 0.8rem; background: #eef2ff; border-radius: 0.6rem; font-family: monospace; font-size: 0.8rem;">
-          Внешний путь:
-          <span id="monitoringUrl" class="copy-link" style="color: var(--indigo); font-weight: 700;">
-            {{ monitoring_url.rstrip('/') }}
-          </span>
-          <div class="copy-tooltip" id="copyTooltip">Ссылка скопирована!</div>
-        </div>
+        Внешний путь:<span id="monitoringUrl" class="copy-link" style="color: var(--indigo); font-weight: 700;">{{monitoring_url.rstrip('/')}}</span>
+    <div class="copy-tooltip" id="copyTooltip">Ссылка скопирована!</div>
+  </div>
+
       </div>
       <a href="https://мониторингпитание.рф/#/home" target="_blank" class="btn btn-dark" style="margin-left: auto;">мониторингпитания.рф</a>
     </div>
