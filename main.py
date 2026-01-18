@@ -120,6 +120,13 @@ async def get_oferta(request: Request):
         return templates.TemplateResponse("oferta.html", {"request": request})
     except Exception:
         raise HTTPException(status_code=404, detail="Документ не найден")
+    
+# --- СТРАНИЦА АНАЛИЗА СТАТИСТИКИ ---
+@app.get("/analis", response_class=HTMLResponse)
+async def analis_page(request: Request):
+    """Страница анализа статистики"""
+    return templates.TemplateResponse("analis.html", {"request": request})
+
 
 # Константы
 FOOD_TYPES = ["Только завтраки", "Завтраки и обеды", "Интернаты", "Обеды"]
@@ -523,12 +530,19 @@ async def login(email: str = Form(...), password: str = Form(...), db: Session =
 # --- АДМИН-ПАНЕЛЬ И РАССЫЛКА (ОПТИМИЗИРОВАННЫЕ) ---
 
 @app.get("/admin", response_class=HTMLResponse)
-async def admin_panel(request: Request, admin_id: int, q: str = "", db: Session = Depends(get_db)):
+async def admin_panel(
+    request: Request,
+    admin_id: int,
+    q: str = "",
+    page: int = 1,           # Номер страницы (по умолчанию — 1)
+    per_page: int = 60,     # Количество записей на страницу (по умолчанию — 60)
+    db: Session = Depends(get_db)
+):
     admin = await get_cached_user(admin_id, db)
     if not admin:
         return RedirectResponse("/login")
 
-    # Оптимизированный запрос с фильтрацией
+    # Формируем запрос
     query = db.query(models.User).filter(models.User.role == "user")
     if admin.role == "municipal_admin":
         query = query.filter(models.User.district == admin.district)
@@ -536,17 +550,28 @@ async def admin_panel(request: Request, admin_id: int, q: str = "", db: Session 
     if q:
         query = query.filter(models.User.unit_name.ilike(f"%{q}%"))
 
-    schools = await run_in_threadpool(query.all)
+    # Подсчёт общего количества записей
+    total_count = await run_in_threadpool(query.count)
+
+    # Расчёт смещения и лимита
+    offset = (page - 1) * per_page
+    schools = await run_in_threadpool(
+        lambda: query.offset(offset).limit(per_page).all()
+    )
 
     return templates.TemplateResponse("admin.html", {
         "request": request,
         "admin": admin,
         "schools": schools,
+        "total_count": total_count,
+        "current_page": page,
+        "per_page": per_page,
+        "search_query": q,
         "food_types": FOOD_TYPES,
         "months": MONTHS,
-        "search_query": q
     })
 
+# Массовые действия
 @app.post("/bulk-upload")
 async def bulk_upload(
     request: Request,
@@ -645,6 +670,89 @@ async def bulk_upload(
         pass
 
     return RedirectResponse(f"/admin?admin_id={admin_id}", status_code=303)
+
+
+@app.post("/admin/bulk-delete-files")
+async def bulk_delete_files(
+    request: Request,
+    admin_id: int = Form(...),
+    school_ids: List[int] = Form(...),  # IDs школ для обработки
+    delete_all: bool = Form(False),        # Удалить всё
+    keep_exceptions: bool = Form(False),    # Сохранять исключённые файлы
+    only_kp: bool = Form(False),          # Только календари питания (kp*.xlsx)
+    db: Session = Depends(get_db)
+):
+    BASE_DIR = Path(__file__).resolve().parent
+    admin = await get_cached_user(admin_id, db)
+    if not admin:
+        return RedirectResponse("/login", status_code=303)
+
+    # Получаем список школ
+    schools = db.query(models.User).filter(
+        models.User.id.in_(school_ids),
+        models.User.role == "user"
+    )
+    if admin.role == "municipal_admin":
+        schools = schools.filter(models.User.district == admin.district)
+    schools = await run_in_threadpool(schools.all)
+
+    deleted_count = 0
+    errors = []
+
+    for school in schools:
+        food_path = BASE_DIR / str(school.id) / "food"
+        manifest_path = food_path / "manifest.json"
+
+        if not await run_in_threadpool(food_path.exists):
+            continue
+
+        # Читаем manifest
+        manifest = await read_manifest_optimized(manifest_path)
+
+        # Собираем список файлов для удаления
+        to_delete = []
+        for filename in manifest.keys():
+            filepath = food_path / filename
+
+            # Проверяем исключения
+            if keep_exceptions:
+                if filename == "findex.xlsx":
+                    continue
+                if re.match(r"^tm\d{4}-sm\.xlsx$", filename):  # tm2026-sm.xlsx
+                    continue
+                if re.match(r"^kp\d{4}\.xlsx$", filename):     # kp2026.xlsx
+                    if not only_kp:  # Если не «только kp», пропускаем
+                        continue
+
+            # Если only_kp — удаляем только kp*.xlsx
+            if only_kp and not re.match(r"^kp\d{4}\.xlsx$", filename):
+                continue
+
+            to_delete.append(filename)
+
+        # Удаляем файлы и обновляем manifest
+        for filename in to_delete:
+            filepath = food_path / filename
+            try:
+                await delete_file_optimized(filepath)
+                manifest.pop(filename, None)
+                deleted_count += 1
+            except Exception as e:
+                errors.append(f"Ошибка при удалении {filename} у {school.id}: {str(e)}")
+
+        # Сохраняем обновлённый manifest
+        if to_delete:
+            await write_manifest_optimized(manifest_path, manifest)
+
+    # Формируем сообщение
+    msg = f"Удалено {deleted_count} файлов."
+    if errors:
+        msg += " Ошибки: " + "; ".join(errors)
+
+    return RedirectResponse(
+        f"/admin?admin_id={admin_id}&message={msg}",
+        status_code=303
+    )
 
 
 # --- ЛИЧНЫЙ КАБИНЕТ ШКОЛЫ (ОПТИМИЗИРОВАННЫЙ) ---
