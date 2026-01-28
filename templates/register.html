@@ -1,29 +1,54 @@
 {% extends "layout.html" %}
 {% block content %}
 <style>
+/* === ОБЩИЕ ПЕРЕМЕННЫЕ — БЕЛО-ГОЛУБАЯ ПАЛИТРА === */
 :root {
-  --indigo: #4f46e5;
-  --indigo-dark: #3730a3;
-  --indigo-light: #e0e7ff;
-  --orange: #f97316;
-  --slate-50: #f8fafc;
-  --slate-100: #f1f5f9;
-  --slate-200: #e2e8f0;
-  --slate-300: #cbd5e1;
-  --slate-400: #94a3b8;
-  --slate-500: #64748b;
-  --slate-600: #475569;
-  --slate-700: #334155;
-  --slate-800: #1e293b;
-  --slate-900: #0f172a;
+  /* Цвета */
+  --blue-primary: #3b82f6;    /* Основной голубой */
+  --blue-secondary: #60a5fa;  /* Светлый голубой */
+  --blue-light: #e0f2ff;      /* Очень светлый фон */
+  --blue-dark: #1e40af;       /* Тёмный акцент */
+  --slate-50: #f8fafc;        /* Белый фон */
+  --slate-100: #f1f5f9;       /* Светло-серый */
+  --slate-200: #e2e8f0;       /* Границы */
+  --slate-300: #cbd5e1;       /* Вторичный текст */
+  --slate-400: #94a3b8;       /* Иконки */
+  --slate-500: #64748b;       /* Подпись */
+  --slate-600: #475569;       /* Текст */
+  --slate-700: #334155;       /* Заголовки */
+  --slate-800: #1e293b;       /* Основной текст */
+  --slate-900: #0f172a;       /* Глубокий тёмный (только для теней) */
+
+  /* Размеры */
   --radius-lg: 1.5rem;
   --radius-md: 1rem;
   --radius-sm: 0.75rem;
   --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
-  --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.05);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.05);
+
+  /* Цвета для ошибок/успеха */
+  --error-bg: #fee2e2;
+  --error-text: #dc2626;
+  --success-bg: #d1fae5;
+  --success-text: #065f46;
+}
+
+/* === ОБЩИЕ СТИЛИ === */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--slate-50);
+  min-height: 100vh;
+  color: var(--slate-800);
+  line-height: 1.6;
 }
 
 .auth-container {
@@ -36,12 +61,12 @@
 }
 
 .auth-card {
-  background: rgba(30, 41, 59, 0.8);
+  background: white;
   backdrop-filter: blur(10px);
   border-radius: var(--radius-lg);
   padding: 3rem;
   box-shadow: var(--shadow-xl);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--slate-200);
   width: 100%;
   max-width: 600px;
   position: relative;
@@ -55,7 +80,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.05), transparent);
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.08), transparent);
   transition: left 0.6s;
 }
 
@@ -67,7 +92,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, var(--indigo-light) 0%, #f0f9ff 100%);
+  background: linear-gradient(135deg, var(--blue-light) 0%, rgba(255,255,255,0.8) 100%);
   width: 90px;
   height: 90px;
   border-radius: 50%;
@@ -80,7 +105,7 @@
   content: '';
   position: absolute;
   inset: -2px;
-  background: linear-gradient(135deg, var(--indigo) 0%, var(--orange) 100%);
+  background: linear-gradient(135deg, var(--blue-primary) 0%, var(--blue-secondary) 100%);
   border-radius: 50%;
   z-index: -1;
   opacity: 0;
@@ -94,12 +119,12 @@
 .register-icon svg {
   width: 36px;
   height: 36px;
-  color: var(--indigo);
+  color: var(--blue-primary);
   transition: var(--transition-base);
 }
 
 .register-icon:hover svg {
-  color: white;
+  color: var(--blue-dark);
   transform: scale(1.1);
 }
 
@@ -107,7 +132,7 @@
   text-align: center;
   font-weight: 700;
   font-size: 2rem;
-  background: linear-gradient(135deg, var(--slate-900) 0%, var(--indigo-dark) 100%);
+  background: linear-gradient(135deg, var(--blue-primary) 0%, var(--blue-secondary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -146,10 +171,10 @@
   border: 2px solid var(--slate-200);
   border-radius: var(--radius-md);
   font-size: 1.05rem;
-  background: rgba(15, 23, 42, 0.9);
+  background: var(--slate-50);
   transition: var(--transition-base);
   font-weight: 500;
-  color: #e2e8f0;
+  color: var(--slate-800);
 }
 
 .form-group select {
@@ -164,9 +189,9 @@
 
 .form-group input:focus,
 .form-group select:focus {
-  border-color: var(--indigo);
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+  border-color: var(--blue-primary);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
   outline: none;
   transform: translateY(-1px);
 }
@@ -185,12 +210,12 @@
 
 .form-group input:focus + svg,
 .form-group select:focus + svg {
-  color: var(--indigo);
+  color: var(--blue-primary);
 }
 
 .section-meta {
   padding-top: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--slate-200);
   margin-top: 2rem;
   position: relative;
 }
@@ -201,21 +226,22 @@
   top: -0.6rem;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(30, 41, 59, 0.8);
+  background: white;
   padding: 0 1rem;
   font-size: 0.85rem;
   color: var(--slate-500);
   font-weight: 600;
   border-radius: 0.5rem;
   backdrop-filter: blur(5px);
+  border: 1px solid var(--slate-200);
 }
 
 .section-meta .form-group input {
-  background: rgba(15, 23, 42, 0.9);
+  background: var(--slate-50);
 }
 
 .section-meta .form-group input:focus {
-  background: rgba(255, 255, 255, 0.15);
+  background: white;
 }
 
 .submit-btn {
@@ -223,11 +249,11 @@
   padding: 1.125rem 2rem;
   border: none;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--indigo) 0%, var(--indigo-dark) 100%);
+  background: linear-gradient(135deg, var(--blue-primary) 0%, var(--blue-secondary) 100%);
   color: white;
   font-weight: 600;
   font-size: 1.05rem;
-  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
   transition: var(--transition-base);
   cursor: pointer;
   position: relative;
@@ -237,8 +263,8 @@
 
 .submit-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 25px rgba(79, 70, 229, 0.4);
-  background: linear-gradient(135deg, var(--indigo-dark) 0%, #312e81 100%);
+  box-shadow: 0 12px 25px rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, var(--blue-secondary) 0%, var(--blue-primary) 100%);
 }
 
 .submit-btn:active {
@@ -268,7 +294,7 @@
 }
 
 .switch-link a {
-  color: var(--indigo);
+  color: var(--blue-primary);
   text-decoration: none;
   font-weight: 600;
   position: relative;
@@ -278,7 +304,7 @@
 }
 
 .switch-link a:hover {
-  background: var(--indigo-light);
+  background: rgba(59, 130, 246, 0.1);
   text-decoration: none;
 }
 
@@ -289,7 +315,7 @@
   left: 0;
   width: 0;
   height: 2px;
-  background: var(--indigo);
+  background: var(--blue-primary);
   transition: width 0.3s ease;
 }
 
@@ -316,7 +342,7 @@
 }
 
 .password-toggle:hover {
-  color: var(--indigo);
+  color: var(--blue-primary);
   background: rgba(59, 130, 246, 0.1);
 }
 
@@ -327,8 +353,8 @@
 }
 
 .error-message {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--error-bg);
+  color: var(--error-text);
   padding: 1rem;
   border-radius: var(--radius-md);
   margin-bottom: 1.5rem;
@@ -338,8 +364,8 @@
 }
 
 .success-message {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--success-bg);
+  color: var(--success-text);
   padding: 1rem;
   border-radius: var(--radius-md);
   margin-bottom: 1.5rem;
@@ -364,7 +390,9 @@
   75% { transform: translateX(5px); }
 }
 
-/* Адаптивность для ПК */
+/* === АДАПТИВНОСТЬ === */
+
+/* ПК */
 @media (min-width: 1024px) {
   .auth-card {
     max-width: 650px;
@@ -430,7 +458,7 @@
   }
 }
 
-/* Адаптивность для планшетов */
+/* Планшеты */
 @media (max-width: 768px) {
   .auth-card {
     max-width: 550px;
@@ -443,7 +471,7 @@
   }
 }
 
-/* Адаптивность для телефонов */
+/* Телефоны */
 @media (max-width: 640px) {
   .auth-container {
     padding: 1rem 0.5rem;
@@ -544,13 +572,15 @@
   }
 }
 
+/* === ГРУППА СОГЛАСИЯ === */
 .consent-group {
   margin-bottom: 1.5rem;
   padding: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--slate-200);
   border-radius: var(--radius-md);
-  background: rgba(15, 23, 42, 0.7);
+  background: white;
   backdrop-filter: blur(5px);
+  box-shadow: var(--shadow-sm);
 }
 
 .checkbox-label {
@@ -565,16 +595,16 @@
   flex-shrink: 0;
   width: 20px;
   height: 20px;
-  border: 2px solid var(--indigo);
+  border: 2px solid var(--blue-primary);
   border-radius: 4px;
   margin-right: 0.75rem;
-  background: transparent;
+  background: white;
   transition: background-color 0.3s, border-color 0.3s;
 }
 
 .checkbox-label input:checked + .checkmark {
-  background-color: var(--indigo);
-  border-color: var(--indigo);
+  background-color: var(--blue-primary);
+  border-color: var(--blue-primary);
 }
 
 .checkbox-label input:checked + .checkmark::after {
@@ -593,7 +623,7 @@
   display: block;
   margin-left: 1.75rem;
   font-size: 0.9rem;
-  color: var(--slate-400);
+  color: var(--slate-500);
   line-height: 1.4;
 }
 
@@ -612,26 +642,26 @@
 
 .consent-list li::before {
   content: "•";
-  color: var(--indigo);
+  color: var(--blue-primary);
   font-weight: bold;
   display: inline-block;
   width: 1em;
   margin-left: -1em;
 }
 
-/* Дополнительные анимации для интерактивных элементов */
+/* === АНИМАЦИИ ДЛЯ ФОКУСА И ЗАГРУЗКИ === */
 .form-group input:focus,
 .form-group select:focus {
   animation: inputFocusGlow 0.4s ease-in-out;
 }
 
 @keyframes inputFocusGlow {
-  0% { box-shadow: 0 0 0 2px rgba(79, 70, 229, 0); }
-  50% { box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.3); }
-  100% { box-shadow: 0 0 0 2px rgba(79, 70, 229, 0); }
+  0% { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0); }
+  50% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
+  100% { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0); }
 }
 
-/* Стили для состояния загрузки кнопки */
+/* Состояние загрузки кнопки */
 .submit-btn.loading {
   pointer-events: none;
   opacity: 0.8;
@@ -654,6 +684,7 @@
 @keyframes spin {
   to { transform: translate(-50%, -50%) rotate(360deg); }
 }
+
 </style>
 
 <div class="auth-container">

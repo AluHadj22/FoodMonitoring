@@ -1,349 +1,485 @@
 {% extends "layout.html" %}
 {% block content %}
 <style>
-/* ----------  DARK-GLASS  ---------- */
+/* ----------  LIGHT-GLASS SCHOOL DASHBOARD — UPGRADED VERSION ---------- */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
-:root{
-  --indigo:#3b82f6;
-  --indigo-dark:#2563eb;
-  --slate-50:#f8fafc;
-  --slate-100:#f1f5f9;
-  --slate-200:#e2e8f0;
-  --slate-400:#182c47;
-  --slate-700:#063c8d;
-  --slate-800:#055ae4;
-  --bg-main:#0f172a;
-  --bg-card:rgba(30,41,59,.65);
-  --border:rgba(255,255,255,.08);
+:root {
+  /* ——— ЦВЕТА: УГЛУБЛЁННЫЙ СИНИЙ / ГОЛУБОЙ ——— */
+  --indigo: #4f7ee6;           /* Более насыщенный, чем #60a5fa — лучше читается */
+  --indigo-dark: #3a68d0;     /* Темнее, но не чёрный — сохраняет глубину */
+  --indigo-light: #7fa9f2;    /* Для hover/акцентов */
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-700: #1e293b;       /* Основной тёмный текст — теперь чёткий */
+  --slate-800: #0f172a;       /* Для кнопок и заголовков — более глубокий */
+  --bg-main: linear-gradient(135deg, #d0e9ff 0%, #f8faff 100%); /* Более мягкий, синеватый градиент */
+  --bg-card: rgba(255, 255, 255, 0.96);
+  --border: rgba(196, 214, 255, 0.7); /* Более синий бордер — в тон с палитрой */
+  --text-primary: #1e293b;    /* Основной текст — оставляем, но теперь он выделяется */
+  --text-secondary: #5e6e85;  /* Более тёмный, чем #64748b — лучше читается */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+
+  /* ——— ТЕНИ: УСИЛЕНЫ ДЛЯ ЧИТАЕМОСТИ ——— */
+  --shadow-card: 0 20px 25px rgba(0, 0, 0, 0.06);
+  --shadow-hover: 0 25px 30px rgba(0, 0, 0, 0.08);
+  --shadow-input: 0 0 0 3px rgba(79, 126, 230, 0.25);
+  --shadow-text: 0 1px 2px rgba(0, 0, 0, 0.08); /* Лёгкая тень на тексте — ключевое! */
 }
 
-body{
-  font-family:"Inter","Segoe UI",system-ui,sans-serif;
-  background:linear-gradient(135deg,var(--bg-main) 0%,#1e293b 100%);
-  color:#e2e8f0;
-  min-height:100vh;
-  line-height:1.6;
+body {
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  background: var(--bg-main);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
 }
 
-.container{
-  max-width:1100px;
-  margin:auto;
-  padding:2rem;
-  display:flex;
-  flex-direction:column;
-  gap:2rem;
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
-/* карточки */
-.card{
-  background:var(--bg-card);
-  backdrop-filter:blur(10px);
-  border-radius:1.5rem;
-  padding:2rem;
-  border:1px solid var(--border);
-  box-shadow:0 20px 25px rgba(0,0,0,.3);
-  animation:fadeInUp .8s ease-out;
+/* === КАРТОЧКИ === */
+.card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.8s ease-out;
 }
 
-/* кнопки */
-.btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:.5rem;
-  padding:.75rem 1.5rem;
-  border:none;
-  border-radius:.6rem;
-  font-weight:600;
-  cursor:pointer;
-  transition:all .25s ease;
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
 }
 
-.btn-indigo{
-  background:linear-gradient(135deg,var(--indigo),#8b5cf6);
-  color:#fff;
-}
-.btn-indigo:hover{
-  transform:translateY(-2px);
-  box-shadow:0 8px 20px rgba(59,130,246,.4);
-}
-
-.btn-dark{
-  background:var(--slate-800);
-  color:#fff;
-}
-.btn-dark:hover{
-  background:#000;
+.card h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--slate-800); /* Более тёмный, чем --text-primary — для заголовков */
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-shadow: var(--shadow-text); /* ✅ КЛЮЧЕВОЕ — текст не теряется */
 }
 
-/* поля ввода */
-input,select{
-  width:100%;
-  padding:.8rem 1rem;
-  border-radius:.6rem;
-  border:2px solid var(--border);
-  background:rgba(15,23,42,.7);
-  color:#e2e8f0;
-  font-size:1rem;
-  transition:border-color .25s,box-shadow .25s;
-}
-input:focus,select:focus{
-  outline:none;
-  border-color:var(--indigo);
-  box-shadow:0 0 0 3px rgba(59,130,246,.2);
+.card h3 svg {
+  width: 24px;
+  height: 24px;
+  color: var(--indigo);
 }
 
-/* список файлов */
-.file-list{
-  max-height:500px;
-  overflow-y:auto;
-  display:flex;
-  flex-direction:column;
-  gap:.6rem;
-}
-.file-item{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:.9rem 1rem;
-  background:rgba(255,255,255,.05);
-  border:1px solid var(--border);
-  border-radius:1rem;
-  transition:all .25s ease;
-}
-.file-item:hover{
-  background:rgba(79,70,229,.1);
-  border-color:rgba(79,70,229,.4);
-  transform:translateY(-2px);
-  box-shadow:0 4px 12px rgba(0,0,0,.2);
-}
-.file-name{
-  display:flex;
-  align-items:center;
-  gap:.6rem;
-  color:var(--slate-50);
-  font-weight:600;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:normal;
-  word-break:break-word;
-  flex:1;
-}
-.file-name svg{
-  width:20px;
-  height:20px;
-  flex-shrink:0;
-  color:var(--indigo);
-}
-.file-actions{
-  display:flex;
-  gap:.5rem;
-}
-.file-actions a{
-  display:inline-flex;
-  align-items:center;
-  gap:.3rem;
-  padding:.45rem .9rem;
-  border-radius:.6rem;
-  font-weight:600;
-  text-decoration:none;
-  transition:all .25s ease;
-}
-.file-actions a svg{
-  width:18px;
-  height:18px;
-}
-.file-actions a.download{
-  background:var(--indigo);
-  color:#fff;
-}
-.file-actions a.download:hover{
-  background:var(--indigo-dark);
-  transform:translateY(-1px);
-}
-.file-actions a.delete{
-  background:#fee2e2;
-  color:#b91c1b;
-}
-.file-actions a.delete:hover{
-  background:#fca5a5;
+/* === КНОПКИ === */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.6rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-decoration: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
 }
 
-/* модалка */
-.modal-overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  display:none;
-  place-items:center;
-  z-index:9999;
-}
-.modal-window{
-  background:#1e293b;
-  border-radius:12px;
-  padding:2rem;
-  min-width:320px;
-  text-align:center;
-  border:1px solid var(--border);
-  animation:fadeIn .2s ease-out;
-}
-.modal-window h3{
-  margin:0 0 1rem;
-  color:#f1f5f9;
-  font-size:1.2rem;
-  font-weight:700;
-}
-.modal-window p{
-  font-size:.95rem;
-  margin:0 0 1.5rem;
-  color:#cbd5e1;
-}
-.modal-buttons{
-  display:flex;
-  justify-content:center; /* Центрируем кнопки */
-  gap:1rem;
-  width:100%; /* Растягиваем на всю ширину */
-}
-.modal-buttons button{
-  padding:.6rem 1.5rem;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  font-size:.9rem;
-  font-weight:600;
-  transition:all .2s;
-  flex:0 1 auto; /* Позволяем кнопкам сжиматься */
-  min-width:120px; /* Минимальная ширина для читаемости */
-}
-#cancelDelete{
-  background:#475569;
-  color:#e2e8f0;
+.btn-indigo {
+  background: linear-gradient(135deg, var(--indigo), var(--indigo-dark));
+  color: white;
 }
 
-#confirmDelete{
-  background:#dc2626;
-  color:#fff;
-}
-#confirmDelete:hover{
-  background:#b91c1c;
+.btn-indigo:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(79, 126, 230, 0.3);
 }
 
-/* пустое состояние */
-.nofiles{
-  text-align:center;
-  padding:3rem 0;
-  color:var(--slate-400);
-  font-style:italic;
-}
-.nofiles svg{
-  width:48px;
-  height:48px;
-  margin-bottom:.5rem;
-  color:var(--slate-400);
+.btn-dark {
+  background: var(--slate-800);
+  color: white;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
 }
 
-/* чекбоксы/массовые действия */
-.upload-controls{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-top:1.5rem;
-  padding-top:1.5rem;
-  border-top:1px solid var(--border);
-}
-.upload-checkbox{
-  display:flex;
-  align-items:center;
-  gap:.8rem;
-}
-.upload-actions{
-  display:flex;
-  gap:.8rem;
-}
-.small-checkbox-label{
-  font-size:.9rem;
-  color:#cbd5e1;
-  font-weight:500;
-}
-.small-checkbox-label input[type="checkbox"]{
-  transform:scale(1.1);
-  margin-right:.4rem;
-}
-.small-action-btn{
-  padding:.4rem .8rem;
-  border-radius:.4rem;
-  font-size:.8rem;
-  font-weight:600;
-  display:flex;
-  align-items:center;
-  gap:.3rem;
-  transition:all .2s ease;
-  border:none;
-  cursor:pointer;
-}
-.small-download-btn{
-  background:#059669;
-  color:#fff;
-}
-.small-download-btn:hover{
-  background:#047857;
-  transform:translateY(-1px);
-  box-shadow:0 2px 6px rgba(5,150,105,.3);
-}
-.small-delete-btn{
-  background:#dc2626;
-  color:#fff;
-}
-.small-delete-btn:hover{
-  background:#b91c1c;
-  transform:translateY(-1px);
-  box-shadow:0 2px 6px rgba(220,38,38,.3);
-}
-.small-action-btn svg{
-  width:14px;
-  height:14px;
+.btn-dark:hover {
+  background: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.3);
 }
 
-/* копирование ссылки */
-.copy-link{
-  cursor:pointer;
-  transition:color .2s;
-  position:relative;
-}
-.copy-link:hover{
-  color:var(--indigo);
-}
-.copy-link.copied{
-  color:#10b981;
-}
-.copy-tooltip{
-  position:absolute;
-  bottom:100%;
-  left:50%;
-  transform:translateX(-50%);
-  background:#1f2937;
-  color:#fff;
-  padding:.4rem .8rem;
-  border-radius:.4rem;
-  font-size:.75rem;
-  white-space:nowrap;
-  opacity:0;
-  transition:opacity .2s;
-  pointer-events:none;
-  margin-bottom:.5rem;
-}
-.copy-tooltip::after{
-  content:"";
-  position:absolute;
-  top:100%;
-  left:50%;
-  transform:translateX(-50%);
-  border:.4rem solid transparent;
-  border-top-color:#1f2937;
+.btn-success {
+  background: linear-gradient(135deg, var(--success), #0d9466);
+  color: white;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
 }
 
-/* редактируемое название школы (обновлённая версия) */
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, var(--warning), #d97706);
+  color: white;
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2);
+}
+
+.btn-warning:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+}
+
+/* === ПОЛЯ ВВОДА === */
+input, select {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border-radius: 0.6rem;
+  border: 2px solid var(--border);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--slate-800); /* ✅ ВСЕ ПОЛЯ ВВОДА — ТЁМНЫЙ ТЕКСТ */
+  font-size: 1rem;
+  transition: all 0.25s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  text-shadow: var(--shadow-text); /* ✅ ТЕНИ НА ТЕКСТЕ — КЛЮЧЕВОЕ ДЛЯ ЧИТАЕМОСТИ */
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--indigo);
+  box-shadow: var(--shadow-input);
+  transform: translateY(-1px);
+}
+
+/* === СПИСОК ФАЙЛОВ === */
+.file-list {
+  max-height: 500px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* === ФАЙЛЫ — УЛУЧШЕННЫЙ ВИД === */
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1rem;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  gap: 1rem;
+}
+
+.file-name {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--slate-800); /* ✅ ВСЕ НАЗВАНИЯ ФАЙЛОВ — ГЛУБОКИЙ ТЁМНЫЙ */
+  font-weight: 600;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: var(--shadow-text); /* ✅ ТЕНИ — ОБЯЗАТЕЛЬНО! */
+}
+
+.file-name svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--indigo);
+}
+
+/* КНОПКИ — теперь вынесены в отдельный блок */
+.file-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.file-actions a {
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.file-actions a svg {
+  width: 16px;
+  height: 16px;
+}
+
+.file-actions a.download {
+  background: rgba(79, 126, 230, 0.1);
+  color: var(--indigo-dark);
+  border: 1px solid rgba(79, 126, 230, 0.2);
+}
+
+.file-actions a.download:hover {
+  background: rgba(79, 126, 230, 0.2);
+  border-color: var(--indigo);
+  color: var(--indigo-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(79, 126, 230, 0.2);
+}
+
+.file-actions a.delete {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.file-actions a.delete:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: var(--error);
+  color: var(--error);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2);
+}
+
+/* === МОДАЛКА === */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  place-items: center;
+  z-index: 9999;
+}
+
+.modal-window {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 2rem;
+  min-width: 320px;
+  text-align: center;
+  border: 1px solid var(--border);
+  box-shadow: 0 25px 40px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-window h3 {
+  margin: 0 0 1rem;
+  color: var(--slate-800);
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-shadow: var(--shadow-text);
+}
+
+.modal-window p {
+  font-size: 0.95rem;
+  margin: 0 0 1.5rem;
+  color: var(--text-secondary);
+  text-shadow: var(--shadow-text);
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.modal-buttons button {
+  padding: 0.6rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  flex: 0 1 auto;
+  min-width: 120px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+#cancelDelete {
+  background: var(--slate-100);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+#cancelDelete:hover {
+  background: var(--slate-200);
+}
+
+#confirmDelete {
+  background: var(--error);
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+#confirmDelete:hover {
+  background: #dc2626;
+  box-shadow: 0 6px 15px rgba(239, 68, 68, 0.3);
+}
+
+/* === ПУСТОЕ СОСТОЯНИЕ === */
+.nofiles {
+  text-align: center;
+  padding: 3rem 0;
+  color: var(--text-secondary);
+  font-style: italic;
+  text-shadow: var(--shadow-text); /* ✅ ДАЖЕ ПУСТЫЕ СООБЩЕНИЯ — ЧИТАЕМЫ */
+}
+
+.nofiles svg {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 0.5rem;
+  color: var(--slate-200);
+}
+
+/* === ЧЕКБОКСЫ / МАССОВЫЕ ДЕЙСТВИЯ === */
+.upload-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.upload-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.upload-actions {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.small-checkbox-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-shadow: var(--shadow-text);
+}
+
+.small-checkbox-label input[type="checkbox"] {
+  transform: scale(1.1);
+  margin-right: 0.4rem;
+}
+
+.small-action-btn {
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.small-download-btn {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.small-download-btn:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: var(--success);
+  color: var(--success);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
+.small-delete-btn {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.small-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: var(--error);
+  color: var(--error);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+}
+
+.small-action-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* === КОПИРОВАНИЕ ССЫЛКИ === */
+.copy-link {
+  cursor: pointer;
+  transition: color 0.2s;
+  position: relative;
+  text-shadow: var(--shadow-text); /* ✅ ВСЕ ССЫЛКИ — С ТЕНЬЮ */
+}
+
+.copy-link:hover {
+  color: var(--indigo);
+}
+
+.copy-link.copied {
+  color: var(--success);
+}
+
+.copy-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--slate-800);
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.4rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  margin-bottom: 0.5rem;
+}
+
+.copy-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 0.4rem solid transparent;
+  border-top-color: var(--slate-800);
+}
+
+/* === РЕДАКТИРУЕМОЕ НАЗВАНИЕ ШКОЛЫ — ПОЛНОСТЬЮ ПЕРЕРАБОТАНО === */
 .editable-title-container {
   position: relative;
   display: flex;
@@ -355,14 +491,42 @@ input:focus,select:focus{
 .editable-title {
   position: relative;
   min-height: 2.4rem;
+  display: flex;
+  align-items: center;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.6rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(196, 214, 255, 0.7); /* Синий бордер — в тон палитре */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 0.5rem;
 }
 
 .editable-title span {
   display: block;
   font-size: 1.8rem;
-  color: #f1f5f9; /* светлый текст для отображения */
+  color: var(--slate-800); /* Тёмный текст — уже хорошо, но можно усилить */
   font-weight: 800;
   transition: opacity 0.3s ease;
+  
+  /* Убираем полупрозрачный белый фон — он снижает контраст */
+  background: transparent; /* Было: rgba(255, 255, 255, 0.98) */
+  
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.8rem;
+  
+  /* Усиляем тень для эффекта «приподнятости» и контраста */
+  text-shadow: 
+    0 1px 1px rgba(0, 0, 0, 0.1),
+    0 2px 3px rgba(0, 0, 0, 0.15);
+  
+  box-shadow: none; /* Убираем внутреннюю тень — она мешает */
+  margin: 0;
+  display: inline-block;
+  width: fit-content;
+  
+  /* Оставляем лёгкую границу, но делаем её контрастной */
+  border: 1px solid rgba(0, 0, 0, 0.3); /* Более насыщенный синий */
 }
 
 .editable-title input {
@@ -370,16 +534,14 @@ input:focus,select:focus{
   inset: 0;
   width: 100%;
   font-size: 1.8rem;
-  color: #1e293b; /* тёмный текст для ввода — лучше читаемость */
+  color: var(--slate-800);
   font-weight: 800;
   padding: 0 0.4rem;
-  border: 3px solid var(--indigo); /* утолщённая граница */
+  border: 3px solid var(--indigo);
   border-radius: 0.6rem;
-  background: #e2e8f0; /* светлый фон для поля ввода */
+  background: rgba(255, 255, 255, 0.98);
   outline: none;
-  box-shadow: 
-    0 4px 12px rgba(59, 130, 246, 0.25),
-    0 0 0 4px rgba(59, 130, 246, 0.15); /* усиленная тень */
+  box-shadow: var(--shadow-input);
   z-index: 10;
   opacity: 0;
   transform: scaleY(0);
@@ -398,7 +560,7 @@ input:focus,select:focus{
 .edit-title-btn {
   padding: 0.4rem 0.8rem;
   background: var(--indigo);
-  color: #fff;
+  color: white;
   border: none;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -406,94 +568,118 @@ input:focus,select:focus{
   font-weight: 600;
   transition: background 0.3s, transform 0.2s;
   align-self: flex-start;
-  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 6px rgba(79, 126, 230, 0.3);
 }
 
 .edit-title-btn:hover {
   background: var(--indigo-dark);
   transform: translateY(-2px);
 }
-/* мета-инфо файла */
-.file-meta{
-  font-size:.8rem;
-  color:#94a3b8;
-  margin-top:.3rem;
+
+/* === МЕТА-ИНФО ФАЙЛА === */
+.file-meta {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.3rem;
+  text-shadow: var(--shadow-text); /* ✅ ДАЖЕ МЕТА — ЧИТАЕМА */
 }
 
-/* зона drag-and-drop */
-.file-upload-area{
-  border:2px dashed var(--border);
-  border-radius:.75rem;
-  padding:1.5rem;
-  text-align:center;
-  margin-bottom:1rem;
-  transition:all .3s ease;
-  position:relative;
-}
-.file-upload-area:hover{
-  border-color:var(--indigo);
-  background:rgba(59,130,246,.05);
-  box-shadow:0 0 0 3px rgba(59,130,246,.1);
-}
-.file-input-wrapper{
-  position:relative;
-  width:100%;
-}
-.file-input-wrapper input[type="file"]{
-  width:100%;
-  padding:.5rem;
-  opacity:0;
-  position:absolute;
-  inset:0;
-  z-index:2;
-  cursor:pointer;
-  height:100%;
-}
-.file-input-label{
-  display:block;
-  padding:1rem;
-  background:rgba(255,255,255,.07);
-  border-radius:.5rem;
-  color:#cbd5e1;
-  font-weight:500;
-  transition:all .2s ease;
-  border:2px solid transparent;
-}
-.file-upload-area:hover .file-input-label{
-  background:var(--indigo);
-  color:#fff;
-  transform:translateY(-1px);
-  box-shadow:0 4px 8px rgba(59,130,246,.2);
-}
-.copy-notification{
-  position:fixed;
-  top:20px;
-  right:20px;
-  background:#0f172a;
-  color:#fff;
-  padding:.8rem 1.2rem;
-  border-radius:.5rem;
-  font-weight:500;
-  z-index:10000;
-  opacity:0;
-  transform:translateY(-10px);
-  transition:all .3s ease;
-  box-shadow:0 4px 12px rgba(0,0,0,.15);
-}
-.copy-notification.show{
-  opacity:1;
-  transform:translateY(0);
+/* === ЗОНА DRAG-AND-DROP === */
+.file-upload-area {
+  border: 2px dashed rgba(196, 214, 255, 0.7);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+  position: relative;
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
-/* анимации */
-@keyframes fadeInUp{
-  from{opacity:0;transform:translateY(30px)}
-  to{opacity:1;transform:translateY(0)}
+.file-upload-area:hover {
+  border-color: var(--indigo);
+  background: rgba(79, 126, 230, 0.08);
+  box-shadow: 0 0 0 3px rgba(79, 126, 230, 0.1);
 }
-@keyframes fadeIn{
-  from{opacity:0;transform:scale(.95) translateY(-10px)}
-  to{opacity:1;transform:scale(1) translateY(0)}
+
+.file-input-wrapper {
+  position: relative;
+  width: 100%;
 }
+
+.file-input-wrapper input[type="file"] {
+  width: 100%;
+  padding: 0.5rem;
+  opacity: 0;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  cursor: pointer;
+  height: 100%;
+}
+
+.file-input-label {
+  display: block;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 0.5rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  text-shadow: var(--shadow-text); /* ✅ ТЕНИ НА НАДПИСИ */
+}
+
+.file-upload-area:hover .file-input-label {
+  background: var(--indigo);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(79, 126, 230, 0.2);
+  text-shadow: none; /* Убираем тень на белом — она мешает */
+}
+
+/* === УВЕДОМЛЕНИЕ КОПИРОВАНИЯ === */
+.copy-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  color: var(--slate-800);
+  padding: 0.8rem 1.2rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  z-index: 10000;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
+  text-shadow: var(--shadow-text);
+}
+
+.copy-notification.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.copy-notification.success {
+  color: var(--success);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+/* === АНИМАЦИИ === */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px) }
+  to { opacity: 1; transform: translateY(0) }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(-10px) }
+  to { opacity: 1; transform: scale(1) translateY(0) }
+}
+
 </style>
 
 <div class="container">
@@ -502,7 +688,7 @@ input:focus,select:focus{
     <div style="width: 100%; display: flex; justify-content: flex-start; align-items: center;">
       <div style="flex: 1;">
         <!-- Название школы (режим просмотра + кнопка) -->
-        <div id="schoolTitleDisplay" style="font-size: 1.8rem; color: #f1f5f9; font-weight: 800; margin-bottom: 0.5rem;">
+        <div id="schoolTitleDisplay" style="font-size: 1.8rem; color: #21262b; font-weight: 800; margin-bottom: 0.5rem;">
           {{ user.unit_name }}
         </div>
         <button type="button" id="editSchoolTitleBtn" class="edit-title-btn">Изменить</button>
