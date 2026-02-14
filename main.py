@@ -66,6 +66,8 @@ from dotenv import load_dotenv
 
 import logging  # ← добавлен
 
+from fastapi.staticfiles import StaticFiles
+
 # Загрузка переменных из .env
 load_dotenv()
 
@@ -97,6 +99,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(GZipMiddleware, minimum_size=100)  # Сжатие для экономии трафика
 
+# 🚨 КЛЮЧЕВОЙ ШАГ: Подключаем папку static/ как статический ресурс
+app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 #ДЛЯ ПЕРСОНАЛЬНЫХ ДАННЫХ
@@ -310,9 +314,8 @@ async def list_directory_files_optimized(path: Path) -> List[Path]:
         return files
     except OSError:
         return []
-
 async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict):
-    """Потоковая генерация HTML для федерального мониторинга"""
+    """Потоковая генерация HTML для федерального мониторинга с улучшенной группировкой"""
     yield f"""
     <html>
         <head>
@@ -320,7 +323,17 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             <title>Файлы учреждения {uid}</title>
             <style>
                 body {{ font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }}
-                .container {{ max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+                .container {{ 
+                    max-width: 1200px; 
+                    margin: 0 auto; 
+                    background: white; 
+                    padding: 20px; 
+                    border-radius: 8px; 
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+                    position: relative;
+                    display: flex;
+                    gap: 30px;
+                }}
                 h1 {{ color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }}
                 .year-section {{ margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px; }}
                 .month-section {{ margin: 10px 0; padding: 10px; background: #fff; border-left: 4px solid #3498db; }}
@@ -330,46 +343,150 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
                 .file-link:hover {{ color: #1a5276; text-decoration: underline; }}
                 .file-date {{ color: #7f8c8d; font-size: 0.9em; }}
                 .no-files {{ color: #95a5a6; font-style: italic; }}
+                .kp-year-header {{ font-weight: bold; color: #16a085; margin: 10px 0 5px 0; }}
+                .tm-year-header {{ font-weight: bold; color: #e67e22; margin: 10px 0 5px 0; }}
+                
+                .main-content {{ 
+                    flex: 1;
+                    min-width: 0;
+                }}
+                
+                .menu-sidebar {{ 
+                    width: 320px;
+                    flex-shrink: 0;
+                    background: #f0f8ff;
+                    padding: 15px;
+                    border-radius: 6px;
+                    border: 1px solid #3498db;
+                    height: fit-content;
+                    position: sticky;
+                    top: 20px;
+                }}
+                
+                .sidebar-title {{
+                    font-size: 1.1em;
+                    font-weight: bold;
+                    color: #2c3e50;
+                    margin-bottom: 15px;
+                    text-align: center;
+                    border-bottom: 1px solid #3498db;
+                    padding-bottom: 8px;
+                }}
+                
+                .sidebar-section {{
+                    margin-bottom: 20px;
+                }}
+                
+                .sidebar-section:last-child {{
+                    margin-bottom: 0;
+                }}
+                
+                .sanpin-compliance {{
+                    background: #d4edda;
+                    border: 1px solid #c3e6cb;
+                    border-radius: 6px;
+                    padding: 12px 15px;
+                    margin: 20px 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    font-size: 0.95em;
+                    color: #155724;
+                }}
+                
+                .sanpin-checkmark {{
+                    color: #28a745;
+                    font-size: 1.2em;
+                    font-weight: bold;
+                }}
+                
+                .nutrition-info {{
+                    background: #e7f3ff;
+                    border: 1px solid #b8daff;
+                    border-radius: 6px;
+                    padding: 12px 15px;
+                    margin: 15px 0;
+                    font-size: 0.9em;
+                    color: #004085;
+                    line-height: 1.4;
+                }}
             </style>
         </head>
         <body>
             <div class="container">
-                <h1>📁 Файлы учреждения {uid}</h1>
-                <hr>
+                <div class="main-content">
+                    <h1>📁 Ежедневное меню 🍎 </h1>
+                    <hr>
     """
-    
+
     files = await list_directory_files_optimized(base_path)
-    grouped_files = {}
-    
+    if not files:
+        yield '<div class="no-files">📭 Нет доступных файлов</div>'
+        yield '</div></div></body></html>'
+        return
+
+    # Группы: обычные файлы по годам/месяцам, tm-файлы по году, kp-файлы по году
+    grouped_files = {}          # {год: {месяц: [файлы]}}
+    tm_files_by_year = {}        # {год: [tm-файлы]}
+    kp_files_by_year = {}       # {год: [kp-файлы]}
+
     for f in files:
         if f.name == "manifest.json":
             continue
-            
+        if not await run_in_threadpool(f.exists):
+            logger.warning(f"Файл {f.name} не найден на диске, пропускаем")
+            continue
+
         file_meta = manifest.get(f.name, {})
         date_str = file_meta.get("upload_datetime", "")
-        
+
         try:
-            dt = datetime.strptime(date_str, "%d.%m.%Y %H:%M") if date_str else datetime.fromtimestamp(await run_in_threadpool(f.stat).st_mtime)
-        except Exception:
+            dt = datetime.strptime(date_str, "%d.%m.%Y %H:%M") if date_str else \
+                  datetime.fromtimestamp(await run_in_threadpool(f.stat).st_mtime)
+        except Exception as e:
+            logger.error(f"Ошибка парсинга даты для {f.name}: {e}")
             dt = datetime.now()
-        
+
         assigned_year = file_meta.get("assigned_year", str(dt.year))
         assigned_month = file_meta.get("assigned_month", dt.strftime("%m"))
         month_name = MONTHS.get(assigned_month, assigned_month)
 
-        grouped_files.setdefault(assigned_year, {}).setdefault(month_name, []).append({
+        stat_result = await run_in_threadpool(f.stat)
+
+        file_info = {
             "filename": f.name,
             "date": dt.strftime("%d.%m.%Y %H:%M"),
-            "size": await run_in_threadpool(f.stat).st_size
-        })
-    
-    # Сортировка и потоковая выдача
+            "size": stat_result.st_size
+        }
+
+        # 1. Группируем tm*.xlsx по году из имени файла
+        if re.match(r"^tm\d{4}-sm\.xlsx$", f.name):
+            tm_year = f.name[2:6]
+            if tm_year not in tm_files_by_year:
+                tm_files_by_year[tm_year] = []
+            tm_files_by_year[tm_year].append(file_info)
+            continue
+
+        # 2. Группируем kp*.xlsx по году из имени файла
+        elif re.match(r"^kp\d{4}\.xlsx$", f.name):
+            kp_year = f.name[2:6]
+            if kp_year not in kp_files_by_year:
+                kp_files_by_year[kp_year] = []
+            kp_files_by_year[kp_year].append(file_info)
+            continue
+
+        # 3. Остальные файлы — в обычную группировку по manifest/дате
+        if assigned_year not in grouped_files:
+            grouped_files[assigned_year] = {}
+        if month_name not in grouped_files[assigned_year]:
+            grouped_files[assigned_year][month_name] = []
+        grouped_files[assigned_year][month_name].append(file_info)
+
+    # Вывод: 1) Обычные файлы по годам/месяцам
     for year in sorted(grouped_files.keys(), reverse=True):
         yield f'<div class="year-section"><h2>📅 {year} год</h2>'
-        
         for month in sorted(grouped_files[year].keys(), reverse=True):
             yield f'<div class="month-section"><h3>📊 {month}</h3><ul class="file-list">'
-            
             for file_info in sorted(grouped_files[year][month], key=lambda x: x["date"], reverse=True):
                 size_kb = file_info["size"] // 1024
                 yield (
@@ -379,14 +496,146 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
                     f'<span style="margin-left: 15px; color: #27ae60;">{size_kb} KB</span></div>'
                     f'</li>'
                 )
-            
             yield '</ul></div>'
         yield '</div>'
-    
+
+    # Если ничего не нашлось
     if not grouped_files:
         yield '<div class="no-files">📭 Нет доступных файлов</div>'
-    
+
+    yield '</div>'  # закрываем main-content
+
+    # Боковая панель с календарями питания и типовым меню
+    if kp_files_by_year or tm_files_by_year:
+        yield '<div class="menu-sidebar">'
+        yield '<div class="sidebar-title">🍽️ Типовое меню и календари питания</div>'
+        
+        # Секция календарей питания
+        if kp_files_by_year:
+            yield '<div class="sidebar-section">'
+            yield '<div style="font-weight: bold; color: #16a085; margin-bottom: 10px;">📅 Календари питания</div>'
+            for kp_year in sorted(kp_files_by_year.keys(), reverse=True):
+                if kp_files_by_year[kp_year]:
+                    yield f'<div class="kp-year-header">{kp_year} год</div>'
+                    yield '<ul class="file-list">'
+                    for file_info in sorted(kp_files_by_year[kp_year], key=lambda x: x["date"], reverse=True):
+                        size_kb = file_info["size"] // 1024
+                        yield (
+                            f'<li class="file-item">'
+                            f'<a class="file-link" href="{file_info["filename"]}">📄 {file_info["filename"]}</a>'
+                            f'<div><span class="file-date">{file_info["date"]}</span>'
+                            f'<span style="margin-left: 15px; color: #27ae60;">{size_kb} KB</span></div>'
+                            f'</li>'
+                        )
+                    yield '</ul>'
+            yield '</div>'  # закрываем sidebar-section
+        
+        # Секция типового меню
+        if tm_files_by_year:
+            yield '<div class="sidebar-section">'
+            yield '<div style="font-weight: bold; color: #e67e22; margin-bottom: 10px;">📋 Типовое меню</div>'
+            for tm_year in sorted(tm_files_by_year.keys(), reverse=True):
+                if tm_files_by_year[tm_year]:
+                    yield f'<div class="tm-year-header">{tm_year} год</div>'
+                    yield '<ul class="file-list">'
+                    for file_info in sorted(tm_files_by_year[tm_year], key=lambda x: x["date"], reverse=True):
+                        size_kb = file_info["size"] // 1024
+                        yield (
+                            f'<li class="file-item">'
+                            f'<a class="file-link" href="{file_info["filename"]}">📄 {file_info["filename"]}</a>'
+                            f'<div><span class="file-date">{file_info["date"]}</span>'
+                            f'<span style="margin-left: 15px; color: #27ae60;">{size_kb} KB</span></div>'
+                            f'</li>'
+                        )
+                    yield '</ul>'
+            yield '</div>'  # закрываем sidebar-section
+        
+        # Блок соответствия СанПиН
+        yield '''
+        <div class="sanpin-compliance">
+            <span class="sanpin-checkmark">✅</span>
+            <div>
+                <strong>Соответствует нормам СанПиН</strong><br>
+                <span style="font-size: 0.9em; color: #0c5460;">Меню разработано в соответствии с требованиями санитарных правил и норм</span>
+            </div>
+        </div>
+        '''
+        
+        # Информация о бесплатном питании
+        yield '''
+        <div class="nutrition-info">
+            <strong>🍲 Бесплатное горячее питание</strong><br>
+            Обучающиеся обеспечиваются бесплатным горячим питанием в соответствии с действующими нормативными документами, размещенными на официальном сайте образовательного учреждения.
+        </div>
+        '''
+        
+        yield '</div>'  # закрываем menu-sidebar
+
     yield '</div></body></html>'
+
+
+    return
+
+    grouped_files = {}
+
+    for f in files:
+        if f.name == "manifest.json":
+            continue
+
+        if not await run_in_threadpool(f.exists):
+            logger.warning(f"Файл {f.name} не найден на диске, пропускаем")
+            continue
+
+        file_meta = manifest.get(f.name, {})
+        date_str = file_meta.get("upload_datetime", "")
+
+        try:
+            dt = datetime.strptime(date_str, "%d.%m.%Y %H:%M") if date_str else \
+                  datetime.fromtimestamp(await run_in_threadpool(f.stat).st_mtime)
+        except Exception as e:
+            logger.error(f"Ошибка парсинга даты для {f.name}: {e}")
+            dt = datetime.now()
+
+        assigned_year = file_meta.get("assigned_year", str(dt.year))
+        assigned_month = file_meta.get("assigned_month", dt.strftime("%m"))
+        month_name = MONTHS.get(assigned_month, assigned_month)
+
+
+        if assigned_year not in grouped_files:
+            grouped_files[assigned_year] = {}
+        if month_name not in grouped_files[assigned_year]:
+            grouped_files[assigned_year][month_name] = []
+
+        # Исправленный участок: сначала ждём stat, потом берём st_size
+        stat_result = await run_in_threadpool(f.stat)
+        grouped_files[assigned_year][month_name].append({
+            "filename": f.name,
+            "date": dt.strftime("%d.%m.%Y %H:%M"),
+            "size": stat_result.st_size
+        })
+
+    # Сортировка и вывод HTML (остаётся без изменений)
+    for year in sorted(grouped_files.keys(), reverse=True):
+        yield f'<div class="year-section"><h2>📅 {year} год</h2>'
+        for month in sorted(grouped_files[year].keys(), reverse=True):
+            yield f'<div class="month-section"><h3>📊 {month}</h3><ul class="file-list">'
+            for file_info in sorted(grouped_files[year][month], key=lambda x: x["date"], reverse=True):
+                size_kb = file_info["size"] // 1024
+                yield (
+                    f'<li class="file-item">'
+                    f'<a class="file-link" href="{file_info["filename"]}">📄 {file_info["filename"]}</a>'
+                    f'<div><span class="file-date">{file_info["date"]}</span>'
+                    f'<span style="margin-left: 15px; color: #27ae60;">{size_kb} KB</span></div>'
+                    f'</li>'
+                )
+            yield '</ul></div>'
+        yield '</div>'
+
+    if not grouped_files:
+        yield '<div class="no-files">📭 Нет доступных файлов</div>'
+
+    yield '</div></body></html>'
+
 
 # Middleware для мониторинга производительности
 @app.middleware("http")
