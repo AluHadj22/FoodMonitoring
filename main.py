@@ -314,6 +314,7 @@ async def list_directory_files_optimized(path: Path) -> List[Path]:
         return files
     except OSError:
         return []
+    
 async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict):
     """Потоковая генерация HTML для федерального мониторинга с улучшенной группировкой"""
     yield f"""
@@ -566,6 +567,13 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
         <div class="nutrition-info">
             <strong>🍲 Бесплатное горячее питание</strong><br>
             Обучающиеся обеспечиваются бесплатным горячим питанием в соответствии с действующими нормативными документами, размещенными на официальном сайте образовательного учреждения.
+        </div>
+        <div class="nutrition-info">
+            <strong>📊 Опрос родителей и обучающихся ФЦМПО</strong><br>
+            <a href="https://opros.cemon.ru/" target="_blank" style="color: #007bff; text-decoration: none; font-weight: bold; border-bottom: 1px dotted #007bff;">
+                https://opros.cemon.ru/
+            </a>
+            <span style="font-size: 0.85em; color: #6c757d; margin-left: 5px;">(откроется в новой вкладке)</span>
         </div>
         '''
         
