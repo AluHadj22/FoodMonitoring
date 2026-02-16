@@ -411,6 +411,16 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
                     color: #004085;
                     line-height: 1.4;
                 }}
+
+                .findex-info {{
+                    background: #fff3cd;
+                    border: 1px solid #f0b400;
+                    border-radius: 6px;
+                    padding: 12px 15px;
+                    margin: 15px 0;
+                    color: #856404;
+                }}
+
             </style>
         </head>
         <body>
@@ -426,10 +436,10 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
         yield '</div></div></body></html>'
         return
 
-    # Группы: обычные файлы по годам/месяцам, tm-файлы по году, kp-файлы по году
-    grouped_files = {}          # {год: {месяц: [файлы]}}
-    tm_files_by_year = {}        # {год: [tm-файлы]}
-    kp_files_by_year = {}       # {год: [kp-файлы]}
+    grouped_files = {}      # {год: {месяц: [файлы]}}
+    tm_files_by_year = {}   # {год: [tm-файлы]}
+    kp_files_by_year = {}   # {год: [kp-файлы]}
+    findex_files = []       # ← специальная кучка findex.xlsx
 
     for f in files:
         if f.name == "manifest.json":
@@ -441,9 +451,41 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
         file_meta = manifest.get(f.name, {})
         date_str = file_meta.get("upload_datetime", "")
 
+        # Пытаемся вытащить дату из имени: 2026-02-02-sm.xlsx
+        date_from_name_match = re.search(r'(\d{4})-(\d{2})-(\d{2})', f.name)
+        if date_from_name_match:
+            y, m, d = date_from_name_match.groups()
+            dt = datetime(int(y), int(m), int(d))
+            assigned_year, assigned_month = str(dt.year), str(dt.month).zfill(2)
+            month_name = MONTHS.get(assigned_month, assigned_month)
+            stat_result = await run_in_threadpool(f.stat)
+            file_info = {"filename": f.name,
+                         "date": dt.strftime("%d.%m.%Y %H:%M"),
+                         "size": stat_result.st_size}
+            grouped_files.setdefault(assigned_year, {}).setdefault(month_name, []).append(file_info)
+            continue
+
+        # Обработка findex.xlsx
+        if f.name.lower() == "findex.xlsx":
+            # ← выводим findex в отдельный блок, т.к. он «для ФЦМПО»
+            try:
+                dt = (datetime.strptime(date_str, "%d.%m.%Y %H:%M")
+                      if date_str
+                      else datetime.fromtimestamp((await run_in_threadpool(f.stat)).st_mtime))
+            except Exception:
+                dt = datetime.now()
+            stat_result = await run_in_threadpool(f.stat)
+            findex_files.append({"filename": f.name,
+                                 "date": dt.strftime("%d.%m.%Y %H:%M"),
+                                 "size": stat_result.st_size})
+            # в обычную группировку findex не идёт
+            continue
+
+        # Остальное – как было
         try:
-            dt = datetime.strptime(date_str, "%d.%m.%Y %H:%M") if date_str else \
-                  datetime.fromtimestamp(await run_in_threadpool(f.stat).st_mtime)
+            dt = (datetime.strptime(date_str, "%d.%m.%Y %H:%M")
+                  if date_str
+                  else datetime.fromtimestamp(await run_in_threadpool(f.stat).st_mtime))
         except Exception as e:
             logger.error(f"Ошибка парсинга даты для {f.name}: {e}")
             dt = datetime.now()
@@ -451,44 +493,34 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
         assigned_year = file_meta.get("assigned_year", str(dt.year))
         assigned_month = file_meta.get("assigned_month", dt.strftime("%m"))
         month_name = MONTHS.get(assigned_month, assigned_month)
-
         stat_result = await run_in_threadpool(f.stat)
+        file_info = {"filename": f.name,
+                     "date": dt.strftime("%d.%m.%Y %H:%M"),
+                     "size": stat_result.st_size}
 
-        file_info = {
-            "filename": f.name,
-            "date": dt.strftime("%d.%m.%Y %H:%M"),
-            "size": stat_result.st_size
-        }
-
-        # 1. Группируем tm*.xlsx по году из имени файла
+        # Группируем tm/kp по прежнему алгоритму
         if re.match(r"^tm\d{4}-sm\.xlsx$", f.name):
             tm_year = f.name[2:6]
-            if tm_year not in tm_files_by_year:
-                tm_files_by_year[tm_year] = []
-            tm_files_by_year[tm_year].append(file_info)
+            tm_files_by_year.setdefault(tm_year, []).append(file_info)
             continue
-
-        # 2. Группируем kp*.xlsx по году из имени файла
-        elif re.match(r"^kp\d{4}\.xlsx$", f.name):
+        if re.match(r"^kp\d{4}\.xlsx$", f.name):
             kp_year = f.name[2:6]
-            if kp_year not in kp_files_by_year:
-                kp_files_by_year[kp_year] = []
-            kp_files_by_year[kp_year].append(file_info)
+            kp_files_by_year.setdefault(kp_year, []).append(file_info)
             continue
 
-        # 3. Остальные файлы — в обычную группировку по manifest/дате
-        if assigned_year not in grouped_files:
-            grouped_files[assigned_year] = {}
-        if month_name not in grouped_files[assigned_year]:
-            grouped_files[assigned_year][month_name] = []
-        grouped_files[assigned_year][month_name].append(file_info)
+        # Обычные файлы
+        grouped_files.setdefault(assigned_year, {}).setdefault(month_name, []).append(file_info)
 
-    # Вывод: 1) Обычные файлы по годам/месяцам
+    # Вывод основных файлов
     for year in sorted(grouped_files.keys(), reverse=True):
         yield f'<div class="year-section"><h2>📅 {year} год</h2>'
         for month in sorted(grouped_files[year].keys(), reverse=True):
             yield f'<div class="month-section"><h3>📊 {month}</h3><ul class="file-list">'
-            for file_info in sorted(grouped_files[year][month], key=lambda x: x["date"], reverse=True):
+            # ← сортируем по дате внутри месяца – старые дни выше
+            grouped_files[year][month].sort(
+                key=lambda x: datetime.strptime(x["date"], "%d.%m.%Y %H:%M"),
+                reverse=False)
+            for file_info in grouped_files[year][month]:
                 size_kb = file_info["size"] // 1024
                 yield (
                     f'<li class="file-item">'
@@ -500,86 +532,86 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             yield '</ul></div>'
         yield '</div>'
 
-    # Если ничего не нашлось
-    if not grouped_files:
+    if not grouped_files and not findex_files:
         yield '<div class="no-files">📭 Нет доступных файлов</div>'
 
-    yield '</div>'  # закрываем main-content
+    yield '</div><!-- /main-content -->'   # закрываем левую колонку
 
-    # Боковая панель с календарями питания и типовым меню
-    if kp_files_by_year or tm_files_by_year:
+    # Правая колонка (меню + календарь + findex)
+    if any([findex_files, tm_files_by_year, kp_files_by_year]):
         yield '<div class="menu-sidebar">'
         yield '<div class="sidebar-title">🍽️ Типовое меню и календари питания</div>'
-        
-        # Секция календарей питания
-        if kp_files_by_year:
+
+        # 1) findex.xlsx
+        if findex_files:
             yield '<div class="sidebar-section">'
-            yield '<div style="font-weight: bold; color: #16a085; margin-bottom: 10px;">📅 Календари питания</div>'
-            for kp_year in sorted(kp_files_by_year.keys(), reverse=True):
-                if kp_files_by_year[kp_year]:
-                    yield f'<div class="kp-year-header">{kp_year} год</div>'
-                    yield '<ul class="file-list">'
-                    for file_info in sorted(kp_files_by_year[kp_year], key=lambda x: x["date"], reverse=True):
-                        size_kb = file_info["size"] // 1024
-                        yield (
-                            f'<li class="file-item">'
-                            f'<a class="file-link" href="{file_info["filename"]}">📄 {file_info["filename"]}</a>'
-                            f'<div><span class="file-date">{file_info["date"]}</span>'
-                            f'<span style="margin-left: 15px; color: #27ae60;">{size_kb} KB</span></div>'
-                            f'</li>'
-                        )
-                    yield '</ul>'
-            yield '</div>'  # закрываем sidebar-section
-        
-        # Секция типового меню
-        if tm_files_by_year:
+            yield '<div class="findex-info">'
+            yield '<strong>📈 Файл findex.xlsx для ФЦМПО</strong><br>(показатель качества питания)'
+            yield '</div><ul class="file-list">'
+            for fi in findex_files:
+                size_kb = fi["size"] // 1024
+                yield (f'<li class="file-item">'
+                       f'<a class="file-link" href="{fi["filename"]}">📄 {fi["filename"]}</a>'
+                       f'<div><span class="file-date">{fi["date"]}</span> '
+                       f'<span style="margin-left:15px;color:#27ae60">{size_kb} KB</span></div>'
+                       f'</li>')
+            yield '</ul></div>'
+
+        # 2) календари питания
+        for kp_year in sorted(kp_files_by_year.keys(), reverse=True):
+            if not kp_files_by_year[kp_year]:
+                continue
             yield '<div class="sidebar-section">'
-            yield '<div style="font-weight: bold; color: #e67e22; margin-bottom: 10px;">📋 Типовое меню</div>'
-            for tm_year in sorted(tm_files_by_year.keys(), reverse=True):
-                if tm_files_by_year[tm_year]:
-                    yield f'<div class="tm-year-header">{tm_year} год</div>'
-                    yield '<ul class="file-list">'
-                    for file_info in sorted(tm_files_by_year[tm_year], key=lambda x: x["date"], reverse=True):
-                        size_kb = file_info["size"] // 1024
-                        yield (
-                            f'<li class="file-item">'
-                            f'<a class="file-link" href="{file_info["filename"]}">📄 {file_info["filename"]}</a>'
-                            f'<div><span class="file-date">{file_info["date"]}</span>'
-                            f'<span style="margin-left: 15px; color: #27ae60;">{size_kb} KB</span></div>'
-                            f'</li>'
-                        )
-                    yield '</ul>'
-            yield '</div>'  # закрываем sidebar-section
-        
-        # Блок соответствия СанПиН
+            yield '<div style="font-weight:bold;color:#16a085;margin-bottom:10px">📅 Календари питания</div>'
+            yield f'<div class="kp-year-header">{kp_year} год</div><ul class="file-list">'
+            for fi in sorted(kp_files_by_year[kp_year], key=lambda x: x["date"], reverse=True):
+                size_kb = fi["size"] // 1024
+                yield (f'<li class="file-item">'
+                       f'<a class="file-link" href="{fi["filename"]}">📄 {fi["filename"]}</a>'
+                       f'<div><span class="file-date">{fi["date"]}</span> '
+                       f'<span style="margin-left:15px;color:#27ae60">{size_kb} KB</span></div>'
+                       f'</li>')
+            yield '</ul></div>'
+
+        # 3) типовое меню
+        for tm_year in sorted(tm_files_by_year.keys(), reverse=True):
+            if not tm_files_by_year[tm_year]:
+                continue
+            yield '<div class="sidebar-section">'
+            yield '<div style="font-weight:bold;color:#e67e22;margin-bottom:10px">📋 Типовое меню</div>'
+            yield f'<div class="tm-year-header">{tm_year} год</div><ul class="file-list">'
+            for fi in sorted(tm_files_by_year[tm_year], key=lambda x: x["date"], reverse=True):
+                size_kb = fi["size"] // 1024
+                yield (f'<li class="file-item">'
+                       f'<a class="file-link" href="{fi["filename"]}">📄 {fi["filename"]}</a>'
+                       f'<div><span class="file-date">{fi["date"]}</span> '
+                       f'<span style="margin-left:15px;color:#27ae60">{size_kb} KB</span></div>'
+                       f'</li>')
+            yield '</ul></div>'
+
+        # 4) «плашки» СанПиН и опрос
         yield '''
         <div class="sanpin-compliance">
             <span class="sanpin-checkmark">✅</span>
             <div>
                 <strong>Соответствует нормам СанПиН</strong><br>
-                <span style="font-size: 0.9em; color: #0c5460;">Меню разработано в соответствии с требованиями санитарных правил и норм</span>
+                <span style="font-size:0.9em;color:#0c5460">Меню разработано в соответствии с требованиями санитарных правил и норм</span>
             </div>
         </div>
         '''
-        
-        # Информация о бесплатном питании
         yield '''
         <div class="nutrition-info">
-            <strong>🍲 Бесплатное горячее питание</strong><br>
-            Обучающиеся обеспечиваются бесплатным горячим питанием в соответствии с действующими нормативными документами, размещенными на официальном сайте образовательного учреждения.
-        </div>
-        <div class="nutrition-info">
-            <strong>📊 Опрос родителей и обучающихся ФЦМПО</strong><br>
-            <a href="https://opros.cemon.ru/" target="_blank" style="color: #007bff; text-decoration: none; font-weight: bold; border-bottom: 1px dotted #007bff;">
+            <strong>🔗 Опрос родителей и обучающихся ФЦМПО</strong><br>
+            <a href="https://opros.cemon.ru/" target="_blank" style="color:#007bff;text-decoration:none;font-weight:bold;border-bottom:1px dotted #007bff">
                 https://opros.cemon.ru/
             </a>
-            <span style="font-size: 0.85em; color: #6c757d; margin-left: 5px;">(откроется в новой вкладке)</span>
+            <span style="font-size:0.85em;color:#6c757d;margin-left:5px">(откроется в новой вкладке)</span>
         </div>
         '''
-        
-        yield '</div>'  # закрываем menu-sidebar
+        yield '</div><!-- /menu-sidebar -->'
 
-    yield '</div></body></html>'
+    yield '</div><!-- /container --></body></html>'
+
 
 
     return
