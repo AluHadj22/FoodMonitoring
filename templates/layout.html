@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>EduFlow</title>
+  <title>ЕЦМ</title>
   {% block styles %}{% endblock %}
 
   <style>
@@ -39,20 +39,20 @@
 
     /* Тёмная тема - более мягкий фон (не чёрный) */
     [data-theme='dark'] {
-      --slate-50: #1e2a3a;      /* Был #0f172a - мягкий тёмно-синий */
-      --slate-100: #2a3647;      /* Был #1e293b */
-      --slate-200: #3a475b;      /* Был #334155 */
-      --slate-300: #4a586f;      /* Был #475569 */
-      --slate-400: #6b7a93;      /* Был #64748b */
-      --slate-500: #8f9eb5;      /* Был #94a3b8 */
-      --slate-600: #b1c0d6;      /* Был #cbd5e1 */
-      --slate-700: #d1dff5;      /* Был #e2e8f0 */
-      --slate-800: #e8f0fe;      /* Был #f1f5f9 */
-      --slate-900: #f8fafc;      /* Был #f8fafc */
+      --slate-50: #1e2a3a;
+      --slate-100: #2a3647;
+      --slate-200: #3a475b;
+      --slate-300: #4a586f;
+      --slate-400: #6b7a93;
+      --slate-500: #8f9eb5;
+      --slate-600: #b1c0d6;
+      --slate-700: #d1dff5;
+      --slate-800: #e8f0fe;
+      --slate-900: #f8fafc;
       --white-bg: #1e2a3a;
-      --surface: #232f3f;        /* Был #0f172a - мягкий тёмный фон */
-      --card: #2a3647;            /* Был #1e293b */
-      --border: #3a475b;          /* Был #334155 */
+      --surface: #232f3f;
+      --card: #2a3647;
+      --border: #3a475b;
       --white: #1e2a3a;
       --sky: #2a3647;
       --blue-light: #1e3a6a;
@@ -114,9 +114,9 @@
       z-index: 100;
     }
 
-    /* Тёмная тема: navbar - адаптирован под новый фон */
+    /* Тёмная тема: navbar */
     [data-theme='dark'] nav {
-      background: rgba(35, 47, 63, 0.95); /* Соответствует новому --surface */
+      background: rgba(35, 47, 63, 0.95);
       color: var(--slate-200);
       border-bottom: 1px solid var(--slate-600);
       box-shadow: 0 4px 20px rgba(0,0,0,0.4);
@@ -264,18 +264,6 @@
       .logo-author {
         font-size: 0.65rem;
       }
-      .nav-links {
-        justify-content: center;
-        width: 100%;
-        gap: 0.5rem;
-      }
-      .nav-link, .nav-button {
-        padding: 0.6rem 1rem;
-        font-size: 0.8rem;
-        flex: 1;
-        justify-content: center;
-        min-width: 140px;
-      }
     }
 
     @media (max-width: 768px) {
@@ -358,6 +346,7 @@
       box-shadow: 0 8px 25px rgba(96, 165, 250, 0.4);
     }
 
+    /* Обновлённый стиль для кнопки мониторинга */
     .monitoring-button {
       background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
       color: white;
@@ -379,6 +368,12 @@
       background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+    }
+
+    .monitoring-button.active {
+      background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+      transform: translateY(-1px);
     }
 
     .monitoring-button::before {
@@ -418,78 +413,108 @@
       box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4) !important;
     }
 
-    .ecmp-tabs {
+    /* Новый стиль для выпадающего меню */
+    .monitoring-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .monitoring-menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      min-width: 280px;
+      background: var(--card);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+    }
+
+    .monitoring-menu.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .monitoring-menu-item {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-
-    .ecmp-tab {
+      padding: 1rem 1.25rem;
+      color: var(--slate-700);
       text-decoration: none;
-      font-weight: 700;
-      font-size: 0.85rem;
-      padding: 0.75rem 1.25rem;
-      border-radius: var(--radius-md);
-      transition: var(--transition-base);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid var(--border);
     }
 
-    .ecmp-tab.stats {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-      border: none;
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    .monitoring-menu-item:last-child {
+      border-bottom: none;
     }
 
-    .ecmp-tab.stats:hover {
-      background: linear-gradient(135deg, #059669 0%, #047857 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
-    }
-
-    .ecmp-tab.utils {
-      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-      color: white;
-      border: none;
-      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
-    }
-
-    .ecmp-tab.utils:hover {
-      background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
-    }
-
-    .ecmp-tab.register {
-      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-      color: white;
-      border: none;
-      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
-    }
-
-    .ecmp-tab.register:hover {
-      background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
-    }
-
-    .ecmp-tab.login {
-      background: var(--card);
-      color: var(--slate-600);
-      border: 1px solid var(--border);
-    }
-
-    .ecmp-tab.login:hover {
+    .monitoring-menu-item:hover {
       background: var(--blue-light);
       color: var(--blue-dark);
-      border-color: var(--blue);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-xl);
+      transform: translateX(4px);
+    }
+
+    .monitoring-menu-item svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+    }
+
+    .monitoring-menu-header {
+      padding: 0.75rem 1.25rem;
+      background: rgba(245, 158, 11, 0.1);
+      color: #f59e0b;
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Стили для пунктов меню */
+    .menu-item-stats {
+      border-left: 3px solid #10b981;
+    }
+
+    .menu-item-utils {
+      border-left: 3px solid #f59e0b;
+    }
+
+    .menu-item-register {
+      border-left: 3px solid #8b5cf6;
+    }
+
+    .menu-item-login {
+      border-left: 3px solid #3b82f6;
+    }
+
+    .menu-item-dashboard {
+      border-left: 3px solid #f97316;
+    }
+
+    /* Тёмная тема для меню */
+    [data-theme='dark'] .monitoring-menu {
+      background: var(--card);
+      border-color: var(--border);
+    }
+
+    [data-theme='dark'] .monitoring-menu-item {
+      color: var(--slate-300);
+    }
+
+    [data-theme='dark'] .monitoring-menu-item:hover {
+      background: var(--slate-700);
     }
 
     /* Контейнер страницы */
@@ -549,20 +574,72 @@
           <img src="/static/logo.jpg" alt="Логотип EduFlow" class="logo-image" />
         </div>
         <div class="logo-text">
-          <h1>EduFlow</h1>
-          <div class="logo-subtitle">Система управления образовательным процессом</div>
+          <h1>ЕЦМ</h1>
+          <div class="logo-subtitle">Единый Центр Мониторинга (образовательного процесса)</div>
           <div class="logo-author">автор: Хаджиев Алу Ибрагимович</div>
         </div>
       </div>
 
       <div class="nav-links" id="nav-links">
-        <button class="monitoring-button" id="monitoring-toggle">
-          <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            <path d="M9 17l5-5-5-5"/>
-          </svg>
-          Мониторинг питания
-        </button>
+        <!-- Кнопка мониторинга с выпадающим меню -->
+        <div class="monitoring-dropdown">
+          <button class="monitoring-button" id="monitoring-toggle">
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              <path d="M9 17l5-5-5-5"/>
+            </svg>
+            Мониторинг питания
+            <svg style="width:12px;height:12px; margin-left:4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          
+          <!-- Выпадающее меню -->
+          <div class="monitoring-menu" id="monitoring-menu">
+            <div class="monitoring-menu-header">
+              📊 Меню мониторинга питания
+            </div>
+            <a href="/analis" class="monitoring-menu-item menu-item-stats">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                <path d="M9 17l5-5-5-5"/>
+              </svg>
+              Анализ статистики
+            </a>
+            <a href="https://disk.yandex.ru/d/a7DfnkuAtep2yw" target="_blank" class="monitoring-menu-item menu-item-utils">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Утилиты ЕЦМП
+            </a>
+            <a href="/stat" class="monitoring-menu-item menu-item-dashboard">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12h2l3-9 4 18 3-9h2"/>
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 8v8"/>
+                <path d="M8 12h8"/>
+              </svg>
+              Дашборд питания
+            </a>
+            <a href="/register" class="monitoring-menu-item menu-item-register">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="8.5" cy="7" r="4"/>
+                <line x1="20" y1="8" x2="20" y2="14"/>
+                <line x1="23" y1="11" x2="17" y2="11"/>
+              </svg>
+              Регистрация
+            </a>
+            <a href="/login" class="monitoring-menu-item menu-item-login">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.5 12H3"/>
+              </svg>
+              Вход / Выход
+            </a>
+          </div>
+        </div>
 
         <a href="/gia.html" class="gia-link">
           <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -613,96 +690,37 @@
       setTheme(current === 'dark' ? 'light' : 'dark');
     });
 
-    // Навигация
+    // Навигация с выпадающим меню
     document.addEventListener('DOMContentLoaded', function() {
       const monitoringButton = document.getElementById('monitoring-toggle');
-      const navLinks = document.getElementById('nav-links');
-      let isEcmpVisible = false;
+      const monitoringMenu = document.getElementById('monitoring-menu');
+      
+      if (monitoringButton && monitoringMenu) {
+        // Открытие/закрытие меню при клике на кнопку
+        monitoringButton.addEventListener('click', function(e) {
+          e.stopPropagation();
+          monitoringMenu.classList.toggle('show');
+          monitoringButton.classList.toggle('active');
+        });
 
-      function showEcmpTabs() {
-        navLinks.innerHTML = `
-          <div class="ecmp-tabs">
-            <a href="/analis" class="ecmp-tab stats">
-              <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                <path d="M9 17l5-5-5-5"/>
-              </svg>
-              Анализ статистики
-            </a>
-            <a href="https://disk.yandex.ru/d/a7DfnkuAtep2yw" target="_blank" class="ecmp-tab utils">
-              <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
-              </svg>
-              Утилиты ЕЦМП
-            </a>
-            <a href="/register" class="ecmp-tab register">
-              <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="8.5" cy="7" r="4"/>
-                <line x1="20" y1="8" x2="20" y2="14"/>
-                <line x1="23" y1="11" x2="17" y2="11"/>
-              </svg>
-              Регистрация
-            </a>
-            <a href="/login" class="ecmp-tab login">
-              <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.5 12H3"/>
-              </svg>
-              Вход / Выход
-            </a>
-            <a href="/gia.html" class="gia-link">
-              <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 17l5-5-5-5"/>
-                <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              ГИА
-            </a>
-          </div>
-        `;
-        isEcmpVisible = true;
+        // Закрытие меню при клике вне его
+        document.addEventListener('click', function(e) {
+          if (!monitoringButton.contains(e.target) && !monitoringMenu.contains(e.target)) {
+            monitoringMenu.classList.remove('show');
+            monitoringButton.classList.remove('active');
+          }
+        });
+
+        // Закрытие меню при клике на пункт меню
+        monitoringMenu.querySelectorAll('a').forEach(link => {
+          link.addEventListener('click', function() {
+            monitoringMenu.classList.remove('show');
+            monitoringButton.classList.remove('active');
+          });
+        });
       }
 
-      function restoreDefaultNav() {
-        navLinks.innerHTML = `
-          <button class="monitoring-button" id="monitoring-toggle">
-            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              <path d="M9 17l5-5-5-5"/>
-            </svg>
-            Мониторинг питания
-          </button>
-          <a href="/gia.html" class="gia-link">
-            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 17l5-5-5-5"/>
-              <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            ГИА
-          </a>
-        `;
-        isEcmpVisible = false;
-        
-        // Заново прикрепляем обработчик к новой кнопке
-        const newButton = document.getElementById('monitoring-toggle');
-        if (newButton) {
-          newButton.addEventListener('click', toggleNav);
-        }
-      }
-
-      function toggleNav() {
-        if (isEcmpVisible) {
-          restoreDefaultNav();
-        } else {
-          showEcmpTabs();
-        }
-      }
-
-      // Прикрепляем обработчик к текущей кнопке
-      if (monitoringButton) {
-        monitoringButton.addEventListener('click', toggleNav);
-      }
-
+      // Анимация появления элементов
       const elements = document.querySelectorAll('.fade-in');
       elements.forEach((el, index) => {
         setTimeout(() => {
@@ -718,10 +736,12 @@
       });
 
       document.addEventListener('click', e => {
-        if (e.target.closest('.nav-link, .nav-button, .monitoring-button, .gia-link, .ecmp-tab')) {
+        if (e.target.closest('.nav-link, .nav-button, .gia-link, .monitoring-menu-item')) {
           const b = e.target.closest('a, button');
-          b.style.transform = 'translateY(0)';
-          setTimeout(() => b.style.transform = 'translateY(-1px)', 100);
+          if (b) {
+            b.style.transform = 'translateY(0)';
+            setTimeout(() => b.style.transform = 'translateY(-1px)', 100);
+          }
         }
       });
     });

@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
 <style>
-/* ----------  LIGHT-GLASS SCHOOL DASHBOARD — ОПТИМИЗИРОВАННАЯ ВЕРСИЯ ---------- */
+/* ----------  LIGHT-GLASS SCHOOL DASHBOARD — С ПРОФИЛЕМ ШКОЛЫ ---------- */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
 :root {
@@ -25,7 +25,7 @@
   --bg-card: #ffffff;
   --border: #c0d4ff;
   
-  /* ——— ТЕНИ (УПРОЩЕНЫ) ——— */
+  /* ——— ТЕНИ ——— */
   --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.04);
   --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.06);
   --shadow-input: 0 0 0 2px rgba(79, 126, 230, 0.2);
@@ -77,7 +77,7 @@ body {
   gap: 2rem;
 }
 
-/* === КАРТОЧКИ — УПРОЩЕНЫ === */
+/* === КАРТОЧКИ === */
 .card {
   background: var(--bg-card);
   border-radius: 1.5rem;
@@ -91,7 +91,7 @@ body {
 
 .card:hover {
   box-shadow: var(--shadow-hover);
-  transform: none; /* Убираем transform для производительности */
+  transform: none;
 }
 
 .card h3 {
@@ -112,7 +112,284 @@ body {
   transition: color 0.2s ease;
 }
 
-/* === КНОПКИ — УЛУЧШЕНЫ ДЛЯ ЧИТАЕМОСТИ === */
+/* === НОВЫЕ СТИЛИ ДЛЯ ПРОФИЛЯ ШКОЛЫ === */
+
+/* Шапка профиля */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+/* Аватар школы */
+.school-avatar {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--indigo);
+  box-shadow: 0 4px 12px rgba(79, 126, 230, 0.3);
+  background: var(--bg-card);
+  transition: all 0.3s ease;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--indigo-light), var(--indigo));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid var(--indigo);
+  box-shadow: 0 4px 12px rgba(79, 126, 230, 0.3);
+}
+
+.avatar-placeholder svg {
+  width: 60px;
+  height: 60px;
+  color: white;
+}
+
+.avatar-upload-btn {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--indigo);
+  border: 2px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.avatar-upload-btn:hover {
+  background: var(--indigo-dark);
+  transform: scale(1.1);
+}
+
+.avatar-upload-btn svg {
+  width: 18px;
+  height: 18px;
+  color: white;
+}
+
+.avatar-upload-input {
+  display: none;
+}
+
+/* Информация школы */
+.school-info {
+  flex: 1;
+  min-width: 300px;
+}
+
+.school-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.school-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--slate-800);
+  transition: color 0.2s ease;
+  margin: 0;
+}
+
+.edit-title-btn {
+  padding: 0.4rem 1rem;
+  background: var(--indigo);
+  color: white;
+  border: none;
+  border-radius: 2rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: opacity 0.2s ease;
+  box-shadow: none;
+}
+
+.edit-title-btn:hover {
+  opacity: 0.9;
+}
+
+.school-badges {
+  display: flex;
+  gap: 1rem;
+  margin: 0.5rem 0;
+  flex-wrap: wrap;
+}
+
+.school-badge {
+  background: rgba(79, 126, 230, 0.1);
+  color: var(--indigo-dark);
+  padding: 0.3rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+[data-theme='dark'] .school-badge {
+  background: rgba(96, 165, 250, 0.2);
+  color: var(--indigo);
+}
+
+.school-badge svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Блок контактов и ссылок */
+.school-links {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+
+.school-link-card {
+  flex: 1;
+  min-width: 200px;
+  background: rgba(79, 126, 230, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.school-link-card:hover {
+  background: rgba(79, 126, 230, 0.1);
+  border-color: var(--indigo);
+}
+
+.school-link-card h4 {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.school-link-card a {
+  color: var(--indigo);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  word-break: break-all;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.school-link-card a:hover {
+  text-decoration: underline;
+}
+
+.link-edit-form {
+  display: none;
+  margin-top: 0.5rem;
+}
+
+.link-edit-form input {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.5rem;
+  border: 2px solid var(--border);
+  background: var(--bg-card);
+  color: var(--slate-800);
+}
+
+.link-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.link-edit-actions button {
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  border: none;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  font-weight: 600;
+}
+
+.link-save-btn {
+  background: var(--success);
+  color: white;
+}
+
+.link-cancel-btn {
+  background: var(--slate-100);
+  color: var(--text-secondary);
+}
+
+.edit-link-icon {
+  margin-left: auto;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+  font-size: 1rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.3rem;
+}
+
+.edit-link-icon:hover {
+  color: var(--indigo);
+  background: rgba(79, 126, 230, 0.1);
+}
+
+/* Форма редактирования названия */
+.school-title-edit-form {
+  display: none;
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(79, 126, 230, 0.05);
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+}
+
+.school-title-edit-form input {
+  width: 100%;
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+  border: 2px solid var(--border);
+  background: var(--bg-card);
+  color: var(--slate-800);
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+/* === ОСТАЛЬНЫЕ СТИЛИ (БЕЗ ИЗМЕНЕНИЙ) === */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -142,7 +419,7 @@ body {
 .btn-dark {
   background: var(--slate-800);
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2); /* Добавляем границу для контраста */
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .btn-dark:hover {
@@ -150,7 +427,6 @@ body {
   background: #000;
 }
 
-/* Специальный стиль для кнопки мониторингпитания.рф */
 .btn-external {
   background: var(--indigo-dark);
   color: white;
@@ -162,10 +438,9 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-left: auto;
-  min-width: 200px; /* Увеличиваем минимальную ширину */
+  min-width: 200px;
 }
 
-/* Тёмная тема для внешней кнопки */
 [data-theme='dark'] .btn-external {
   background: #3b82f6;
   border: 2px solid rgba(255, 255, 255, 0.4);
@@ -178,25 +453,7 @@ body {
   transform: translateY(-1px);
 }
 
-.btn-success {
-  background: linear-gradient(135deg, var(--success), #0d9466);
-  color: white;
-}
-
-.btn-success:hover {
-  opacity: 0.9;
-}
-
-.btn-warning {
-  background: linear-gradient(135deg, var(--warning), #d97706);
-  color: white;
-}
-
-.btn-warning:hover {
-  opacity: 0.9;
-}
-
-/* === ПОЛЯ ВВОДА — УЛУЧШЕНЫ ДЛЯ ЧИТАЕМОСТИ === */
+/* === ПОЛЯ ВВОДА === */
 input, select {
   width: 100%;
   padding: 0.8rem 1rem;
@@ -209,9 +466,8 @@ input, select {
   box-shadow: none;
 }
 
-/* Увеличиваем поле для года */
 input[name="year"] {
-  width: 100px !important; /* Увеличено с 80px */
+  width: 100px !important;
   text-align: center;
   font-weight: 600;
 }
@@ -222,7 +478,6 @@ input:focus, select:focus {
   box-shadow: var(--shadow-input);
 }
 
-/* Тёмная тема для полей */
 [data-theme='dark'] input,
 [data-theme='dark'] select {
   background: var(--slate-800);
@@ -239,7 +494,6 @@ input:focus, select:focus {
   gap: 0.6rem;
 }
 
-/* === ФАЙЛЫ — УПРОЩЕНЫ === */
 .file-item {
   display: flex;
   align-items: center;
@@ -321,7 +575,7 @@ input:focus, select:focus {
   border-color: var(--error);
 }
 
-/* === МОДАЛКА — УПРОЩЕНА === */
+/* === МОДАЛКА === */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -522,98 +776,6 @@ input:focus, select:focus {
   opacity: 1;
 }
 
-/* === РЕДАКТИРУЕМОЕ НАЗВАНИЕ === */
-.editable-title-container {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-  width: 100%;
-}
-
-.editable-title {
-  position: relative;
-  min-height: 2.4rem;
-  display: flex;
-  align-items: center;
-  padding: 0.4rem 0.8rem;
-  border-radius: 0.6rem;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid var(--border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  margin-bottom: 0.5rem;
-  transition: background 0.2s ease, border-color 0.2s ease;
-}
-
-/* Тёмная тема для редактируемого названия */
-[data-theme='dark'] .editable-title {
-  background: var(--slate-800);
-}
-
-.editable-title span {
-  display: block;
-  font-size: 1.8rem;
-  color: var(--slate-800);
-  font-weight: 800;
-  background: transparent;
-  border-radius: 0.5rem;
-  padding: 0.3rem 0.8rem;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  margin: 0;
-  display: inline-block;
-  width: fit-content;
-  border: 1px solid rgba(0, 0, 0, 0.3);
-  transition: color 0.2s ease, border-color 0.2s ease;
-}
-
-/* Тёмная тема для текста названия */
-[data-theme='dark'] .editable-title span {
-  color: var(--slate-200);
-  border-color: var(--border);
-}
-
-.editable-title input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  font-size: 1.8rem;
-  color: var(--slate-800);
-  font-weight: 800;
-  padding: 0 0.4rem;
-  border: 3px solid var(--indigo);
-  border-radius: 0.6rem;
-  background: var(--bg-card);
-  outline: none;
-  box-shadow: var(--shadow-input);
-  z-index: 10;
-  opacity: 0;
-  transform: scaleY(0);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.editable-title input.active {
-  opacity: 1;
-  transform: scaleY(1);
-}
-
-.edit-title-btn {
-  padding: 0.4rem 0.8rem;
-  background: var(--indigo);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 600;
-  transition: opacity 0.2s ease;
-  align-self: flex-start;
-  box-shadow: none;
-}
-
-.edit-title-btn:hover {
-  opacity: 0.9;
-}
-
 /* === МЕТА-ИНФО ФАЙЛА === */
 .file-meta {
   font-size: 0.8rem;
@@ -622,7 +784,7 @@ input:focus, select:focus {
   transition: color 0.2s ease;
 }
 
-/* === ЗОНА DRAG-AND-DROP — УПРОЩЕНА === */
+/* === ЗОНА DRAG-AND-DROP === */
 .file-upload-area {
   border: 2px dashed var(--border);
   border-radius: 0.75rem;
@@ -666,7 +828,6 @@ input:focus, select:focus {
   border: 2px solid transparent;
 }
 
-/* Тёмная тема для лейбла загрузки */
 [data-theme='dark'] .file-input-label {
   background: var(--slate-800);
   color: var(--slate-400);
@@ -707,7 +868,7 @@ input:focus, select:focus {
   border-color: rgba(16, 185, 129, 0.3);
 }
 
-/* === АНИМАЦИИ — УПРОЩЕНЫ === */
+/* === АНИМАЦИИ === */
 @keyframes fadeInUp {
   from { 
     opacity: 0; 
@@ -733,76 +894,168 @@ input:focus, select:focus {
 </style>
 
 <div class="container">
-  <!-- Заголовок учреждения -->
-  <div class="card" style="border-left: 6px solid var(--indigo); width: 100%; display: flex; flex-direction: column; align-items: flex-start;">
-    <div style="width: 100%; display: flex; justify-content: flex-start; align-items: center; gap: 2rem;">
-      <div style="flex: 1;">
-        <!-- Название школы (режим просмотра + кнопка) -->
-        <div id="schoolTitleDisplay" style="font-size: 1.8rem; color: var(--slate-800); font-weight: 800; margin-bottom: 0.5rem; transition: color 0.2s ease;">
-          {{ user.unit_name }}
-        </div>
-        <button type="button" id="editSchoolTitleBtn" class="edit-title-btn">Изменить</button>
-
-        <!-- Форма редактирования названия школы (скрыта по умолчанию) -->
-        <form id="schoolTitleForm" action="/profile/update" method="post" style="display: none; margin-top: 1rem; gap: 1rem; align-items: center;">
+  <!-- Заголовок учреждения с профилем -->
+  <div class="card" style="border-left: 6px solid var(--indigo);">
+    <!-- Верхняя часть с аватаром и основной информацией -->
+    <div class="profile-header">
+      <!-- Аватар школы -->
+      <div class="school-avatar">
+        {% if profile and profile.avatar %}
+          <img src="/{{ user.id }}/avatar/{{ profile.avatar }}" alt="Логотип школы" class="avatar-image" id="schoolAvatar">
+        {% else %}
+          <div class="avatar-placeholder" id="avatarPlaceholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.586a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 7.586 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </div>
+        {% endif %}
+        
+        <!-- Кнопка загрузки аватара -->
+        <form id="avatarUploadForm" action="/profile/upload-avatar" method="post" enctype="multipart/form-data" style="position: absolute; bottom: 5px; right: 5px;">
           <input type="hidden" name="uid" value="{{ user.id }}">
-          <div style="display: flex; gap: 1rem; align-items: center; width: 100%;">
-            <input
-              type="text"
-              name="unit_name"
-              value="{{ user.unit_name }}"
-              placeholder="Введите название школы"
-              required
-              style="flex: 1;"
-            >
-            <button type="submit" class="btn btn-indigo" style="padding: 0.75rem 1.5rem;">
-              Сохранить
-            </button>
-            <button type="button" id="cancelSchoolTitleBtn" class="btn" style="background: var(--slate-100); color: var(--text-secondary);">
-              Отмена
-            </button>
-          </div>
+          <label for="avatarInput" class="avatar-upload-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+              <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+          </label>
+          <input type="file" id="avatarInput" name="avatar" class="avatar-upload-input" accept="image/*" onchange="this.form.submit()">
         </form>
+      </div>
 
-        <p style="color: var(--indigo); font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 600; text-transform: uppercase; transition: color 0.2s ease;">
-          {{ user.district }} | {{ user.food_type }}
-        </p>
+      <!-- Информация школы -->
+      <div class="school-info">
+        <div class="school-title-wrapper">
+          <h1 class="school-title" id="schoolTitle">{{ user.unit_name }}</h1>
+          <button class="edit-title-btn" id="editSchoolTitleBtn">✎ Изменить</button>
+        </div>
 
-        <div style="margin-top: 1rem;">
-          <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-            <strong style="color: var(--slate-700); transition: color 0.2s ease;">Директор:</strong>
-            <span id="directorNameDisplay" style="color: var(--slate-800); transition: color 0.2s ease;">{{ user.director_name or 'Не указано' }}</span>
-            <button type="button" id="editDirectorBtn" style="background: none; border: none; color: var(--indigo); cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: color 0.2s ease;">
-              (Изменить)
-            </button>
-          </div>
+        <div class="school-badges">
+          <span class="school-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            {{ user.district }}
+          </span>
+          <span class="school-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"></path>
+            </svg>
+            {{ user.food_type }}
+          </span>
+        </div>
 
-          <!-- Форма изменения ФИО директора (скрыта по умолчанию) -->
-          <form id="directorForm" action="/profile/update" method="post" style="display: none; margin-top: 0.5rem; gap: 0.5rem; align-items: center;">
+        <!-- Форма редактирования названия школы -->
+        <div class="school-title-edit-form" id="schoolTitleEditForm">
+          <form action="/profile/update" method="post">
             <input type="hidden" name="uid" value="{{ user.id }}">
-            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-              <input  
-                type="text"
-                name="director_name"
-                value="{{ user.director_name }}"
-                placeholder="Введите ФИО директора"
-                required  
-                style="padding: 0.5rem 0.8rem; min-width: 250px;"
-              >
-              <button type="submit" class="btn btn-indigo" style="padding: 0.5rem 0.8rem;">Сохранить</button>
-              <button type="button" id="cancelBtn" class="btn" style="padding: 0.5rem 0.8rem; background: var(--slate-100); color: var(--text-secondary);">Отмена</button>
+            <input type="text" name="unit_name" value="{{ user.unit_name }}" placeholder="Название школы" required>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-indigo" style="padding: 0.5rem 1rem;">Сохранить</button>
+              <button type="button" class="btn" id="cancelSchoolTitleBtn" style="background: var(--slate-100); color: var(--text-secondary); padding: 0.5rem 1rem;">Отмена</button>
             </div>
           </form>
         </div>
 
-        <div style="margin-top: 0.6rem; padding: 0.5rem 0.8rem; background: rgba(79, 126, 230, 0.1); border-radius: 0.6rem; font-family: monospace; font-size: 0.8rem; transition: background 0.2s ease; display: inline-block;">
-          Внешний путь: <span id="monitoringUrl" class="copy-link">{{ monitoring_url.rstrip('/') }}</span>
+        <!-- Директор -->
+        <div style="margin: 1rem 0;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <strong style="color: var(--slate-700);">Директор:</strong>
+            <span id="directorNameDisplay" style="color: var(--slate-800);">{{ user.director_name or 'Не указано' }}</span>
+            <button type="button" id="editDirectorBtn" style="background: none; border: none; color: var(--indigo); cursor: pointer; font-size: 0.8rem; font-weight: 600;">✎</button>
+          </div>
+
+          <!-- Форма изменения ФИО директора -->
+          <form id="directorForm" action="/profile/update" method="post" style="display: none; margin-top: 0.5rem;">
+            <input type="hidden" name="uid" value="{{ user.id }}">
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <input type="text" name="director_name" value="{{ user.director_name }}" placeholder="ФИО директора" style="flex: 1;">
+              <button type="submit" class="btn btn-indigo" style="padding: 0.5rem 0.8rem;">✓</button>
+              <button type="button" id="cancelBtn" class="btn" style="padding: 0.5rem 0.8rem; background: var(--slate-100); color: var(--text-secondary);">✕</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Внешний путь -->
+        <div style="margin: 1rem 0; padding: 0.5rem 1rem; background: rgba(79, 126, 230, 0.1); border-radius: 2rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+          <span style="color: var(--text-secondary);">Внешний путь:</span>
+          <span id="monitoringUrl" class="copy-link">{{ monitoring_url.rstrip('/') }}</span>
           <span class="copy-tooltip" id="copyTooltip">Ссылка скопирована!</span>
         </div>
       </div>
+
+      <!-- Кнопка внешнего ресурса -->
       <a href="https://мониторингпитание.рф/#/home" target="_blank" class="btn btn-external">
         мониторингпитания.рф
       </a>
+    </div>
+
+    <!-- Блок ссылок на сайт школы и горячее питание -->
+    <div class="school-links">
+      <!-- Ссылка на сайт школы -->
+      <div class="school-link-card">
+        <h4>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          Сайт школы
+        </h4>
+        <div id="schoolWebsiteDisplay">
+          {% if profile and profile.website_url %}
+            <a href="{{ profile.website_url }}" target="_blank">{{ profile.website_url }}</a>
+          {% else %}
+            <span style="color: var(--text-secondary);">Не указан</span>
+          {% endif %}
+          <span class="edit-link-icon" id="editWebsiteBtn" title="Редактировать">✎</span>
+        </div>
+        <div class="link-edit-form" id="websiteEditForm">
+          <form action="/profile/update-links" method="post">
+            <input type="hidden" name="uid" value="{{ user.id }}">
+            <input type="url" name="website_url" value="{{ profile.website_url or '' }}" placeholder="https://...">
+            <div class="link-edit-actions">
+              <button type="submit" class="link-save-btn">Сохранить</button>
+              <button type="button" class="link-cancel-btn" id="cancelWebsiteBtn">Отмена</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Ссылка на раздел горячее питание -->
+      <div class="school-link-card">
+        <h4>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 3v5a5 5 0 0 0 5 5h8a5 5 0 0 0 5-5V3"></path>
+            <path d="M3 16h18v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5z"></path>
+          </svg>
+          Горячее питание
+        </h4>
+        <div id="hotMealDisplay">
+          {% if profile and profile.hot_meal_url %}
+            <a href="{{ profile.hot_meal_url }}" target="_blank">{{ profile.hot_meal_url }}</a>
+          {% else %}
+            <span style="color: var(--text-secondary);">Не указан</span>
+          {% endif %}
+          <span class="edit-link-icon" id="editHotMealBtn" title="Редактировать">✎</span>
+        </div>
+        <div class="link-edit-form" id="hotMealEditForm">
+          <form action="/profile/update-links" method="post">
+            <input type="hidden" name="uid" value="{{ user.id }}">
+            <input type="url" name="hot_meal_url" value="{{ profile.hot_meal_url or '' }}" placeholder="https://...">
+            <div class="link-edit-actions">
+              <button type="submit" class="link-save-btn">Сохранить</button>
+              <button type="button" class="link-cancel-btn" id="cancelHotMealBtn">Отмена</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -845,7 +1098,6 @@ input:focus, select:focus {
         </button>
       </form>
 
-      <!-- Кнопки управления -->
       {% if files_grouped and files_grouped.get(year) and files_grouped[year].get(months[month]) %}
       <div class="upload-controls">
         <div class="upload-checkbox">
@@ -940,7 +1192,6 @@ input:focus, select:focus {
 <div class="copy-notification" id="copyNotification">Ссылка скопирована!</div>
 
 <script>
-// Оптимизированный JavaScript
 document.addEventListener('DOMContentLoaded', function() {
   let copyTimeout, notificationTimeout;
   
@@ -965,22 +1216,58 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // === ЛОГИКА РЕДАКТИРОВАНИЯ НАЗВАНИЯ ШКОЛЫ ===
-  const schoolTitleDisplay = document.getElementById('schoolTitleDisplay');
+  const schoolTitle = document.getElementById('schoolTitle');
   const editSchoolTitleBtn = document.getElementById('editSchoolTitleBtn');
-  const schoolTitleForm = document.getElementById('schoolTitleForm');
+  const schoolTitleEditForm = document.getElementById('schoolTitleEditForm');
   const cancelSchoolTitleBtn = document.getElementById('cancelSchoolTitleBtn');
 
-  if (editSchoolTitleBtn && schoolTitleForm && cancelSchoolTitleBtn && schoolTitleDisplay) {
+  if (editSchoolTitleBtn && schoolTitleEditForm && cancelSchoolTitleBtn && schoolTitle) {
     editSchoolTitleBtn.addEventListener('click', function() {
-      schoolTitleDisplay.style.display = 'none';
+      schoolTitle.style.display = 'none';
       editSchoolTitleBtn.style.display = 'none';
-      schoolTitleForm.style.display = 'flex';
+      schoolTitleEditForm.style.display = 'block';
     });
 
     cancelSchoolTitleBtn.addEventListener('click', function() {
-      schoolTitleForm.style.display = 'none';
-      schoolTitleDisplay.style.display = 'block';
+      schoolTitleEditForm.style.display = 'none';
+      schoolTitle.style.display = 'block';
       editSchoolTitleBtn.style.display = 'inline-block';
+    });
+  }
+
+  // === ЛОГИКА РЕДАКТИРОВАНИЯ ССЫЛКИ НА САЙТ ===
+  const editWebsiteBtn = document.getElementById('editWebsiteBtn');
+  const websiteEditForm = document.getElementById('websiteEditForm');
+  const cancelWebsiteBtn = document.getElementById('cancelWebsiteBtn');
+  const websiteDisplay = document.getElementById('schoolWebsiteDisplay');
+
+  if (editWebsiteBtn && websiteEditForm && cancelWebsiteBtn) {
+    editWebsiteBtn.addEventListener('click', function() {
+      websiteDisplay.style.display = 'none';
+      websiteEditForm.style.display = 'block';
+    });
+
+    cancelWebsiteBtn.addEventListener('click', function() {
+      websiteEditForm.style.display = 'none';
+      websiteDisplay.style.display = 'block';
+    });
+  }
+
+  // === ЛОГИКА РЕДАКТИРОВАНИЯ ССЫЛКИ НА ГОРЯЧЕЕ ПИТАНИЕ ===
+  const editHotMealBtn = document.getElementById('editHotMealBtn');
+  const hotMealEditForm = document.getElementById('hotMealEditForm');
+  const cancelHotMealBtn = document.getElementById('cancelHotMealBtn');
+  const hotMealDisplay = document.getElementById('hotMealDisplay');
+
+  if (editHotMealBtn && hotMealEditForm && cancelHotMealBtn) {
+    editHotMealBtn.addEventListener('click', function() {
+      hotMealDisplay.style.display = 'none';
+      hotMealEditForm.style.display = 'block';
+    });
+
+    cancelHotMealBtn.addEventListener('click', function() {
+      hotMealEditForm.style.display = 'none';
+      hotMealDisplay.style.display = 'block';
     });
   }
 
@@ -1017,7 +1304,6 @@ document.addEventListener('DOMContentLoaded', function() {
           }, 1500);
         }
       }).catch(() => {
-        // Fallback для старых браузеров
         const textArea = document.createElement('textarea');
         textArea.value = text;
         document.body.appendChild(textArea);
@@ -1097,7 +1383,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'))
         .map(checkbox => checkbox.dataset.filename);
 
-      // Создаем форму для массового удаления
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = '/delete-files';
@@ -1134,7 +1419,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Закрытие модалки по клику на оверлей
   if (deleteModal) {
     deleteModal.addEventListener('click', function(e) {
       if (e.target === this) {

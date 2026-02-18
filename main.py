@@ -31,7 +31,7 @@ from fastapi.responses import (
     HTMLResponse,
     FileResponse,
     StreamingResponse,
-    RedirectResponse  # ← Теперь здесь!
+    RedirectResponse
 )
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.gzip import GZipMiddleware
@@ -53,7 +53,7 @@ from email.headerregistry import Address
 
 # Работа с Excel
 from openpyxl import load_workbook
-from openpyxl.utils.exceptions import InvalidFileException  # ← добавлен
+from openpyxl.utils.exceptions import InvalidFileException
 
 # Кеширование
 from cachetools import TTLCache
@@ -64,13 +64,12 @@ from concurrent.futures import ThreadPoolExecutor
 # Переменные окружения
 from dotenv import load_dotenv
 
-import logging  # ← добавлен
+import logging
 
 from fastapi.staticfiles import StaticFiles
 
 # Загрузка переменных из .env
 load_dotenv()
-
 
 # Создаёт таблицы в БД, если их нет
 Base.metadata.create_all(bind=engine)
@@ -97,13 +96,13 @@ async def lifespan(app: FastAPI):
     IO_EXECUTOR.shutdown()
 
 app = FastAPI(lifespan=lifespan)
-app.add_middleware(GZipMiddleware, minimum_size=100)  # Сжатие для экономии трафика
+app.add_middleware(GZipMiddleware, minimum_size=100)
 
-# 🚨 КЛЮЧЕВОЙ ШАГ: Подключаем папку static/ как статический ресурс
+# Подключаем папку static/
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-#ДЛЯ ПЕРСОНАЛЬНЫХ ДАННЫХ
+# ДЛЯ ПЕРСОНАЛЬНЫХ ДАННЫХ
 @app.get("/privacy.html", response_class=HTMLResponse)
 async def get_privacy(request: Request):
     try:
@@ -131,7 +130,6 @@ async def analis_page(request: Request):
     """Страница анализа статистики"""
     return templates.TemplateResponse("analis.html", {"request": request})
 
-
 # Константы
 FOOD_TYPES = ["Только завтраки", "Завтраки и обеды", "Интернаты", "Обеды"]
 DISTRICTS = [
@@ -154,8 +152,7 @@ MUNICIPAL_CODE = "rayonadmin3377%"
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-#Функция для обновления данных внутри файлов excel
-
+# Функция для обновления данных внутри файлов excel
 async def update_excel_content(
     file_path: Path,
     school_name: str,
@@ -170,7 +167,6 @@ async def update_excel_content(
         temp_name = f"{file_path.stem}_temp_{os.getpid()}_{id(file_path)}{file_path.suffix}"
         temp_path = temp_dir / temp_name
 
-        # Исправлено: убираем lambda, передаём функцию напрямую
         await asyncio.to_thread(shutil.copy2, file_path, temp_path)
 
         wb = load_workbook(temp_path)
@@ -196,14 +192,12 @@ async def update_excel_content(
         wb.save(temp_path)
         wb.close()
 
-        # Исправлено: убираем lambda
         await asyncio.to_thread(shutil.move, temp_path, file_path)
 
     except Exception as e:
         print(f"Ошибка при обновлении {file_path}: {e}")
         if temp_path and temp_path.exists():
             try:
-                # Исправлено: убираем lambda
                 await asyncio.to_thread(temp_path.unlink)
             except Exception as del_err:
                 print(f"Не удалось удалить временный файл {temp_path}: {del_err}")
@@ -216,13 +210,11 @@ async def update_excel_content(
             except:
                 pass
 
-
 # Оптимизированные утилиты
 async def run_in_threadpool(func, *args, **kwargs):
     """Запуск блокирующих операций в threadpool"""
     loop = asyncio.get_event_loop()
     if kwargs:
-        # Если есть именованные аргументы, используем лямбду
         return await loop.run_in_executor(IO_EXECUTOR, lambda: func(*args, **kwargs))
     else:
         return await loop.run_in_executor(IO_EXECUTOR, func, *args)
@@ -281,7 +273,6 @@ async def save_uploaded_file_optimized(file: UploadFile, dest_path: Path):
     async with aiofiles.open(dest_path, "wb") as buffer:
         await buffer.write(content)
     
-    # Обновляем кеш существования файла
     cache_key = str(dest_path)
     async with CACHE_LOCK:
         FILE_EXISTS_CACHE[cache_key] = True
@@ -292,7 +283,6 @@ async def delete_file_optimized(file_path: Path):
         if await run_in_threadpool(file_path.exists):
             await run_in_threadpool(file_path.unlink)
             
-            # Очищаем кеш существования файла
             cache_key = str(file_path)
             async with CACHE_LOCK:
                 if cache_key in FILE_EXISTS_CACHE:
@@ -316,7 +306,8 @@ async def list_directory_files_optimized(path: Path) -> List[Path]:
         return []
     
 async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict):
-    """Потоковая генерация HTML для федерального мониторинга с улучшенной группировкой"""
+    """Потоковая генерация HTML для федерального мониторинга"""
+    # ... (код функции без изменений, он очень длинный, оставляем как есть)
     yield f"""
     <html>
         <head>
@@ -439,7 +430,7 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
     grouped_files = {}      # {год: {месяц: [файлы]}}
     tm_files_by_year = {}   # {год: [tm-файлы]}
     kp_files_by_year = {}   # {год: [kp-файлы]}
-    findex_files = []       # ← специальная кучка findex.xlsx
+    findex_files = []       # специальная кучка findex.xlsx
 
     for f in files:
         if f.name == "manifest.json":
@@ -451,7 +442,6 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
         file_meta = manifest.get(f.name, {})
         date_str = file_meta.get("upload_datetime", "")
 
-        # Пытаемся вытащить дату из имени: 2026-02-02-sm.xlsx
         date_from_name_match = re.search(r'(\d{4})-(\d{2})-(\d{2})', f.name)
         if date_from_name_match:
             y, m, d = date_from_name_match.groups()
@@ -465,9 +455,7 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             grouped_files.setdefault(assigned_year, {}).setdefault(month_name, []).append(file_info)
             continue
 
-        # Обработка findex.xlsx
         if f.name.lower() == "findex.xlsx":
-            # ← выводим findex в отдельный блок, т.к. он «для ФЦМПО»
             try:
                 dt = (datetime.strptime(date_str, "%d.%m.%Y %H:%M")
                       if date_str
@@ -478,10 +466,8 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             findex_files.append({"filename": f.name,
                                  "date": dt.strftime("%d.%m.%Y %H:%M"),
                                  "size": stat_result.st_size})
-            # в обычную группировку findex не идёт
             continue
 
-        # Остальное – как было
         try:
             dt = (datetime.strptime(date_str, "%d.%m.%Y %H:%M")
                   if date_str
@@ -498,7 +484,6 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
                      "date": dt.strftime("%d.%m.%Y %H:%M"),
                      "size": stat_result.st_size}
 
-        # Группируем tm/kp по прежнему алгоритму
         if re.match(r"^tm\d{4}-sm\.xlsx$", f.name):
             tm_year = f.name[2:6]
             tm_files_by_year.setdefault(tm_year, []).append(file_info)
@@ -508,7 +493,6 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             kp_files_by_year.setdefault(kp_year, []).append(file_info)
             continue
 
-        # Обычные файлы
         grouped_files.setdefault(assigned_year, {}).setdefault(month_name, []).append(file_info)
 
     # Вывод основных файлов
@@ -516,7 +500,6 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
         yield f'<div class="year-section"><h2>📅 {year} год</h2>'
         for month in sorted(grouped_files[year].keys(), reverse=True):
             yield f'<div class="month-section"><h3>📊 {month}</h3><ul class="file-list">'
-            # ← сортируем по дате внутри месяца – старые дни выше
             grouped_files[year][month].sort(
                 key=lambda x: datetime.strptime(x["date"], "%d.%m.%Y %H:%M"),
                 reverse=False)
@@ -535,14 +518,12 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
     if not grouped_files and not findex_files:
         yield '<div class="no-files">📭 Нет доступных файлов</div>'
 
-    yield '</div><!-- /main-content -->'   # закрываем левую колонку
+    yield '</div><!-- /main-content -->'
 
-    # Правая колонка (меню + календарь + findex)
     if any([findex_files, tm_files_by_year, kp_files_by_year]):
         yield '<div class="menu-sidebar">'
         yield '<div class="sidebar-title">🍽️ Типовое меню и календари питания</div>'
 
-        # 1) findex.xlsx
         if findex_files:
             yield '<div class="sidebar-section">'
             yield '<div class="findex-info">'
@@ -557,7 +538,6 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
                        f'</li>')
             yield '</ul></div>'
 
-        # 2) календари питания
         for kp_year in sorted(kp_files_by_year.keys(), reverse=True):
             if not kp_files_by_year[kp_year]:
                 continue
@@ -573,7 +553,6 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
                        f'</li>')
             yield '</ul></div>'
 
-        # 3) типовое меню
         for tm_year in sorted(tm_files_by_year.keys(), reverse=True):
             if not tm_files_by_year[tm_year]:
                 continue
@@ -589,7 +568,6 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
                        f'</li>')
             yield '</ul></div>'
 
-        # 4) «плашки» СанПиН и опрос
         yield '''
         <div class="sanpin-compliance">
             <span class="sanpin-checkmark">✅</span>
@@ -612,71 +590,6 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
 
     yield '</div><!-- /container --></body></html>'
 
-
-
-    return
-
-    grouped_files = {}
-
-    for f in files:
-        if f.name == "manifest.json":
-            continue
-
-        if not await run_in_threadpool(f.exists):
-            logger.warning(f"Файл {f.name} не найден на диске, пропускаем")
-            continue
-
-        file_meta = manifest.get(f.name, {})
-        date_str = file_meta.get("upload_datetime", "")
-
-        try:
-            dt = datetime.strptime(date_str, "%d.%m.%Y %H:%M") if date_str else \
-                  datetime.fromtimestamp(await run_in_threadpool(f.stat).st_mtime)
-        except Exception as e:
-            logger.error(f"Ошибка парсинга даты для {f.name}: {e}")
-            dt = datetime.now()
-
-        assigned_year = file_meta.get("assigned_year", str(dt.year))
-        assigned_month = file_meta.get("assigned_month", dt.strftime("%m"))
-        month_name = MONTHS.get(assigned_month, assigned_month)
-
-
-        if assigned_year not in grouped_files:
-            grouped_files[assigned_year] = {}
-        if month_name not in grouped_files[assigned_year]:
-            grouped_files[assigned_year][month_name] = []
-
-        # Исправленный участок: сначала ждём stat, потом берём st_size
-        stat_result = await run_in_threadpool(f.stat)
-        grouped_files[assigned_year][month_name].append({
-            "filename": f.name,
-            "date": dt.strftime("%d.%m.%Y %H:%M"),
-            "size": stat_result.st_size
-        })
-
-    # Сортировка и вывод HTML (остаётся без изменений)
-    for year in sorted(grouped_files.keys(), reverse=True):
-        yield f'<div class="year-section"><h2>📅 {year} год</h2>'
-        for month in sorted(grouped_files[year].keys(), reverse=True):
-            yield f'<div class="month-section"><h3>📊 {month}</h3><ul class="file-list">'
-            for file_info in sorted(grouped_files[year][month], key=lambda x: x["date"], reverse=True):
-                size_kb = file_info["size"] // 1024
-                yield (
-                    f'<li class="file-item">'
-                    f'<a class="file-link" href="{file_info["filename"]}">📄 {file_info["filename"]}</a>'
-                    f'<div><span class="file-date">{file_info["date"]}</span>'
-                    f'<span style="margin-left: 15px; color: #27ae60;">{size_kb} KB</span></div>'
-                    f'</li>'
-                )
-            yield '</ul></div>'
-        yield '</div>'
-
-    if not grouped_files:
-        yield '<div class="no-files">📭 Нет доступных файлов</div>'
-
-    yield '</div></body></html>'
-
-
 # Middleware для мониторинга производительности
 @app.middleware("http")
 async def performance_middleware(request: Request, call_next):
@@ -684,29 +597,24 @@ async def performance_middleware(request: Request, call_next):
     response = await call_next(request)
     process_time = time.time() - start_time
     
-    if process_time > 1.0:  # Логируем только медленные запросы
+    if process_time > 1.0:
         print(f"⏱️ SLOW_REQUEST: {request.method} {request.url} - {process_time:.3f}s")
     
     response.headers["X-Process-Time"] = f"{process_time:.3f}s"
     return response
 
-# --- ФЕДЕРАЛЬНЫЙ МОНИТОРИНГ (ОПТИМИЗИРОВАННЫЙ) ---
-
+# --- ФЕДЕРАЛЬНЫЙ МОНИТОРИНГ ---
 @app.get("/{uid}/food/", response_class=HTMLResponse)
 async def federal_index(uid: int):
-    """Оптимизированная версия для федерального мониторинга"""
     BASE_DIR = Path(__file__).resolve().parent
     base_path = BASE_DIR / str(uid) / "food"
 
-    # Быстрая проверка существования директории
     if not await run_in_threadpool(base_path.exists):
         return HTMLResponse(content="<html><body><h1>📭 Нет доступных файлов</h1></body></html>")
 
-    # Кешированное чтение manifest
     manifest_path = base_path / "manifest.json"
     manifest = await read_manifest_optimized(manifest_path)
 
-    # Потоковая генерация HTML
     return StreamingResponse(
         generate_federal_html_stream(uid, base_path, manifest),
         media_type="text/html"
@@ -714,11 +622,9 @@ async def federal_index(uid: int):
 
 @app.get("/{uid}/food/{filename}")
 async def get_federal_file(uid: int, filename: str):
-    """Оптимизированная отдача файлов с кешированием"""
     BASE_DIR = Path(__file__).resolve().parent
     file_path = BASE_DIR / str(uid) / "food" / filename
 
-    # Кешированная проверка существования файла
     cache_key = str(file_path)
     async with CACHE_LOCK:
         if cache_key in FILE_EXISTS_CACHE:
@@ -736,8 +642,22 @@ async def get_federal_file(uid: int, filename: str):
 
     raise HTTPException(status_code=404, detail="Файл не найден")
 
-# --- РЕГИСТРАЦИЯ И АВТОРИЗАЦИЯ (ОПТИМИЗИРОВАННЫЕ) ---
+# --- ЭНДПОИНТ ДЛЯ АВАТАРА (НОВЫЙ) ---
+@app.get("/{uid}/avatar/{filename}")
+async def get_avatar(uid: int, filename: str):
+    """Отдача аватара школы"""
+    BASE_DIR = Path(__file__).resolve().parent
+    avatar_path = BASE_DIR / str(uid) / "avatar" / filename
+    
+    if await run_in_threadpool(avatar_path.exists):
+        return FileResponse(
+            avatar_path,
+            headers={"Cache-Control": "public, max-age=86400"}  # Кеш на сутки
+        )
+    
+    raise HTTPException(status_code=404, detail="Аватар не найден")
 
+# --- РЕГИСТРАЦИЯ И АВТОРИЗАЦИЯ ---
 @app.get("/")
 async def home():
     return RedirectResponse("/login")
@@ -755,33 +675,30 @@ async def register(
     email: str = Form(...),
     password: str = Form(...),
     unit_name: str = Form(...),
-    director_name: str = Form(...),  # Новое поле!
+    director_name: str = Form(...),
     district: str = Form(...),
     food_type: str = Form(...),
     secret_code: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
-    # Проверка существования пользователя
     existing_user = await run_in_threadpool(
         lambda: db.query(models.User).filter(models.User.email == email).first()
     )
     if existing_user:
         return "Пользователь с таким email уже существует"
 
-    # Определение роли
     role = "user"
     if secret_code == REGIONAL_CODE:
         role = "regional_admin"
     elif secret_code == MUNICIPAL_CODE:
         role = "municipal_admin"
 
-    # Создание пользователя
     hashed_pw = auth.get_password_hash(password)
     new_user = models.User(
         email=email,
         hashed_password=hashed_pw,
         unit_name=unit_name,
-        director_name=director_name,  # Сохраняем ФИО директора
+        director_name=director_name,
         district=district,
         food_type=food_type,
         role=role
@@ -791,11 +708,13 @@ async def register(
     await run_in_threadpool(db.commit)
     await run_in_threadpool(db.refresh, new_user)
 
-    # Создание директорий
     BASE_DIR = Path(__file__).resolve().parent
     school_dir = BASE_DIR / str(new_user.id)
     food_dir = school_dir / "food"
+    avatar_dir = school_dir / "avatar"  # Создаём папку для аватаров
+    
     await run_in_threadpool(lambda: food_dir.mkdir(parents=True, exist_ok=True))
+    await run_in_threadpool(lambda: avatar_dir.mkdir(parents=True, exist_ok=True))
 
     return RedirectResponse("/login", status_code=303)
 
@@ -816,22 +735,20 @@ async def login(email: str = Form(...), password: str = Form(...), db: Session =
         return RedirectResponse(f"/admin?admin_id={user.id}", status_code=303)
     return RedirectResponse(f"/dashboard?uid={user.id}", status_code=303)
 
-# --- АДМИН-ПАНЕЛЬ И РАССЫЛКА (ОПТИМИЗИРОВАННЫЕ) ---
-
+# --- АДМИН-ПАНЕЛЬ ---
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_panel(
     request: Request,
     admin_id: int,
     q: str = "",
-    page: int = 1,           # Номер страницы (по умолчанию — 1)
-    per_page: int = 60,     # Количество записей на страницу (по умолчанию — 60)
+    page: int = 1,
+    per_page: int = 60,
     db: Session = Depends(get_db)
 ):
     admin = await get_cached_user(admin_id, db)
     if not admin:
         return RedirectResponse("/login")
 
-    # Формируем запрос
     query = db.query(models.User).filter(models.User.role == "user")
     if admin.role == "municipal_admin":
         query = query.filter(models.User.district == admin.district)
@@ -839,10 +756,7 @@ async def admin_panel(
     if q:
         query = query.filter(models.User.unit_name.ilike(f"%{q}%"))
 
-    # Подсчёт общего количества записей
     total_count = await run_in_threadpool(query.count)
-
-    # Расчёт смещения и лимита
     offset = (page - 1) * per_page
     schools = await run_in_threadpool(
         lambda: query.offset(offset).limit(per_page).all()
@@ -860,7 +774,7 @@ async def admin_panel(
         "months": MONTHS,
     })
 
-# Массовые действия
+# --- МАССОВЫЕ ДЕЙСТВИЯ ---
 @app.post("/bulk-upload")
 async def bulk_upload(
     request: Request,
@@ -888,7 +802,6 @@ async def bulk_upload(
     uploader_name = admin.unit_name if admin else f"ADMIN {admin_id}"
     uploader_ip = request.client.host if request.client else "—"
 
-    # 1. Сохраняем оригиналы всех файлов во временную папку
     temp_uploads = BASE_DIR / "temp_uploads"
     await asyncio.to_thread(lambda: temp_uploads.mkdir(parents=True, exist_ok=True))
 
@@ -900,7 +813,6 @@ async def bulk_upload(
         await save_uploaded_file_optimized(file, orig_path)
         original_paths[file.filename] = orig_path
 
-    # 2. Для каждой школы — своя копия оригинала + модификация
     for school in schools:
         food_path = BASE_DIR / str(school.id) / "food"
         await run_in_threadpool(lambda: food_path.mkdir(parents=True, exist_ok=True))
@@ -912,14 +824,11 @@ async def bulk_upload(
             if not file.filename:
                 continue
 
-            # Берём оригинал из сохранённых
             orig_path = original_paths[file.filename]
             dest_path = food_path / file.filename
 
-            # Копируем оригинал в целевую папку (не модифицированный!)
             await asyncio.to_thread(lambda: shutil.copy2(orig_path, dest_path))
 
-            # Определяем тип файла и дату
             file_type = None
             date_str = None
             if file.filename.startswith("tm"):
@@ -933,7 +842,6 @@ async def bulk_upload(
                 except:
                     pass
 
-            # Модифицируем именно dest_path (копию для этой школы)
             await update_excel_content(
                 dest_path,
                 school.unit_name,
@@ -952,7 +860,6 @@ async def bulk_upload(
 
         await write_manifest_optimized(manifest_path, manifest)
 
-    # 3. Очищаем временные оригиналы
     try:
         await asyncio.to_thread(lambda: shutil.rmtree(temp_uploads))
     except:
@@ -960,17 +867,16 @@ async def bulk_upload(
 
     return RedirectResponse(f"/admin?admin_id={admin_id}", status_code=303)
 
-
 @app.post("/admin/bulk-delete-files")
 async def bulk_delete_files(
     request: Request,
     admin_id: int = Form(...),
-    school_ids: List[int] = Form(...),  # IDs школ для обработки
-    delete_all: bool = Form(False),     # Удалить всё
-    keep_exceptions: bool = Form(False), # Сохранять исключённые файлы
-    only_kp: bool = Form(False),         # Только календари питания (kp*.xlsx)
-    only_tm_sm: bool = Form(False),      # Только tm*-sm.xlsx файлы
-    only_findex: bool = Form(False),     # Только findex.xlsx
+    school_ids: List[int] = Form(...),
+    delete_all: bool = Form(False),
+    keep_exceptions: bool = Form(False),
+    only_kp: bool = Form(False),
+    only_tm_sm: bool = Form(False),
+    only_findex: bool = Form(False),
     db: Session = Depends(get_db)
 ):
     BASE_DIR = Path(__file__).resolve().parent
@@ -978,7 +884,6 @@ async def bulk_delete_files(
     if not admin:
         return RedirectResponse("/login", status_code=303)
 
-    # Получаем список школ
     schools = db.query(models.User).filter(
         models.User.id.in_(school_ids),
         models.User.role == "user"
@@ -997,47 +902,37 @@ async def bulk_delete_files(
         if not await run_in_threadpool(food_path.exists):
             continue
 
-        # Читаем manifest
         manifest = await read_manifest_optimized(manifest_path)
 
-        # Собираем список файлов для удаления
         to_delete = []
         
         for filename in manifest.keys():
             filepath = food_path / filename
             
-            # Проверяем, какой тип удаления выбран
             should_delete = False
             
             if delete_all:
-                # Удаляем всё, но учитываем исключения
                 if keep_exceptions:
-                    # Проверяем исключения
                     if filename == "findex.xlsx":
                         continue
-                    if re.match(r"^tm\d{4}-sm\.xlsx$", filename):  # tm2026-sm.xlsx
+                    if re.match(r"^tm\d{4}-sm\.xlsx$", filename):
                         continue
-                    if re.match(r"^kp\d{4}\.xlsx$", filename):     # kp2026.xlsx
+                    if re.match(r"^kp\d{4}\.xlsx$", filename):
                         continue
                 should_delete = True
                 
             elif only_tm_sm:
-                # Только tm*-sm.xlsx файлы
                 if re.match(r"^tm\d{4}-sm\.xlsx$", filename):
                     should_delete = True
                     
             elif only_findex:
-                # Только findex.xlsx
                 if filename == "findex.xlsx":
                     should_delete = True
                     
             elif only_kp:
-                # Только kp*.xlsx
                 if re.match(r"^kp\d{4}\.xlsx$", filename):
                     should_delete = True
                     
-            # Если ни один флаг не установлен, но keep_exceptions=True,
-            # то удаляем всё, кроме исключений (для обратной совместимости)
             elif keep_exceptions and not any([delete_all, only_tm_sm, only_findex, only_kp]):
                 if filename not in ["findex.xlsx"] and \
                    not re.match(r"^tm\d{4}-sm\.xlsx$", filename) and \
@@ -1047,7 +942,6 @@ async def bulk_delete_files(
             if should_delete:
                 to_delete.append(filename)
 
-        # Удаляем файлы и обновляем manifest
         for filename in to_delete:
             filepath = food_path / filename
             try:
@@ -1057,11 +951,9 @@ async def bulk_delete_files(
             except Exception as e:
                 errors.append(f"Ошибка при удалении {filename} у {school.id}: {str(e)}")
 
-        # Сохраняем обновлённый manifest
         if to_delete:
             await write_manifest_optimized(manifest_path, manifest)
 
-    # Формируем сообщение
     msg = f"Удалено {deleted_count} файлов."
     if errors:
         msg += " Ошибки: " + "; ".join(errors)
@@ -1071,9 +963,7 @@ async def bulk_delete_files(
         status_code=303
     )
 
-
-# --- ЛИЧНЫЙ КАБИНЕТ ШКОЛЫ (ОПТИМИЗИРОВАННЫЙ) ---
-
+# --- ЛИЧНЫЙ КАБИНЕТ ШКОЛЫ (ОБНОВЛЁННЫЙ) ---
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(
     request: Request,
@@ -1088,17 +978,26 @@ async def dashboard(
 
     BASE_DIR = Path(__file__).resolve().parent
     food_path = BASE_DIR / str(uid) / "food"
+    profile_path = BASE_DIR / str(uid) / "profile.json"
+    
     await run_in_threadpool(lambda: food_path.mkdir(parents=True, exist_ok=True))
 
-    # Кешированное чтение manifest
+    # Загружаем данные профиля (аватар, ссылки)
+    profile_data = {}
+    if await run_in_threadpool(profile_path.exists):
+        try:
+            async with aiofiles.open(profile_path, "r", encoding="utf-8") as f:
+                content = await f.read()
+                profile_data = json.loads(content) if content else {}
+        except Exception as e:
+            logger.error(f"Ошибка загрузки profile.json для uid {uid}: {e}")
+
     manifest_path = food_path / "manifest.json"
     manifest = await read_manifest_optimized(manifest_path)
 
-    # Принудительное обновление кеша (на случай ручных изменений manifest)
     async with CACHE_LOCK:
         MANIFEST_CACHE[str(manifest_path)] = manifest.copy()
 
-    # Оптимизированное получение файлов
     files = await list_directory_files_optimized(food_path)
     grouped_files = {}
 
@@ -1109,7 +1008,6 @@ async def dashboard(
         file_meta = manifest.get(f.name, {})
         upload_time = file_meta.get("upload_datetime", get_msk_time().strftime("%d.%m.%Y %H:%M"))
 
-        # Исправленный fallback: используем текущую дату, если поля отсутствуют
         assigned_year = file_meta.get("assigned_year", str(get_msk_time().year))
         assigned_month = file_meta.get("assigned_month", f"{get_msk_time().month:02d}")
         uploader_name = file_meta.get("uploader_name", user.unit_name)
@@ -1128,6 +1026,7 @@ async def dashboard(
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "user": user,
+        "profile": profile_data,  # Передаём данные профиля в шаблон
         "files_grouped": grouped_files,
         "period": f"{year}-{month}",
         "year": year,
@@ -1136,6 +1035,88 @@ async def dashboard(
         "monitoring_url": monitoring_url
     })
 
+# --- ЗАГРУЗКА АВАТАРА (НОВЫЙ ЭНДПОИНТ) ---
+@app.post("/profile/upload-avatar")
+async def upload_avatar(
+    uid: int = Form(...),
+    avatar: UploadFile = File(...)
+):
+    BASE_DIR = Path(__file__).resolve().parent
+    school_dir = BASE_DIR / str(uid)
+    avatar_dir = school_dir / "avatar"
+    profile_path = school_dir / "profile.json"
+    
+    # Создаём папки
+    await run_in_threadpool(lambda: avatar_dir.mkdir(parents=True, exist_ok=True))
+    
+    # Удаляем старый аватар
+    try:
+        old_files = await run_in_threadpool(lambda: list(avatar_dir.glob("*")))
+        for old_file in old_files:
+            await run_in_threadpool(old_file.unlink)
+    except Exception as e:
+        logger.error(f"Ошибка при удалении старого аватара: {e}")
+    
+    # Сохраняем новый
+    file_ext = Path(avatar.filename).suffix.lower()
+    if file_ext not in ['.jpg', '.jpeg', '.png', '.gif', '.webp']:
+        file_ext = '.jpg'  # По умолчанию
+    
+    avatar_filename = f"avatar{file_ext}"
+    avatar_path = avatar_dir / avatar_filename
+    
+    content = await avatar.read()
+    async with aiofiles.open(avatar_path, "wb") as f:
+        await f.write(content)
+    
+    # Обновляем profile.json
+    profile_data = {}
+    if await run_in_threadpool(profile_path.exists):
+        try:
+            async with aiofiles.open(profile_path, "r", encoding="utf-8") as f:
+                content = await f.read()
+                profile_data = json.loads(content) if content else {}
+        except Exception:
+            profile_data = {}
+    
+    profile_data["avatar"] = avatar_filename
+    
+    async with aiofiles.open(profile_path, "w", encoding="utf-8") as f:
+        await f.write(json.dumps(profile_data, ensure_ascii=False, indent=2))
+    
+    return RedirectResponse(f"/dashboard?uid={uid}", status_code=303)
+
+# --- ОБНОВЛЕНИЕ ССЫЛОК (НОВЫЙ ЭНДПОИНТ) ---
+@app.post("/profile/update-links")
+async def update_links(
+    uid: int = Form(...),
+    website_url: str = Form(""),
+    hot_meal_url: str = Form("")
+):
+    BASE_DIR = Path(__file__).resolve().parent
+    school_dir = BASE_DIR / str(uid)
+    profile_path = school_dir / "profile.json"
+    
+    profile_data = {}
+    if await run_in_threadpool(profile_path.exists):
+        try:
+            async with aiofiles.open(profile_path, "r", encoding="utf-8") as f:
+                content = await f.read()
+                profile_data = json.loads(content) if content else {}
+        except Exception:
+            profile_data = {}
+    
+    if website_url:
+        profile_data["website_url"] = website_url
+    if hot_meal_url:
+        profile_data["hot_meal_url"] = hot_meal_url
+    
+    async with aiofiles.open(profile_path, "w", encoding="utf-8") as f:
+        await f.write(json.dumps(profile_data, ensure_ascii=False, indent=2))
+    
+    return RedirectResponse(f"/dashboard?uid={uid}", status_code=303)
+
+# --- ОСТАЛЬНЫЕ ЭНДПОИНТЫ (БЕЗ ИЗМЕНЕНИЙ) ---
 @app.post("/upload")
 async def upload_files(
     request: Request,
@@ -1156,7 +1137,6 @@ async def upload_files(
     uploader_name = user.unit_name if user else f"UID {uid}"
     client_ip = request.client.host if request.client else "—"
 
-    # Параллельная обработка файлов
     for file in files:
         if not file.filename:
             continue
@@ -1208,7 +1188,6 @@ async def delete_files(
 
     manifest = await read_manifest_optimized(manifest_path)
 
-    # Параллельное удаление файлов
     for filename in files:
         file_path = folder / filename
         await delete_file_optimized(file_path)
@@ -1224,7 +1203,7 @@ async def delete_files(
 @app.post("/profile/update")
 async def update_profile(
     uid: int = Form(...),
-    director_name: str = Form(""),  # Дефолтное значение — пустая строка
+    director_name: str = Form(""),
     unit_name: str | None = Form(None),
     db: Session = Depends(get_db)
 ):
@@ -1232,8 +1211,7 @@ async def update_profile(
     if not user:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
 
-    # Обновляем только если значение передано (и не пустое для unit_name)
-    if director_name != "":  # Если не пустая строка
+    if director_name != "":
         user.director_name = director_name
 
     if unit_name is not None and unit_name.strip() != "":
@@ -1244,21 +1222,16 @@ async def update_profile(
 
     return RedirectResponse(f"/dashboard?uid={uid}", status_code=303)
 
-
-
-
-# Валидация email (улучшенная)
+# --- СБРОС ПАРОЛЯ (БЕЗ ИЗМЕНЕНИЙ) ---
 def is_valid_email(email: str) -> bool:
     if not email or '@' not in email:
         return False
     pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return re.match(pattern, email) is not None
 
-# Определение SMTP‑конфигурации по домену
 def get_smtp_config(email: str) -> dict:
     domain = email.lower().split('@')[-1]
 
-    # Настройки для популярных провайдеров
     providers = {
         'gmail.com': {
             'hostname': 'smtp.gmail.com',
@@ -1289,7 +1262,6 @@ def get_smtp_config(email: str) -> dict:
     if domain in providers:
         return providers[domain]
 
-    # Для неизвестных доменов: пробуем стандартный SMTP
     return {
         'hostname': f'smtp.{domain}',
         'port': 587,
@@ -1305,19 +1277,6 @@ async def send_reset_email(email: str, token: str):
         reset_url = f"https://monitoring95.ru/reset-password/{token}"
         safe_email = email.replace('<', '&lt;').replace('>', '&gt;')
 
-        # HTML-письмо
-        html_content = f"""
-        <html>
-        <body>
-            <h2>Сброс пароля</h2>
-            <p>Чтобы сменить пароль, перейдите по ссылке:</p>
-            <a href="{reset_url}">Сменить пароль</a>
-            <p>Ссылка действительна 1 час.</p>
-            <p>Ваш email: {safe_email}</p>
-        </body>
-        </html>
-        """
-        
         message = MIMEText(f"""
 <html>
 <body>
@@ -1328,9 +1287,9 @@ async def send_reset_email(email: str, token: str):
     <p>Ваш email: {safe_email}</p>
 </body>
 </html>
-""", "html", "utf-8")  # Тип "html", а не "plain"
+""", "html", "utf-8")
         message["Subject"] = "Сброс пароля"
-        message["From"] = os.getenv("SMTP_USERNAME")  # Простая строка!
+        message["From"] = os.getenv("SMTP_USERNAME")
         message["To"] = email
 
         config = get_smtp_config(email)
@@ -1363,7 +1322,6 @@ async def send_reset_email(email: str, token: str):
             detail=f"Не удалось отправить письмо: {str(e)}"
         )
 
-# СБРОС ПАРОЛЯ
 @app.get("/reset-password-request", response_class=HTMLResponse)
 async def reset_password_request_page(request: Request):
     return templates.TemplateResponse("reset_password_request.html", {"request": request})
@@ -1430,7 +1388,6 @@ async def reset_password_page(
         {"request": request, "token": token, "email": email}
     )
 
-
 @app.post("/reset-password")
 async def reset_password(
     token: str = Form(...),
@@ -1453,22 +1410,18 @@ async def reset_password(
     if not user:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
 
-    # Проверка минимальной длины пароля
     if len(password) < 6:
         raise HTTPException(
             status_code=400,
             detail="Пароль должен быть не менее 6 символов"
         )
 
-    # Хешируем новый пароль
     hashed_pw = auth.get_password_hash(password)
     user.hashed_password = hashed_pw
 
     try:
         await run_in_threadpool(db.commit)
-        
     except Exception as e:
-        
         raise HTTPException(
             status_code=500,
             detail="Не удалось сохранить новый пароль. Попробуйте снова."
@@ -1476,7 +1429,6 @@ async def reset_password(
 
     return RedirectResponse("/login", status_code=303)
 
-# Эндпоинт для проверки здоровья
 @app.get("/health")
 async def health_check():
     return {
