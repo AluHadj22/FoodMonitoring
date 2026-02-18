@@ -966,9 +966,11 @@ async def bulk_delete_files(
     request: Request,
     admin_id: int = Form(...),
     school_ids: List[int] = Form(...),  # IDs школ для обработки
-    delete_all: bool = Form(False),        # Удалить всё
-    keep_exceptions: bool = Form(False),    # Сохранять исключённые файлы
-    only_kp: bool = Form(False),          # Только календари питания (kp*.xlsx)
+    delete_all: bool = Form(False),     # Удалить всё
+    keep_exceptions: bool = Form(False), # Сохранять исключённые файлы
+    only_kp: bool = Form(False),         # Только календари питания (kp*.xlsx)
+    only_tm_sm: bool = Form(False),      # Только tm*-sm.xlsx файлы
+    only_findex: bool = Form(False),     # Только findex.xlsx
     db: Session = Depends(get_db)
 ):
     BASE_DIR = Path(__file__).resolve().parent
@@ -1000,24 +1002,50 @@ async def bulk_delete_files(
 
         # Собираем список файлов для удаления
         to_delete = []
+        
         for filename in manifest.keys():
             filepath = food_path / filename
-
-            # Проверяем исключения
-            if keep_exceptions:
-                if filename == "findex.xlsx":
-                    continue
-                if re.match(r"^tm\d{4}-sm\.xlsx$", filename):  # tm2026-sm.xlsx
-                    continue
-                if re.match(r"^kp\d{4}\.xlsx$", filename):     # kp2026.xlsx
-                    if not only_kp:  # Если не «только kp», пропускаем
+            
+            # Проверяем, какой тип удаления выбран
+            should_delete = False
+            
+            if delete_all:
+                # Удаляем всё, но учитываем исключения
+                if keep_exceptions:
+                    # Проверяем исключения
+                    if filename == "findex.xlsx":
                         continue
+                    if re.match(r"^tm\d{4}-sm\.xlsx$", filename):  # tm2026-sm.xlsx
+                        continue
+                    if re.match(r"^kp\d{4}\.xlsx$", filename):     # kp2026.xlsx
+                        continue
+                should_delete = True
+                
+            elif only_tm_sm:
+                # Только tm*-sm.xlsx файлы
+                if re.match(r"^tm\d{4}-sm\.xlsx$", filename):
+                    should_delete = True
+                    
+            elif only_findex:
+                # Только findex.xlsx
+                if filename == "findex.xlsx":
+                    should_delete = True
+                    
+            elif only_kp:
+                # Только kp*.xlsx
+                if re.match(r"^kp\d{4}\.xlsx$", filename):
+                    should_delete = True
+                    
+            # Если ни один флаг не установлен, но keep_exceptions=True,
+            # то удаляем всё, кроме исключений (для обратной совместимости)
+            elif keep_exceptions and not any([delete_all, only_tm_sm, only_findex, only_kp]):
+                if filename not in ["findex.xlsx"] and \
+                   not re.match(r"^tm\d{4}-sm\.xlsx$", filename) and \
+                   not re.match(r"^kp\d{4}\.xlsx$", filename):
+                    should_delete = True
 
-            # Если only_kp — удаляем только kp*.xlsx
-            if only_kp and not re.match(r"^kp\d{4}\.xlsx$", filename):
-                continue
-
-            to_delete.append(filename)
+            if should_delete:
+                to_delete.append(filename)
 
         # Удаляем файлы и обновляем manifest
         for filename in to_delete:

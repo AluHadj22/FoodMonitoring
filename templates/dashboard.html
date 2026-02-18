@@ -1,33 +1,59 @@
 {% extends "layout.html" %}
 {% block content %}
 <style>
-/* ----------  LIGHT-GLASS SCHOOL DASHBOARD — UPGRADED VERSION ---------- */
+/* ----------  LIGHT-GLASS SCHOOL DASHBOARD — ОПТИМИЗИРОВАННАЯ ВЕРСИЯ ---------- */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
 :root {
-  /* ——— ЦВЕТА: УГЛУБЛЁННЫЙ СИНИЙ / ГОЛУБОЙ ——— */
-  --indigo: #4f7ee6;           /* Более насыщенный, чем #60a5fa — лучше читается */
-  --indigo-dark: #3a68d0;     /* Темнее, но не чёрный — сохраняет глубину */
-  --indigo-light: #7fa9f2;    /* Для hover/акцентов */
+  /* ——— ЦВЕТА ——— */
+  --indigo: #4f7ee6;
+  --indigo-dark: #3a68d0;
+  --indigo-light: #7fa9f2;
   --slate-50: #f8fafc;
   --slate-100: #f1f5f9;
   --slate-200: #e2e8f0;
-  --slate-700: #1e293b;       /* Основной тёмный текст — теперь чёткий */
-  --slate-800: #0f172a;       /* Для кнопок и заголовков — более глубокий */
-  --bg-main: linear-gradient(135deg, #d0e9ff 0%, #f8faff 100%); /* Более мягкий, синеватый градиент */
-  --bg-card: rgba(255, 255, 255, 0.96);
-  --border: rgba(196, 214, 255, 0.7); /* Более синий бордер — в тон с палитрой */
-  --text-primary: #1e293b;    /* Основной текст — оставляем, но теперь он выделяется */
-  --text-secondary: #5e6e85;  /* Более тёмный, чем #64748b — лучше читается */
+  --slate-700: #1e293b;
+  --slate-800: #0f172a;
+  --text-primary: #1e293b;
+  --text-secondary: #5e6e85;
   --success: #10b981;
   --warning: #f59e0b;
   --error: #ef4444;
+  
+  /* ——— ФОНЫ ——— */
+  --bg-main: linear-gradient(135deg, #d0e9ff 0%, #f8faff 100%);
+  --bg-card: #ffffff;
+  --border: #c0d4ff;
+  
+  /* ——— ТЕНИ (УПРОЩЕНЫ) ——— */
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.06);
+  --shadow-input: 0 0 0 2px rgba(79, 126, 230, 0.2);
+}
 
-  /* ——— ТЕНИ: УСИЛЕНЫ ДЛЯ ЧИТАЕМОСТИ ——— */
-  --shadow-card: 0 20px 25px rgba(0, 0, 0, 0.06);
-  --shadow-hover: 0 25px 30px rgba(0, 0, 0, 0.08);
-  --shadow-input: 0 0 0 3px rgba(79, 126, 230, 0.25);
-  --shadow-text: 0 1px 2px rgba(0, 0, 0, 0.08); /* Лёгкая тень на тексте — ключевое! */
+/* Тёмная тема */
+[data-theme='dark'] {
+  --indigo: #60a5fa;
+  --indigo-dark: #3b82f6;
+  --indigo-light: #93c5fd;
+  --slate-50: #0f172a;
+  --slate-100: #1e293b;
+  --slate-200: #334155;
+  --slate-700: #e2e8f0;
+  --slate-800: #f1f5f9;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --success: #6ee7b7;
+  --warning: #fcd34d;
+  --error: #fca5a5;
+  
+  --bg-main: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  --bg-card: #1e293b;
+  --border: #334155;
+  
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.3);
+  --shadow-input: 0 0 0 2px rgba(96, 165, 250, 0.3);
 }
 
 body {
@@ -39,6 +65,7 @@ body {
   line-height: 1.6;
   margin: 0;
   padding: 0;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .container {
@@ -50,41 +77,42 @@ body {
   gap: 2rem;
 }
 
-/* === КАРТОЧКИ === */
+/* === КАРТОЧКИ — УПРОЩЕНЫ === */
 .card {
   background: var(--bg-card);
-  backdrop-filter: blur(12px);
   border-radius: 1.5rem;
   padding: 2rem;
   border: 1px solid var(--border);
   box-shadow: var(--shadow-card);
-  transition: all 0.3s ease;
-  animation: fadeInUp 0.8s ease-out;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  animation: fadeInUp 0.5s ease-out forwards;
+  will-change: transform, opacity;
 }
 
 .card:hover {
-  transform: translateY(-4px);
   box-shadow: var(--shadow-hover);
+  transform: none; /* Убираем transform для производительности */
 }
 
 .card h3 {
   font-size: 1.4rem;
   font-weight: 700;
-  color: var(--slate-800); /* Более тёмный, чем --text-primary — для заголовков */
+  color: var(--slate-800);
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  text-shadow: var(--shadow-text); /* ✅ КЛЮЧЕВОЕ — текст не теряется */
+  transition: color 0.2s ease;
 }
 
 .card h3 svg {
   width: 24px;
   height: 24px;
   color: var(--indigo);
+  transition: color 0.2s ease;
 }
 
-/* === КНОПКИ === */
+/* === КНОПКИ — УЛУЧШЕНЫ ДЛЯ ЧИТАЕМОСТИ === */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -95,9 +123,10 @@ body {
   border-radius: 0.6rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: opacity 0.2s ease, box-shadow 0.2s ease;
   text-decoration: none;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  white-space: nowrap;
 }
 
 .btn-indigo {
@@ -106,63 +135,99 @@ body {
 }
 
 .btn-indigo:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(79, 126, 230, 0.3);
+  opacity: 0.9;
+  box-shadow: 0 4px 10px rgba(79, 126, 230, 0.2);
 }
 
 .btn-dark {
   background: var(--slate-800);
   color: white;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Добавляем границу для контраста */
 }
 
 .btn-dark:hover {
+  opacity: 0.9;
   background: #000;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.3);
+}
+
+/* Специальный стиль для кнопки мониторингпитания.рф */
+.btn-external {
+  background: var(--indigo-dark);
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: auto;
+  min-width: 200px; /* Увеличиваем минимальную ширину */
+}
+
+/* Тёмная тема для внешней кнопки */
+[data-theme='dark'] .btn-external {
+  background: #3b82f6;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-external:hover {
+  background: var(--indigo);
+  border-color: white;
+  transform: translateY(-1px);
 }
 
 .btn-success {
   background: linear-gradient(135deg, var(--success), #0d9466);
   color: white;
-  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
 }
 
 .btn-success:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+  opacity: 0.9;
 }
 
 .btn-warning {
   background: linear-gradient(135deg, var(--warning), #d97706);
   color: white;
-  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2);
 }
 
 .btn-warning:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+  opacity: 0.9;
 }
 
-/* === ПОЛЯ ВВОДА === */
+/* === ПОЛЯ ВВОДА — УЛУЧШЕНЫ ДЛЯ ЧИТАЕМОСТИ === */
 input, select {
   width: 100%;
   padding: 0.8rem 1rem;
   border-radius: 0.6rem;
   border: 2px solid var(--border);
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--slate-800); /* ✅ ВСЕ ПОЛЯ ВВОДА — ТЁМНЫЙ ТЕКСТ */
+  background: var(--bg-card);
+  color: var(--slate-800);
   font-size: 1rem;
-  transition: all 0.25s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  text-shadow: var(--shadow-text); /* ✅ ТЕНИ НА ТЕКСТЕ — КЛЮЧЕВОЕ ДЛЯ ЧИТАЕМОСТИ */
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: none;
+}
+
+/* Увеличиваем поле для года */
+input[name="year"] {
+  width: 100px !important; /* Увеличено с 80px */
+  text-align: center;
+  font-weight: 600;
 }
 
 input:focus, select:focus {
   outline: none;
   border-color: var(--indigo);
   box-shadow: var(--shadow-input);
-  transform: translateY(-1px);
+}
+
+/* Тёмная тема для полей */
+[data-theme='dark'] input,
+[data-theme='dark'] select {
+  background: var(--slate-800);
+  color: var(--slate-200);
+  border-color: var(--border);
 }
 
 /* === СПИСОК ФАЙЛОВ === */
@@ -174,17 +239,16 @@ input:focus, select:focus {
   gap: 0.6rem;
 }
 
-/* === ФАЙЛЫ — УЛУЧШЕННЫЙ ВИД === */
+/* === ФАЙЛЫ — УПРОЩЕНЫ === */
 .file-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0.9rem 1rem;
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 1rem;
-  transition: all 0.25s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.2s ease, background 0.2s ease;
   gap: 1rem;
 }
 
@@ -192,13 +256,13 @@ input:focus, select:focus {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: var(--slate-800); /* ✅ ВСЕ НАЗВАНИЯ ФАЙЛОВ — ГЛУБОКИЙ ТЁМНЫЙ */
+  color: var(--slate-800);
   font-weight: 600;
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-shadow: var(--shadow-text); /* ✅ ТЕНИ — ОБЯЗАТЕЛЬНО! */
+  transition: color 0.2s ease;
 }
 
 .file-name svg {
@@ -206,9 +270,9 @@ input:focus, select:focus {
   height: 20px;
   flex-shrink: 0;
   color: var(--indigo);
+  transition: color 0.2s ease;
 }
 
-/* КНОПКИ — теперь вынесены в отдельный блок */
 .file-actions {
   display: flex;
   align-items: center;
@@ -224,9 +288,9 @@ input:focus, select:focus {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  transition: all 0.2s ease;
+  transition: opacity 0.2s ease, background 0.2s ease;
   text-decoration: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
 }
 
 .file-actions a svg {
@@ -243,9 +307,7 @@ input:focus, select:focus {
 .file-actions a.download:hover {
   background: rgba(79, 126, 230, 0.2);
   border-color: var(--indigo);
-  color: var(--indigo-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(79, 126, 230, 0.2);
+  opacity: 1;
 }
 
 .file-actions a.delete {
@@ -257,12 +319,9 @@ input:focus, select:focus {
 .file-actions a.delete:hover {
   background: rgba(239, 68, 68, 0.2);
   border-color: var(--error);
-  color: var(--error);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2);
 }
 
-/* === МОДАЛКА === */
+/* === МОДАЛКА — УПРОЩЕНА === */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -273,14 +332,13 @@ input:focus, select:focus {
 }
 
 .modal-window {
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(10px);
+  background: var(--bg-card);
   border-radius: 12px;
   padding: 2rem;
   min-width: 320px;
   text-align: center;
   border: 1px solid var(--border);
-  box-shadow: 0 25px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -289,14 +347,14 @@ input:focus, select:focus {
   color: var(--slate-800);
   font-size: 1.2rem;
   font-weight: 700;
-  text-shadow: var(--shadow-text);
+  transition: color 0.2s ease;
 }
 
 .modal-window p {
   font-size: 0.95rem;
   margin: 0 0 1.5rem;
   color: var(--text-secondary);
-  text-shadow: var(--shadow-text);
+  transition: color 0.2s ease;
 }
 
 .modal-buttons {
@@ -313,10 +371,9 @@ input:focus, select:focus {
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 600;
-  transition: all 0.2s;
+  transition: opacity 0.2s ease;
   flex: 0 1 auto;
   min-width: 120px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 #cancelDelete {
@@ -326,18 +383,16 @@ input:focus, select:focus {
 }
 
 #cancelDelete:hover {
-  background: var(--slate-200);
+  opacity: 0.8;
 }
 
 #confirmDelete {
   background: var(--error);
   color: white;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
 #confirmDelete:hover {
-  background: #dc2626;
-  box-shadow: 0 6px 15px rgba(239, 68, 68, 0.3);
+  opacity: 0.9;
 }
 
 /* === ПУСТОЕ СОСТОЯНИЕ === */
@@ -346,7 +401,7 @@ input:focus, select:focus {
   padding: 3rem 0;
   color: var(--text-secondary);
   font-style: italic;
-  text-shadow: var(--shadow-text); /* ✅ ДАЖЕ ПУСТЫЕ СООБЩЕНИЯ — ЧИТАЕМЫ */
+  transition: color 0.2s ease;
 }
 
 .nofiles svg {
@@ -354,9 +409,10 @@ input:focus, select:focus {
   height: 48px;
   margin-bottom: 0.5rem;
   color: var(--slate-200);
+  transition: color 0.2s ease;
 }
 
-/* === ЧЕКБОКСЫ / МАССОВЫЕ ДЕЙСТВИЯ === */
+/* === ЧЕКБОКСЫ === */
 .upload-controls {
   display: flex;
   justify-content: space-between;
@@ -364,6 +420,7 @@ input:focus, select:focus {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--border);
+  transition: border-color 0.2s ease;
 }
 
 .upload-checkbox {
@@ -381,12 +438,13 @@ input:focus, select:focus {
   font-size: 0.9rem;
   color: var(--text-secondary);
   font-weight: 500;
-  text-shadow: var(--shadow-text);
+  transition: color 0.2s ease;
 }
 
 .small-checkbox-label input[type="checkbox"] {
   transform: scale(1.1);
   margin-right: 0.4rem;
+  accent-color: var(--indigo);
 }
 
 .small-action-btn {
@@ -397,10 +455,10 @@ input:focus, select:focus {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  transition: all 0.2s ease;
+  transition: opacity 0.2s ease, background 0.2s ease;
   border: none;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
 }
 
 .small-download-btn {
@@ -412,9 +470,6 @@ input:focus, select:focus {
 .small-download-btn:hover {
   background: rgba(16, 185, 129, 0.2);
   border-color: var(--success);
-  color: var(--success);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
 }
 
 .small-delete-btn {
@@ -426,9 +481,6 @@ input:focus, select:focus {
 .small-delete-btn:hover {
   background: rgba(239, 68, 68, 0.2);
   border-color: var(--error);
-  color: var(--error);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
 }
 
 .small-action-btn svg {
@@ -439,17 +491,14 @@ input:focus, select:focus {
 /* === КОПИРОВАНИЕ ССЫЛКИ === */
 .copy-link {
   cursor: pointer;
-  transition: color 0.2s;
+  transition: color 0.2s ease;
   position: relative;
-  text-shadow: var(--shadow-text); /* ✅ ВСЕ ССЫЛКИ — С ТЕНЬЮ */
+  color: var(--indigo) !important;
+  font-weight: 700;
 }
 
 .copy-link:hover {
-  color: var(--indigo);
-}
-
-.copy-link.copied {
-  color: var(--success);
+  color: var(--indigo-dark) !important;
 }
 
 .copy-tooltip {
@@ -464,22 +513,16 @@ input:focus, select:focus {
   font-size: 0.75rem;
   white-space: nowrap;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s ease;
   pointer-events: none;
   margin-bottom: 0.5rem;
 }
 
-.copy-tooltip::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 0.4rem solid transparent;
-  border-top-color: var(--slate-800);
+.copy-tooltip.show {
+  opacity: 1;
 }
 
-/* === РЕДАКТИРУЕМОЕ НАЗВАНИЕ ШКОЛЫ — ПОЛНОСТЬЮ ПЕРЕРАБОТАНО === */
+/* === РЕДАКТИРУЕМОЕ НАЗВАНИЕ === */
 .editable-title-container {
   position: relative;
   display: flex;
@@ -496,37 +539,37 @@ input:focus, select:focus {
   padding: 0.4rem 0.8rem;
   border-radius: 0.6rem;
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(196, 214, 255, 0.7); /* Синий бордер — в тон палитре */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   margin-bottom: 0.5rem;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+/* Тёмная тема для редактируемого названия */
+[data-theme='dark'] .editable-title {
+  background: var(--slate-800);
 }
 
 .editable-title span {
   display: block;
   font-size: 1.8rem;
-  color: var(--slate-800); /* Тёмный текст — уже хорошо, но можно усилить */
+  color: var(--slate-800);
   font-weight: 800;
-  transition: opacity 0.3s ease;
-  
-  /* Убираем полупрозрачный белый фон — он снижает контраст */
-  background: transparent; /* Было: rgba(255, 255, 255, 0.98) */
-  
+  background: transparent;
   border-radius: 0.5rem;
   padding: 0.3rem 0.8rem;
-  
-  /* Усиляем тень для эффекта «приподнятости» и контраста */
-  text-shadow: 
-    0 1px 1px rgba(0, 0, 0, 0.1),
-    0 2px 3px rgba(0, 0, 0, 0.15);
-  
-  box-shadow: none; /* Убираем внутреннюю тень — она мешает */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   margin: 0;
   display: inline-block;
   width: fit-content;
-  
-  /* Оставляем лёгкую границу, но делаем её контрастной */
-  border: 1px solid rgba(0, 0, 0, 0.3); /* Более насыщенный синий */
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Тёмная тема для текста названия */
+[data-theme='dark'] .editable-title span {
+  color: var(--slate-200);
+  border-color: var(--border);
 }
 
 .editable-title input {
@@ -539,17 +582,13 @@ input:focus, select:focus {
   padding: 0 0.4rem;
   border: 3px solid var(--indigo);
   border-radius: 0.6rem;
-  background: rgba(255, 255, 255, 0.98);
+  background: var(--bg-card);
   outline: none;
   box-shadow: var(--shadow-input);
   z-index: 10;
   opacity: 0;
   transform: scaleY(0);
-  transition:
-    opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 0.3s ease,
-    box-shadow 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .editable-title input.active {
@@ -566,14 +605,13 @@ input:focus, select:focus {
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 600;
-  transition: background 0.3s, transform 0.2s;
+  transition: opacity 0.2s ease;
   align-self: flex-start;
-  box-shadow: 0 2px 6px rgba(79, 126, 230, 0.3);
+  box-shadow: none;
 }
 
 .edit-title-btn:hover {
-  background: var(--indigo-dark);
-  transform: translateY(-2px);
+  opacity: 0.9;
 }
 
 /* === МЕТА-ИНФО ФАЙЛА === */
@@ -581,26 +619,24 @@ input:focus, select:focus {
   font-size: 0.8rem;
   color: var(--text-secondary);
   margin-top: 0.3rem;
-  text-shadow: var(--shadow-text); /* ✅ ДАЖЕ МЕТА — ЧИТАЕМА */
+  transition: color 0.2s ease;
 }
 
-/* === ЗОНА DRAG-AND-DROP === */
+/* === ЗОНА DRAG-AND-DROP — УПРОЩЕНА === */
 .file-upload-area {
-  border: 2px dashed rgba(196, 214, 255, 0.7);
+  border: 2px dashed var(--border);
   border-radius: 0.75rem;
   padding: 1.5rem;
   text-align: center;
   margin-bottom: 1rem;
-  transition: all 0.3s ease;
+  transition: border-color 0.2s ease, background 0.2s ease;
   position: relative;
-  background: rgba(255, 255, 255, 0.75);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  background: var(--bg-card);
 }
 
 .file-upload-area:hover {
   border-color: var(--indigo);
-  background: rgba(79, 126, 230, 0.08);
-  box-shadow: 0 0 0 3px rgba(79, 126, 230, 0.1);
+  background: rgba(79, 126, 230, 0.05);
 }
 
 .file-input-wrapper {
@@ -622,21 +658,24 @@ input:focus, select:focus {
 .file-input-label {
   display: block;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--bg-card);
   border-radius: 0.5rem;
   color: var(--text-secondary);
   font-weight: 500;
   transition: all 0.2s ease;
   border: 2px solid transparent;
-  text-shadow: var(--shadow-text); /* ✅ ТЕНИ НА НАДПИСИ */
+}
+
+/* Тёмная тема для лейбла загрузки */
+[data-theme='dark'] .file-input-label {
+  background: var(--slate-800);
+  color: var(--slate-400);
 }
 
 .file-upload-area:hover .file-input-label {
   background: var(--indigo);
   color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(79, 126, 230, 0.2);
-  text-shadow: none; /* Убираем тень на белом — она мешает */
+  border-color: transparent;
 }
 
 /* === УВЕДОМЛЕНИЕ КОПИРОВАНИЯ === */
@@ -644,8 +683,7 @@ input:focus, select:focus {
   position: fixed;
   top: 20px;
   right: 20px;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(10px);
+  background: var(--bg-card);
   color: var(--slate-800);
   padding: 0.8rem 1.2rem;
   border-radius: 0.5rem;
@@ -653,10 +691,10 @@ input:focus, select:focus {
   z-index: 10000;
   opacity: 0;
   transform: translateY(-10px);
-  transition: all 0.3s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border: 1px solid var(--border);
-  text-shadow: var(--shadow-text);
+  pointer-events: none;
 }
 
 .copy-notification.show {
@@ -669,15 +707,27 @@ input:focus, select:focus {
   border-color: rgba(16, 185, 129, 0.3);
 }
 
-/* === АНИМАЦИИ === */
+/* === АНИМАЦИИ — УПРОЩЕНЫ === */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(30px) }
-  to { opacity: 1; transform: translateY(0) }
+  from { 
+    opacity: 0; 
+    transform: translateY(15px);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95) translateY(-10px) }
-  to { opacity: 1; transform: scale(1) translateY(0) }
+  from { 
+    opacity: 0; 
+    transform: scale(0.98);
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1);
+  }
 }
 
 </style>
@@ -685,10 +735,10 @@ input:focus, select:focus {
 <div class="container">
   <!-- Заголовок учреждения -->
   <div class="card" style="border-left: 6px solid var(--indigo); width: 100%; display: flex; flex-direction: column; align-items: flex-start;">
-    <div style="width: 100%; display: flex; justify-content: flex-start; align-items: center;">
+    <div style="width: 100%; display: flex; justify-content: flex-start; align-items: center; gap: 2rem;">
       <div style="flex: 1;">
         <!-- Название школы (режим просмотра + кнопка) -->
-        <div id="schoolTitleDisplay" style="font-size: 1.8rem; color: #21262b; font-weight: 800; margin-bottom: 0.5rem;">
+        <div id="schoolTitleDisplay" style="font-size: 1.8rem; color: var(--slate-800); font-weight: 800; margin-bottom: 0.5rem; transition: color 0.2s ease;">
           {{ user.unit_name }}
         </div>
         <button type="button" id="editSchoolTitleBtn" class="edit-title-btn">Изменить</button>
@@ -703,52 +753,26 @@ input:focus, select:focus {
               value="{{ user.unit_name }}"
               placeholder="Введите название школы"
               required
-              style="
-                flex: 1;
-                padding: 0.75rem 1rem;
-                border: 1px solid var(--slate-200);
-                border-radius: 0.4rem;
-                font-size: 1.1rem;
-                color: #1e293b;
-                background: #fff;
-              "
+              style="flex: 1;"
             >
-            <button type="submit" style="
-                padding: 0.75rem 1.5rem;
-                background: var(--indigo);
-                color: white;
-                border: none;
-                border-radius: 0.4rem;
-                cursor: pointer;
-                font-weight: 600;
-                font-size: 0.9rem;
-              ">
+            <button type="submit" class="btn btn-indigo" style="padding: 0.75rem 1.5rem;">
               Сохранить
             </button>
-            <button type="button" id="cancelSchoolTitleBtn" style="
-                padding: 0.75rem 1.5rem;
-                background: #e2e8f0;
-                color: var(--slate-700);
-                border: none;
-                border-radius: 0.4rem;
-                cursor: pointer;
-                font-weight: 600;
-                font-size: 0.9rem;
-              ">
+            <button type="button" id="cancelSchoolTitleBtn" class="btn" style="background: var(--slate-100); color: var(--text-secondary);">
               Отмена
             </button>
           </div>
         </form>
 
-        <p style="color: var(--indigo); font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 600; text-transform: uppercase;">
+        <p style="color: var(--indigo); font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 600; text-transform: uppercase; transition: color 0.2s ease;">
           {{ user.district }} | {{ user.food_type }}
         </p>
 
         <div style="margin-top: 1rem;">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <strong style="color: var(--slate-700);">Директор:</strong>
-            <span id="directorNameDisplay" style="color: var(--slate-800);">{{ user.director_name or 'Не указано' }}</span>
-            <button type="button" id="editDirectorBtn" style="background: none; border: none; color: var(--indigo); cursor: pointer; font-size: 0.8rem; font-weight: 600;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <strong style="color: var(--slate-700); transition: color 0.2s ease;">Директор:</strong>
+            <span id="directorNameDisplay" style="color: var(--slate-800); transition: color 0.2s ease;">{{ user.director_name or 'Не указано' }}</span>
+            <button type="button" id="editDirectorBtn" style="background: none; border: none; color: var(--indigo); cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: color 0.2s ease;">
               (Изменить)
             </button>
           </div>
@@ -756,55 +780,54 @@ input:focus, select:focus {
           <!-- Форма изменения ФИО директора (скрыта по умолчанию) -->
           <form id="directorForm" action="/profile/update" method="post" style="display: none; margin-top: 0.5rem; gap: 0.5rem; align-items: center;">
             <input type="hidden" name="uid" value="{{ user.id }}">
-            <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
               <input  
                 type="text"
                 name="director_name"
                 value="{{ user.director_name }}"
                 placeholder="Введите ФИО директора"
                 required  
-                style="padding: 0.5rem 0.8rem; border: 1px solid var(--slate-200); border-radius: 0.4rem; font-size: 0.9rem;"
+                style="padding: 0.5rem 0.8rem; min-width: 250px;"
               >
-              <button type="submit" style="padding: 0.5rem 0.8rem; background: var(--indigo); color: white; border: none; border-radius: 0.4rem; cursor: pointer; font-weight: 600;">
-                Сохранить  
-              </button>
-              <button type="button" id="cancelBtn" style="padding: 0.5rem 0.8rem; background: #e2e8f0; color: var(--slate-700); border: none; border-radius: 0.4rem; cursor: pointer; font-weight: 600;">
-                Отмена  
-              </button>
+              <button type="submit" class="btn btn-indigo" style="padding: 0.5rem 0.8rem;">Сохранить</button>
+              <button type="button" id="cancelBtn" class="btn" style="padding: 0.5rem 0.8rem; background: var(--slate-100); color: var(--text-secondary);">Отмена</button>
             </div>
           </form>
         </div>
 
-        <div style="margin-top: 0.6rem; padding: 0.5rem 0.8rem; background: #eef2ff; border-radius: 0.6rem; font-family: monospace; font-size: 0.8rem;">
-          Внешний путь:<span id="monitoringUrl" class="copy-link" style="color: var(--indigo); font-weight: 700;">{{monitoring_url.rstrip('/')}}</span>
-          <div class="copy-tooltip" id="copyTooltip">Ссылка скопирована!</div>
+        <div style="margin-top: 0.6rem; padding: 0.5rem 0.8rem; background: rgba(79, 126, 230, 0.1); border-radius: 0.6rem; font-family: monospace; font-size: 0.8rem; transition: background 0.2s ease; display: inline-block;">
+          Внешний путь: <span id="monitoringUrl" class="copy-link">{{ monitoring_url.rstrip('/') }}</span>
+          <span class="copy-tooltip" id="copyTooltip">Ссылка скопирована!</span>
         </div>
       </div>
-      <a href="https://мониторингпитание.рф/#/home" target="_blank" class="btn btn-dark" style="margin-left: auto;">мониторингпитания.рф</a>
+      <a href="https://мониторингпитание.рф/#/home" target="_blank" class="btn btn-external">
+        мониторингпитания.рф
+      </a>
     </div>
   </div>
 
   <!-- Настройка периода -->
   <div style="display:grid;grid-template-columns:1fr;gap:2rem;">
     <div class="card">
-      <h3 style="font-size:1.1rem;color:var(--slate-800);font-weight:800;margin-bottom:1rem;">Настройка периода</h3>
+      <h3 style="font-size:1.1rem; margin-bottom:1rem;">Настройка периода</h3>
       <form action="/dashboard" method="get" style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
         <input type="hidden" name="uid" value="{{ user.id }}">
         <div style="display:flex;align-items:center;gap:.5rem;">
-          <label style="font-weight:500;color:var(--slate-700);">Год:</label>
-          <input type="number" name="year" value="{{ year }}" style="padding:.5rem .8rem;border:1px solid #d1d5db;border-radius:.375rem;width:80px;">
+          <label style="font-weight:600; color: var(--slate-700);">Год:</label>
+          <input type="number" name="year" value="{{ year }}" style="width: 100px; text-align: center; font-weight: 600;">
         </div>
         <div style="display:flex;align-items:center;gap:.5rem;">
-          <label style="font-weight:500;color:var(--slate-700);">Месяц:</label>
-          <select name="month" style="padding:.5rem .8rem;border:1px solid #d1d5db;border-radius:.375rem;">
+          <label style="font-weight:600; color: var(--slate-700);">Месяц:</label>
+          <select name="month" style="min-width: 120px;">
             {% for m_id, m_name in months.items() %}
             <option value="{{ m_id }}" {% if m_id == month %}selected{% endif %}>{{ m_name }}</option>
             {% endfor %}
           </select>
         </div>
-        <button class="btn btn-indigo" type="submit">ОК</button>
+        <button class="btn btn-indigo" type="submit" style="padding: 0.8rem 2rem;">Применить</button>
       </form>
-      <h3 style="font-size:1rem;color:var(--slate-700);font-weight:700;margin-top:1.8rem;">Загрузить файлы в этот период</h3>
+      
+      <h3 style="font-size:1rem; margin-top:1.8rem;">Загрузить файлы в этот период</h3>
       <form action="/upload" method="post" enctype="multipart/form-data">
         <input type="hidden" name="uid" value="{{ user.id }}">
         <input type="hidden" name="year" value="{{ year }}">
@@ -845,9 +868,9 @@ input:focus, select:focus {
 
     <!-- Файлы месяца -->
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-        <h3 style="font-size:1.1rem;color:var(--slate-800);font-weight:800;">Файлы месяца</h3>
-        <span style="font-size:.8rem;background:#e0e7ff;color:var(--indigo-dark);padding:.3rem .8rem;border-radius:9999px;text-transform:uppercase;font-weight:700;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem; flex-wrap: wrap; gap: 1rem;">
+        <h3 style="font-size:1.1rem;">Файлы месяца</h3>
+        <span style="font-size:.8rem;background:rgba(79, 126, 230, 0.1);color:var(--indigo-dark);padding:.3rem .8rem;border-radius:9999px;text-transform:uppercase;font-weight:700;transition:background 0.2s ease, color 0.2s ease;">
           {{ months[month] }} {{ year }}
         </span>
       </div>
@@ -856,14 +879,14 @@ input:focus, select:focus {
       <div class="file-list" id="fileList">
         {% for file_info in files_grouped[year][months[month]] %}
         <div class="file-item">
-          <div style="display:flex;flex-direction:column;flex:1;">
+          <div style="display:flex;flex-direction:column;flex:1; min-width: 0;">
             <div class="file-name">
               <input type="checkbox" class="file-checkbox" data-filename="{{ file_info.filename }}">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
               </svg>
-              <span>{{ file_info.filename }}</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">{{ file_info.filename }}</span>
             </div>
             <div class="file-meta">
               Загружено: {{ file_info.date }} | {{ file_info.uploader }}
@@ -917,185 +940,208 @@ input:focus, select:focus {
 <div class="copy-notification" id="copyNotification">Ссылка скопирована!</div>
 
 <script>
-// Логика переключения между просмотром и редактированием ФИО директора
+// Оптимизированный JavaScript
 document.addEventListener('DOMContentLoaded', function() {
+  let copyTimeout, notificationTimeout;
+  
+  // === ЛОГИКА РЕДАКТИРОВАНИЯ ФИО ДИРЕКТОРА ===
   const display = document.getElementById('directorNameDisplay');
   const editBtn = document.getElementById('editDirectorBtn');
   const form = document.getElementById('directorForm');
   const cancelBtn = document.getElementById('cancelBtn');
 
+  if (editBtn && form && cancelBtn && display) {
+    editBtn.addEventListener('click', function() {
+      display.style.display = 'none';
+      editBtn.style.display = 'none';
+      form.style.display = 'flex';
+    });
 
-  // Открыть форму редактирования
-  editBtn.addEventListener('click', function() {
-    display.style.display = 'none';
-    editBtn.style.display = 'none';
-    form.style.display = 'flex';
-  });
+    cancelBtn.addEventListener('click', function() {
+      form.style.display = 'none';
+      display.style.display = 'inline';
+      editBtn.style.display = 'inline';
+    });
+  }
 
-  // Закрыть форму редактирования
-  cancelBtn.addEventListener('click', function() {
-    form.style.display = 'none';
-    display.style.display = 'inline';
-    editBtn.style.display = 'inline';
-  });
-});
+  // === ЛОГИКА РЕДАКТИРОВАНИЯ НАЗВАНИЯ ШКОЛЫ ===
+  const schoolTitleDisplay = document.getElementById('schoolTitleDisplay');
+  const editSchoolTitleBtn = document.getElementById('editSchoolTitleBtn');
+  const schoolTitleForm = document.getElementById('schoolTitleForm');
+  const cancelSchoolTitleBtn = document.getElementById('cancelSchoolTitleBtn');
 
-// Логика редактирования названия школы (аналогично ФИО директора)
-const schoolTitleDisplay = document.getElementById('schoolTitleDisplay');
-const editSchoolTitleBtn = document.getElementById('editSchoolTitleBtn');
-const schoolTitleForm = document.getElementById('schoolTitleForm');
-const cancelSchoolTitleBtn = document.getElementById('cancelSchoolTitleBtn');
+  if (editSchoolTitleBtn && schoolTitleForm && cancelSchoolTitleBtn && schoolTitleDisplay) {
+    editSchoolTitleBtn.addEventListener('click', function() {
+      schoolTitleDisplay.style.display = 'none';
+      editSchoolTitleBtn.style.display = 'none';
+      schoolTitleForm.style.display = 'flex';
+    });
 
+    cancelSchoolTitleBtn.addEventListener('click', function() {
+      schoolTitleForm.style.display = 'none';
+      schoolTitleDisplay.style.display = 'block';
+      editSchoolTitleBtn.style.display = 'inline-block';
+    });
+  }
 
-// Открыть форму редактирования названия школы
-editSchoolTitleBtn.addEventListener('click', function() {
-  schoolTitleDisplay.style.display = 'none';
-  editSchoolTitleBtn.style.display = 'none';
-  schoolTitleForm.style.display = 'flex';
-});
-
-
-// Закрыть форму редактирования названия школы (Отмена)
-cancelSchoolTitleBtn.addEventListener('click', function() {
-  schoolTitleForm.style.display = 'none';
-  schoolTitleDisplay.style.display = 'block';
-  editSchoolTitleBtn.style.display = 'inline-block';
-});
-
-// Функция показа уведомления
-function showCopyNotification() {
-  const notification = document.getElementById('copyNotification');
-  notification.classList.add('show');
-  setTimeout(() => {
-    notification.classList.remove('show');
-  }, 2000);
-}
-
-// Копирование ссылки
-document.getElementById('monitoringUrl').addEventListener('click', function() {
-  const text = this.textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    showCopyNotification();
+  // === ФУНКЦИЯ ПОКАЗА УВЕДОМЛЕНИЯ ===
+  function showCopyNotification() {
+    const notification = document.getElementById('copyNotification');
+    if (!notification) return;
     
-    // Также показываем тултип (на всякий случай)
-    const tooltip = document.getElementById('copyTooltip');
-    tooltip.style.opacity = '1';
-    setTimeout(() => {
-      tooltip.style.opacity = '0';
-    }, 2000);
-  }).catch(err => {
-    // Fallback для старых браузеров
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textArea);
-    showCopyNotification();
-  });
-});
+    notification.classList.add('show');
+    
+    if (notificationTimeout) clearTimeout(notificationTimeout);
+    notificationTimeout = setTimeout(() => {
+      notification.classList.remove('show');
+    }, 1500);
+  }
 
-// Управление checkbox'ами
-const checkAll = document.getElementById('checkAll');
-const fileCheckboxes = document.querySelectorAll('.file-checkbox');
+  // === КОПИРОВАНИЕ ССЫЛКИ ===
+  const monitoringUrl = document.getElementById('monitoringUrl');
+  const copyTooltip = document.getElementById('copyTooltip');
 
+  if (monitoringUrl) {
+    monitoringUrl.addEventListener('click', function() {
+      const text = this.textContent;
+      
+      navigator.clipboard.writeText(text).then(() => {
+        showCopyNotification();
+        
+        if (copyTooltip) {
+          copyTooltip.classList.add('show');
+          
+          if (copyTimeout) clearTimeout(copyTimeout);
+          copyTimeout = setTimeout(() => {
+            copyTooltip.classList.remove('show');
+          }, 1500);
+        }
+      }).catch(() => {
+        // Fallback для старых браузеров
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showCopyNotification();
+      });
+    });
+  }
 
-if (checkAll) {
-  checkAll.addEventListener('change', function() {
+  // === УПРАВЛЕНИЕ CHECKBOX'АМИ ===
+  const checkAll = document.getElementById('checkAll');
+  const fileCheckboxes = document.querySelectorAll('.file-checkbox');
+
+  if (checkAll && fileCheckboxes.length > 0) {
+    checkAll.addEventListener('change', function() {
+      fileCheckboxes.forEach(checkbox => {
+        checkbox.checked = this.checked;
+      });
+    });
+
     fileCheckboxes.forEach(checkbox => {
-      checkbox.checked = this.checked;
+      checkbox.addEventListener('change', function() {
+        const allChecked = Array.from(fileCheckboxes).every(cb => cb.checked);
+        checkAll.checked = allChecked;
+      });
     });
-  });
-}
-
-if (fileCheckboxes.length > 0) {
-  fileCheckboxes.forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-      const allChecked = Array.from(fileCheckboxes).every(cb => cb.checked);
-      checkAll.checked = allChecked;
-    });
-  });
-}
-
-// Скачивание выделенных файлов
-document.getElementById('downloadSelected')?.addEventListener('click', function() {
-  const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'))
-    .map(checkbox => checkbox.dataset.filename);
-  
-  if (selectedFiles.length === 0) {
-    alert('Выберите файлы для скачивания');
-    return;
   }
 
-  // Скачиваем каждый файл по отдельности
-  selectedFiles.forEach(filename => {
-    window.open(`/{{ user.id }}/food/${filename}`, '_blank');
-  });
-});
+  // === СКАЧИВАНИЕ ВЫДЕЛЕННЫХ ФАЙЛОВ ===
+  const downloadSelected = document.getElementById('downloadSelected');
+  if (downloadSelected) {
+    downloadSelected.addEventListener('click', function() {
+      const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'))
+        .map(checkbox => checkbox.dataset.filename);
+      
+      if (selectedFiles.length === 0) {
+        alert('Выберите файлы для скачивания');
+        return;
+      }
 
-// Удаление выделенных файлов
-const deleteModal = document.getElementById('deleteModal');
-const openConfirmBtn = document.getElementById('openConfirm');
-const cancelDeleteBtn = document.getElementById('cancelDelete');
-const confirmDeleteBtn = document.getElementById('confirmDelete');
-
-
-openConfirmBtn?.addEventListener('click', function() {
-  const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'))
-    .map(checkbox => checkbox.dataset.filename);
-
-  if (selectedFiles.length === 0) {
-    alert('Выберите файлы для удаления');
-    return;
+      selectedFiles.forEach(filename => {
+        window.open(`/{{ user.id }}/food/${filename}`, '_blank');
+      });
+    });
   }
 
-  deleteModal.style.display = 'flex';
-});
+  // === УДАЛЕНИЕ ВЫДЕЛЕННЫХ ФАЙЛОВ ===
+  const deleteModal = document.getElementById('deleteModal');
+  const openConfirmBtn = document.getElementById('openConfirm');
+  const cancelDeleteBtn = document.getElementById('cancelDelete');
+  const confirmDeleteBtn = document.getElementById('confirmDelete');
 
-cancelDeleteBtn?.addEventListener('click', function() {
-  deleteModal.style.display = 'none';
-});
+  if (openConfirmBtn && deleteModal) {
+    openConfirmBtn.addEventListener('click', function() {
+      const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'))
+        .map(checkbox => checkbox.dataset.filename);
 
-confirmDeleteBtn?.addEventListener('click', function() {
-  const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'))
-    .map(checkbox => checkbox.dataset.filename);
+      if (selectedFiles.length === 0) {
+        alert('Выберите файлы для удаления');
+        return;
+      }
 
-  // Создаем форму для массового удаления
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = '/delete-files';
+      deleteModal.style.display = 'flex';
+    });
+  }
 
+  if (cancelDeleteBtn && deleteModal) {
+    cancelDeleteBtn.addEventListener('click', function() {
+      deleteModal.style.display = 'none';
+    });
+  }
 
-  // Добавляем скрытые поля
-  const uidInput = document.createElement('input');
-  uidInput.type = 'hidden';
-  uidInput.name = 'uid';
-  uidInput.value = '{{ user.id }}';
-  form.appendChild(uidInput);
+  if (confirmDeleteBtn && deleteModal) {
+    confirmDeleteBtn.addEventListener('click', function() {
+      const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'))
+        .map(checkbox => checkbox.dataset.filename);
 
-  const yearInput = document.createElement('input');
-  yearInput.type = 'hidden';
-  yearInput.name = 'year';
-  yearInput.value = '{{ year }}';
-  form.appendChild(yearInput);
+      // Создаем форму для массового удаления
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/delete-files';
+      form.style.display = 'none';
 
-  const monthInput = document.createElement('input');
-  monthInput.type = 'hidden';
-  monthInput.name = 'month';
-  monthInput.value = '{{ month }}';
-  form.appendChild(monthInput);
+      const uidInput = document.createElement('input');
+      uidInput.type = 'hidden';
+      uidInput.name = 'uid';
+      uidInput.value = '{{ user.id }}';
+      form.appendChild(uidInput);
 
-  // Добавляем выбранные файлы
-  selectedFiles.forEach(filename => {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'hidden';
-    fileInput.name = 'files';
-    fileInput.value = filename;
-    form.appendChild(fileInput);
-  });
+      const yearInput = document.createElement('input');
+      yearInput.type = 'hidden';
+      yearInput.name = 'year';
+      yearInput.value = '{{ year }}';
+      form.appendChild(yearInput);
 
-  document.body.appendChild(form);
-  form.submit();
+      const monthInput = document.createElement('input');
+      monthInput.type = 'hidden';
+      monthInput.name = 'month';
+      monthInput.value = '{{ month }}';
+      form.appendChild(monthInput);
+
+      selectedFiles.forEach(filename => {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'hidden';
+        fileInput.name = 'files';
+        fileInput.value = filename;
+        form.appendChild(fileInput);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+    });
+  }
+
+  // Закрытие модалки по клику на оверлей
+  if (deleteModal) {
+    deleteModal.addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.style.display = 'none';
+      }
+    });
+  }
 });
 </script>
 {% endblock %}

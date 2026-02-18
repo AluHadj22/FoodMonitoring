@@ -36,6 +36,33 @@
   --success-text: #065f46;
 }
 
+/* === ТЁМНАЯ ТЕМА === */
+[data-theme='dark'] {
+  --slate-50: #0f172a;
+  --slate-100: #1e293b;
+  --slate-200: #334155;
+  --slate-300: #475569;
+  --slate-400: #64748b;
+  --slate-500: #94a3b8;
+  --slate-600: #cbd5e1;
+  --slate-700: #e2e8f0;
+  --slate-800: #f1f5f9;
+  --slate-900: #f8fafc;
+  
+  --blue-light: #1e40af;
+  --blue-dark: #93c5fd;
+  
+  --error-bg: rgba(239, 68, 68, 0.2);
+  --error-text: #f87171;
+  --success-bg: rgba(16, 185, 129, 0.2);
+  --success-text: #6ee7b7;
+  
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.4);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.4);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.5);
+}
+
 /* === ОБЩИЕ СТИЛИ === */
 * {
   margin: 0;
@@ -45,10 +72,11 @@
 
 body {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background: var(--slate-50);
+  background: transparent; /* Позволяем фону из layout просвечивать */
   min-height: 100vh;
   color: var(--slate-800);
   line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .auth-container {
@@ -61,16 +89,23 @@ body {
 }
 
 .auth-card {
-  background: white;
+  background: var(--card, white);
   backdrop-filter: blur(10px);
   border-radius: var(--radius-lg);
   padding: 3rem;
   box-shadow: var(--shadow-xl);
-  border: 1px solid var(--slate-200);
+  border: 1px solid var(--border, var(--slate-200));
   width: 100%;
   max-width: 600px;
   position: relative;
   overflow: hidden;
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Тёмная тема для карточки */
+[data-theme='dark'] .auth-card {
+  background: var(--card, #1e293b);
+  border-color: var(--border, #334155);
 }
 
 .auth-card::before {
@@ -99,6 +134,12 @@ body {
   margin: 0 auto 2.5rem;
   box-shadow: var(--shadow-md);
   position: relative;
+  transition: background 0.3s ease;
+}
+
+/* Тёмная тема для иконки */
+[data-theme='dark'] .register-icon {
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.5) 0%, rgba(51, 65, 85, 0.8) 100%);
 }
 
 .register-icon::after {
@@ -121,6 +162,11 @@ body {
   height: 36px;
   color: var(--blue-primary);
   transition: var(--transition-base);
+}
+
+/* Тёмная тема для svg иконки */
+[data-theme='dark'] .register-icon svg {
+  color: var(--blue-secondary);
 }
 
 .register-icon:hover svg {
@@ -162,19 +208,28 @@ body {
   font-weight: 600;
   color: var(--slate-700);
   font-size: 0.95rem;
+  transition: color 0.3s ease;
 }
 
 .form-group input,
 .form-group select {
   width: 100%;
   padding: 1.125rem 1.125rem 1.125rem 3.5rem;
-  border: 2px solid var(--slate-200);
+  border: 2px solid var(--border, var(--slate-200));
   border-radius: var(--radius-md);
   font-size: 1.05rem;
-  background: var(--slate-50);
+  background: var(--surface, var(--slate-50));
   transition: var(--transition-base);
   font-weight: 500;
   color: var(--slate-800);
+}
+
+/* Тёмная тема для полей ввода */
+[data-theme='dark'] .form-group input,
+[data-theme='dark'] .form-group select {
+  background: var(--slate-800, #1e293b);
+  border-color: var(--border, #334155);
+  color: var(--slate-200, #e2e8f0);
 }
 
 .form-group select {
@@ -187,13 +242,29 @@ body {
   padding-right: 3.5rem;
 }
 
+/* Тёмная тема для стрелки select */
+[data-theme='dark'] .form-group select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+}
+
 .form-group input:focus,
 .form-group select:focus {
   border-color: var(--blue-primary);
-  background: white;
+  background: var(--card, white);
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
   outline: none;
   transform: translateY(-1px);
+}
+
+/* Тёмная тема для focused поля */
+[data-theme='dark'] .form-group input:focus,
+[data-theme='dark'] .form-group select:focus {
+  background: var(--slate-700, #334155);
+  border-color: var(--blue-secondary);
+}
+
+.form-group input::placeholder {
+  color: var(--slate-400);
 }
 
 .form-group svg {
@@ -213,11 +284,18 @@ body {
   color: var(--blue-primary);
 }
 
+/* Тёмная тема для иконок в фокусе */
+[data-theme='dark'] .form-group input:focus + svg,
+[data-theme='dark'] .form-group select:focus + svg {
+  color: var(--blue-secondary);
+}
+
 .section-meta {
   padding-top: 1.5rem;
-  border-top: 1px solid var(--slate-200);
+  border-top: 1px solid var(--border, var(--slate-200));
   margin-top: 2rem;
   position: relative;
+  transition: border-color 0.3s ease;
 }
 
 .section-meta::before {
@@ -226,22 +304,39 @@ body {
   top: -0.6rem;
   left: 50%;
   transform: translateX(-50%);
-  background: white;
+  background: var(--card, white);
   padding: 0 1rem;
   font-size: 0.85rem;
   color: var(--slate-500);
   font-weight: 600;
   border-radius: 0.5rem;
   backdrop-filter: blur(5px);
-  border: 1px solid var(--slate-200);
+  border: 1px solid var(--border, var(--slate-200));
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Тёмная тема для метки секции */
+[data-theme='dark'] .section-meta::before {
+  background: var(--card, #1e293b);
+  border-color: var(--border, #334155);
+  color: var(--slate-400);
 }
 
 .section-meta .form-group input {
-  background: var(--slate-50);
+  background: var(--surface, var(--slate-50));
 }
 
 .section-meta .form-group input:focus {
-  background: white;
+  background: var(--card, white);
+}
+
+/* Тёмная тема для полей в секции */
+[data-theme='dark'] .section-meta .form-group input {
+  background: var(--slate-800, #1e293b);
+}
+
+[data-theme='dark'] .section-meta .form-group input:focus {
+  background: var(--slate-700, #334155);
 }
 
 .submit-btn {
@@ -291,6 +386,7 @@ body {
   margin-top: 2rem;
   font-size: 0.95rem;
   color: var(--slate-600);
+  transition: color 0.3s ease;
 }
 
 .switch-link a {
@@ -303,9 +399,19 @@ body {
   transition: var(--transition-base);
 }
 
+/* Тёмная тема для ссылки */
+[data-theme='dark'] .switch-link a {
+  color: var(--blue-secondary);
+}
+
 .switch-link a:hover {
   background: rgba(59, 130, 246, 0.1);
   text-decoration: none;
+}
+
+/* Тёмная тема для hover ссылки */
+[data-theme='dark'] .switch-link a:hover {
+  background: rgba(96, 165, 250, 0.1);
 }
 
 .switch-link a::after {
@@ -317,6 +423,11 @@ body {
   height: 2px;
   background: var(--blue-primary);
   transition: width 0.3s ease;
+}
+
+/* Тёмная тема для подчёркивания ссылки */
+[data-theme='dark'] .switch-link a::after {
+  background: var(--blue-secondary);
 }
 
 .switch-link a:hover::after {
@@ -346,6 +457,12 @@ body {
   background: rgba(59, 130, 246, 0.1);
 }
 
+/* Тёмная тема для кнопки показа пароля */
+[data-theme='dark'] .password-toggle:hover {
+  color: var(--blue-secondary);
+  background: rgba(96, 165, 250, 0.1);
+}
+
 .password-toggle svg {
   width: 20px;
   height: 20px;
@@ -358,9 +475,10 @@ body {
   padding: 1rem;
   border-radius: var(--radius-md);
   margin-bottom: 1.5rem;
-  border: 1px solid #fecaca;
+  border: 1px solid rgba(239, 68, 68, 0.3);
   font-size: 0.9rem;
   animation: shake 0.5s ease-in-out;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .success-message {
@@ -369,8 +487,144 @@ body {
   padding: 1rem;
   border-radius: var(--radius-md);
   margin-bottom: 1.5rem;
-  border: 1px solid #a7f3d0;
+  border: 1px solid rgba(16, 185, 129, 0.3);
   font-size: 0.9rem;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* === ГРУППА СОГЛАСИЯ === */
+.consent-group {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border, var(--slate-200));
+  border-radius: var(--radius-md);
+  background: var(--surface, white);
+  backdrop-filter: blur(5px);
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Тёмная тема для группы согласия */
+[data-theme='dark'] .consent-group {
+  background: var(--slate-800, #1e293b);
+  border-color: var(--border, #334155);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkmark {
+  position: relative;
+  top: 2px;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--blue-primary);
+  border-radius: 4px;
+  margin-right: 0.75rem;
+  background: var(--surface, white);
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+/* Тёмная тема для чекбокса */
+[data-theme='dark'] .checkmark {
+  background: var(--slate-700, #334155);
+  border-color: var(--blue-secondary);
+}
+
+.checkbox-label input:checked + .checkmark {
+  background-color: var(--blue-primary);
+  border-color: var(--blue-primary);
+}
+
+/* Тёмная тема для отмеченного чекбокса */
+[data-theme='dark'] .checkbox-label input:checked + .checkmark {
+  background-color: var(--blue-secondary);
+  border-color: var(--blue-secondary);
+}
+
+.checkbox-label input:checked + .checkmark::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 6px;
+  height: 11px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.consent-text {
+  display: block;
+  margin-left: 1.75rem;
+  font-size: 0.9rem;
+  color: var(--slate-600);
+  line-height: 1.4;
+  transition: color 0.3s ease;
+}
+
+/* Тёмная тема для текста согласия */
+[data-theme='dark'] .consent-text {
+  color: var(--slate-400);
+}
+
+.consent-text a {
+  color: var(--blue-primary);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+/* Тёмная тема для ссылок в тексте согласия */
+[data-theme='dark'] .consent-text a {
+  color: var(--blue-secondary);
+}
+
+.consent-text a:hover {
+  text-decoration: underline;
+}
+
+.consent-list {
+  margin: 0.5rem 0 0 1rem;
+  padding-left: 0;
+  list-style: none;
+}
+
+.consent-list li {
+  margin: 0.25rem 0;
+  position: relative;
+  font-size: 0.875rem;
+  color: var(--slate-500);
+  transition: color 0.3s ease;
+}
+
+/* Тёмная тема для списка */
+[data-theme='dark'] .consent-list li {
+  color: var(--slate-400);
+}
+
+.consent-list li::before {
+  content: "•";
+  color: var(--blue-primary);
+  font-weight: bold;
+  display: inline-block;
+  width: 1em;
+  margin-left: -1em;
+}
+
+/* Тёмная тема для маркера списка */
+[data-theme='dark'] .consent-list li::before {
+  color: var(--blue-secondary);
 }
 
 @keyframes fadeInUp {
@@ -390,9 +644,29 @@ body {
   75% { transform: translateX(5px); }
 }
 
-/* === АДАПТИВНОСТЬ === */
+@keyframes spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
 
-/* ПК */
+@keyframes inputFocusGlow {
+  0% { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0); }
+  50% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
+  100% { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0); }
+}
+
+/* Тёмная тема для анимации фокуса */
+[data-theme='dark'] .form-group input:focus,
+[data-theme='dark'] .form-group select:focus {
+  animation: inputFocusGlowDark 0.4s ease-in-out;
+}
+
+@keyframes inputFocusGlowDark {
+  0% { box-shadow: 0 0 0 2px rgba(96, 165, 250, 0); }
+  50% { box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.2); }
+  100% { box-shadow: 0 0 0 2px rgba(96, 165, 250, 0); }
+}
+
+/* === АДАПТИВНОСТЬ === */
 @media (min-width: 1024px) {
   .auth-card {
     max-width: 650px;
@@ -458,7 +732,6 @@ body {
   }
 }
 
-/* Планшеты */
 @media (max-width: 768px) {
   .auth-card {
     max-width: 550px;
@@ -471,7 +744,6 @@ body {
   }
 }
 
-/* Телефоны */
 @media (max-width: 640px) {
   .auth-container {
     padding: 1rem 0.5rem;
@@ -572,95 +844,6 @@ body {
   }
 }
 
-/* === ГРУППА СОГЛАСИЯ === */
-.consent-group {
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  border: 1px solid var(--slate-200);
-  border-radius: var(--radius-md);
-  background: white;
-  backdrop-filter: blur(5px);
-  box-shadow: var(--shadow-sm);
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: flex-start;
-  cursor: pointer;
-}
-
-.checkmark {
-  position: relative;
-  top: 2px;
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--blue-primary);
-  border-radius: 4px;
-  margin-right: 0.75rem;
-  background: white;
-  transition: background-color 0.3s, border-color 0.3s;
-}
-
-.checkbox-label input:checked + .checkmark {
-  background-color: var(--blue-primary);
-  border-color: var(--blue-primary);
-}
-
-.checkbox-label input:checked + .checkmark::after {
-  content: '';
-  position: absolute;
-  left: 5px;
-  top: 2px;
-  width: 6px;
-  height: 11px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.consent-text {
-  display: block;
-  margin-left: 1.75rem;
-  font-size: 0.9rem;
-  color: var(--slate-500);
-  line-height: 1.4;
-}
-
-.consent-list {
-  margin: 0.5rem 0 0 1rem;
-  padding-left: 0;
-  list-style: none;
-}
-
-.consent-list li {
-  margin: 0.25rem 0;
-  position: relative;
-  font-size: 0.875rem;
-  color: var(--slate-500);
-}
-
-.consent-list li::before {
-  content: "•";
-  color: var(--blue-primary);
-  font-weight: bold;
-  display: inline-block;
-  width: 1em;
-  margin-left: -1em;
-}
-
-/* === АНИМАЦИИ ДЛЯ ФОКУСА И ЗАГРУЗКИ === */
-.form-group input:focus,
-.form-group select:focus {
-  animation: inputFocusGlow 0.4s ease-in-out;
-}
-
-@keyframes inputFocusGlow {
-  0% { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0); }
-  50% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
-  100% { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0); }
-}
-
 /* Состояние загрузки кнопки */
 .submit-btn.loading {
   pointer-events: none;
@@ -680,11 +863,6 @@ body {
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
-
-@keyframes spin {
-  to { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
 </style>
 
 <div class="auth-container">
@@ -743,12 +921,11 @@ body {
           <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
         </svg>
       </div>
-      <!-- НОВОЕ ПОЛЕ: ФИО директора -->
+
       <div class="form-group">
         <label for="director_name">ФИО директора</label>
         <input type="text" name="director_name" id="director_name" placeholder="Фамилия Имя Отчество" required>
         <svg fill="currentColor" viewBox="0 0 20 20">
-          <!-- Иконка для ФИО (можно использовать любую подходящую) -->
           <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none"/>
           <line x1="10" y1="6" x2="10" y2="14" stroke="currentColor" stroke-width="2"/>
           <line x1="6" y1="10" x2="14" y2="10" stroke="currentColor" stroke-width="2"/>
@@ -782,8 +959,6 @@ body {
         </div>
       </div>
 
-    
-
       <div class="section-meta">
         <div class="form-group">
           <label for="secret_code">Код доступа (только для админов)</label>
@@ -793,59 +968,54 @@ body {
           </svg>
         </div>
       </div>
-      <!-- Блок 1: Согласие на обработку персональных данных -->
-<div class="consent-group">
-  <label class="checkbox-label">
-    <input
-      type="checkbox"
-      name="consent_pd"
-      id="consent_pd"
-      required
-    >
-    <span class="checkmark"></span>
-    <span class="consent-text">
-      Я даю <strong>добровольное согласие</strong> на обработку персональных данных
-      в соответствии с <a href="/privacy.html" target="_blank">Политикой конфиденциальности</a><br>
-      
-      
-      Согласие действует до момента его отзыва в письменной форме.
-    </span>
-  </label>
-</div>
 
-<!-- Блок 2: Согласие с Пользовательским соглашением -->
-<div class="consent-group">
-  <label class="checkbox-label">
-    <input
-      type="checkbox"
-      name="consent_agree"
-      id="consent_agree"
-      required
-    >
-    <span class="checkmark"></span>
-    <span class="consent-text">
-      Я ознакомился и <strong>полностью принимаю</strong> условия
-      <a href="/agree.html" target="_blank">Пользовательского соглашения</a>
-    </span>
-  </label>
-</div>
+      <div class="consent-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            name="consent_pd"
+            id="consent_pd"
+            required
+          >
+          <span class="checkmark"></span>
+          <span class="consent-text">
+            Я даю <strong>добровольное согласие</strong> на обработку персональных данных
+            в соответствии с <a href="/privacy.html" target="_blank">Политикой конфиденциальности</a><br>
+            Согласие действует до момента его отзыва в письменной форме.
+          </span>
+        </label>
+      </div>
 
-<!-- Блок 3: Согласие с Договором оферты -->
-<div class="consent-group">
-  <label class="checkbox-label">
-    <input
-      type="checkbox"
-      name="consent_oferta"
-      id="consent_oferta"
-      required
-    >
-    <span class="checkmark"></span>
-    <span class="consent-text">
-      Я принимаю условия <a href="/oferta.html" target="_blank">Договора оферты</a>
-      
-    </span>
-  </label>
-</div>
+      <div class="consent-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            name="consent_agree"
+            id="consent_agree"
+            required
+          >
+          <span class="checkmark"></span>
+          <span class="consent-text">
+            Я ознакомился и <strong>полностью принимаю</strong> условия
+            <a href="/agree.html" target="_blank">Пользовательского соглашения</a>
+          </span>
+        </label>
+      </div>
+
+      <div class="consent-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            name="consent_oferta"
+            id="consent_oferta"
+            required
+          >
+          <span class="checkmark"></span>
+          <span class="consent-text">
+            Я принимаю условия <a href="/oferta.html" target="_blank">Договора оферты</a>
+          </span>
+        </label>
+      </div>
 
       <button type="submit" class="submit-btn">
         <span>Создать аккаунт</span>
@@ -915,7 +1085,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
-
-
-<a href="/agree.html" target="_blank">Пользовательское соглашение</a><br>
-          <a href="/oferta.html" target="_blank">Договор оферты</a>

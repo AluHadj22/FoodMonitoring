@@ -9,11 +9,12 @@
 
 body {
     font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
+    background: transparent;
     background-attachment: fixed;
     min-height: 100vh;
-    color: #1e293b;
+    color: var(--slate-800, #1e293b);
     line-height: 1.6;
+    transition: color 0.2s ease;
 }
 
 .container {
@@ -22,11 +23,11 @@ body {
     padding: 2rem;
 }
 
-/* Анимации */
+/* Упрощённые анимации */
 @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(20px);
     }
     to {
         opacity: 1;
@@ -34,29 +35,27 @@ body {
     }
 }
 
+.fade-in-up {
+    animation: fadeInUp 0.5s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+    will-change: transform, opacity;
+}
+
+.slide-in-right {
+    animation: slideInRight 0.5s ease-out forwards;
+    will-change: transform, opacity;
+}
+
 @keyframes slideInRight {
     from {
         opacity: 0;
-        transform: translateX(30px);
+        transform: translateX(20px);
     }
     to {
         opacity: 1;
         transform: translateX(0);
     }
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-.fade-in-up {
-    animation: fadeInUp 0.8s ease-out;
-}
-
-.slide-in-right {
-    animation: slideInRight 0.8s ease-out;
 }
 
 /* Сетка админ панели */
@@ -74,15 +73,20 @@ body {
 
 /* Боковая панель */
 .admin-sidebar {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
+    background: var(--card, #ffffff);
     border-radius: 1.5rem;
     padding: 2rem;
-    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.08);
-    border: 1px solid #e2e8f0;
-    position: relative;
-    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border, #e2e8f0);
     height: fit-content;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Тёмная тема для боковой панели */
+[data-theme='dark'] .admin-sidebar {
+    background: var(--card, #1e293b);
+    border-color: var(--border, #334155);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .admin-sidebar::before {
@@ -106,12 +110,13 @@ body {
 }
 
 .admin-role {
-    color: #64748b;
+    color: var(--slate-500, #64748b);
     font-size: 0.9rem;
     margin-bottom: 2rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--border, #e2e8f0);
     font-weight: 600;
+    transition: color 0.2s ease, border-color 0.2s ease;
 }
 
 /* Кнопка 1С */
@@ -126,17 +131,15 @@ body {
     padding: 1rem 1.5rem;
     border-radius: 0.75rem;
     text-decoration: none;
-    box-shadow: 0 10px 25px rgba(96, 165, 250, 0.2);
-    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(96, 165, 250, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     margin-bottom: 2rem;
-    position: relative;
-    overflow: hidden;
     border: none;
 }
 
 .onec-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 15px 30px rgba(96, 165, 250, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
 }
 
 .onec-button svg {
@@ -147,12 +150,20 @@ body {
 /* Формы */
 .bulk-upload-form,
 .bulk-delete-form {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--surface, #ffffff);
     padding: 1.5rem;
     border-radius: 1rem;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border, #e2e8f0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     margin-bottom: 1.5rem;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Тёмная тема для форм */
+[data-theme='dark'] .bulk-upload-form,
+[data-theme='dark'] .bulk-delete-form {
+    background: var(--surface, #1e293b);
+    border-color: var(--border, #334155);
 }
 
 .bulk-delete-form {
@@ -163,15 +174,27 @@ body {
 .bulk-delete-form h3 {
     font-size: 1.2rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--slate-800, #1e293b);
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    transition: color 0.2s ease;
+}
+
+/* Тёмная тема для заголовков форм */
+[data-theme='dark'] .bulk-upload-form h3,
+[data-theme='dark'] .bulk-delete-form h3 {
+    color: var(--slate-200, #e2e8f0);
 }
 
 .bulk-delete-form h3 {
     color: #dc2626;
+}
+
+/* Тёмная тема для заголовка формы удаления */
+[data-theme='dark'] .bulk-delete-form h3 {
+    color: #ef4444;
 }
 
 .form-group {
@@ -181,30 +204,50 @@ body {
 .form-label {
     display: block;
     font-weight: 600;
-    color: #334155;
+    color: var(--slate-700, #334155);
     margin-bottom: 0.5rem;
     font-size: 0.9rem;
+    transition: color 0.2s ease;
+}
+
+/* Тёмная тема для меток */
+[data-theme='dark'] .form-label {
+    color: var(--slate-300, #cbd5e1);
 }
 
 .form-select,
 .form-input {
     width: 100%;
     padding: 0.75rem 1rem;
-    background: #ffffff;
-    border: 2px solid #e2e8f0;
+    background: var(--card, #ffffff);
+    border: 2px solid var(--border, #e2e8f0);
     border-radius: 0.75rem;
-    color: #1e293b;
+    color: var(--slate-800, #1e293b);
     font-size: 0.9rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+/* Тёмная тема для полей ввода */
+[data-theme='dark'] .form-select,
+[data-theme='dark'] .form-input {
+    background: var(--slate-800, #1e293b);
+    border-color: var(--border, #334155);
+    color: var(--slate-200, #e2e8f0);
 }
 
 .form-select:focus,
 .form-input:focus {
     outline: none;
     border-color: #60a5fa;
-    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
-    transform: translateY(-1px);
+    box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.1);
+    transform: translateY(0);
+}
+
+/* Тёмная тема для focused полей */
+[data-theme='dark'] .form-select:focus,
+[data-theme='dark'] .form-input:focus {
+    background: var(--slate-700, #334155);
+    border-color: #60a5fa;
 }
 
 .form-grid {
@@ -223,8 +266,9 @@ body {
 
 .schools-count {
     font-size: 0.8rem;
-    color: #64748b;
+    color: var(--slate-500, #64748b);
     font-weight: 600;
+    transition: color 0.2s ease;
 }
 
 .select-all-buttons {
@@ -233,21 +277,35 @@ body {
 }
 
 .select-all-button {
-    background: #f1f5f9;
-    color: #334155;
-    border: 1px solid #e2e8f0;
+    background: var(--surface, #f1f5f9);
+    color: var(--slate-700, #334155);
+    border: 1px solid var(--border, #e2e8f0);
     padding: 0.4rem 0.8rem;
     border-radius: 0.5rem;
     font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Тёмная тема для кнопок выбора всех */
+[data-theme='dark'] .select-all-button {
+    background: var(--slate-700, #334155);
+    border-color: var(--border, #475569);
+    color: var(--slate-300, #cbd5e1);
 }
 
 .select-all-button:hover {
     background: #e0f2fe;
     border-color: #60a5fa;
     color: #3b82f6;
+}
+
+/* Тёмная тема для hover кнопок выбора всех */
+[data-theme='dark'] .select-all-button:hover {
+    background: var(--slate-600, #475569);
+    border-color: #60a5fa;
+    color: #60a5fa;
 }
 
 .schools-checkbox-grid {
@@ -257,11 +315,17 @@ body {
     max-height: 200px;
     overflow-y: auto;
     padding: 1rem;
-    background: #ffffff;
+    background: var(--card, #ffffff);
     border-radius: 0.75rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border, #e2e8f0);
     margin-bottom: 1rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Тёмная тема для сетки чекбоксов */
+[data-theme='dark'] .schools-checkbox-grid {
+    background: var(--slate-800, #1e293b);
+    border-color: var(--border, #334155);
 }
 
 .school-checkbox {
@@ -270,28 +334,45 @@ body {
     gap: 0.5rem;
     padding: 0.5rem;
     border-radius: 0.5rem;
-    transition: all 0.3s ease;
+    transition: background-color 0.2s ease;
     cursor: pointer;
 }
 
 .school-checkbox:hover {
-    background: #f1f5f9;
+    background: var(--surface, #f1f5f9);
+}
+
+/* Тёмная тема для hover чекбоксов */
+[data-theme='dark'] .school-checkbox:hover {
+    background: var(--slate-700, #334155);
 }
 
 .school-checkbox input[type="checkbox"] {
     width: 16px;
     height: 16px;
     cursor: pointer;
+    accent-color: #3b82f6;
+}
+
+/* Тёмная тема для чекбоксов */
+[data-theme='dark'] .school-checkbox input[type="checkbox"] {
+    accent-color: #60a5fa;
 }
 
 .school-checkbox label {
     font-size: 0.85rem;
-    color: #1e293b;
+    color: var(--slate-800, #1e293b);
     cursor: pointer;
     font-weight: 500;
+    transition: color 0.2s ease;
 }
 
-/* Опции удаления */
+/* Тёмная тема для меток чекбоксов */
+[data-theme='dark'] .school-checkbox label {
+    color: var(--slate-300, #cbd5e1);
+}
+
+/* Опции удаления - обновлено с новыми опциями */
 .delete-options {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -304,49 +385,116 @@ body {
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem;
-    background: #ffffff;
+    background: var(--card, #ffffff);
     border-radius: 0.5rem;
-    border: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border, #e2e8f0);
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+/* Тёмная тема для опций удаления */
+[data-theme='dark'] .delete-option {
+    background: var(--slate-800, #1e293b);
+    border-color: var(--border, #334155);
 }
 
 .delete-option:hover {
     border-color: #ef4444;
     background: #fef2f2;
-    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.1);
+}
+
+/* Тёмная тема для hover опций удаления */
+[data-theme='dark'] .delete-option:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
 }
 
 .delete-option input[type="checkbox"] {
     width: 16px;
     height: 16px;
+    accent-color: #ef4444;
 }
 
 .delete-option label {
     font-size: 0.85rem;
-    color: #1e293b;
+    color: var(--slate-800, #1e293b);
     font-weight: 500;
     cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+/* Тёмная тема для меток опций удаления */
+[data-theme='dark'] .delete-option label {
+    color: var(--slate-300, #cbd5e1);
+}
+
+/* Специальные стили для новых опций */
+.delete-option.tm-option {
+    border-left: 3px solid #f59e0b;
+}
+
+.delete-option.tm-option label {
+    color: #f59e0b;
+    font-weight: 700;
+}
+
+[data-theme='dark'] .delete-option.tm-option label {
+    color: #fbbf24;
+}
+
+.delete-option.findex-option {
+    border-left: 3px solid #10b981;
+}
+
+.delete-option.findex-option label {
+    color: #10b981;
+    font-weight: 700;
+}
+
+[data-theme='dark'] .delete-option.findex-option label {
+    color: #34d399;
+}
+
+.delete-option.kp-option {
+    border-left: 3px solid #8b5cf6;
+}
+
+.delete-option.kp-option label {
+    color: #8b5cf6;
+    font-weight: 700;
+}
+
+[data-theme='dark'] .delete-option.kp-option label {
+    color: #a78bfa;
 }
 
 /* Область загрузки файлов */
 .file-upload-zone {
-    border: 2px dashed #cbd5e1;
+    border: 2px dashed var(--border, #cbd5e1);
     border-radius: 0.75rem;
     padding: 2rem 1rem;
     text-align: center;
-    background: #ffffff;
-    transition: all 0.3s ease;
+    background: var(--card, #ffffff);
+    transition: border-color 0.2s ease, background-color 0.2s ease;
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+/* Тёмная тема для зоны загрузки */
+[data-theme='dark'] .file-upload-zone {
+    background: var(--slate-800, #1e293b);
+    border-color: var(--border, #475569);
 }
 
 .file-upload-zone:hover {
     border-color: #60a5fa;
-    background: #f8fafc;
-    box-shadow: 0 4px 8px rgba(96, 165, 250, 0.1);
+    background: var(--surface, #f8fafc);
+}
+
+/* Тёмная тема для hover зоны загрузки */
+[data-theme='dark'] .file-upload-zone:hover {
+    background: var(--slate-700, #334155);
+    border-color: #60a5fa;
 }
 
 .file-upload-zone input {
@@ -368,25 +516,31 @@ body {
     width: 48px;
     height: 48px;
     margin: 0 auto 1rem;
-    color: #94a3b8;
-    transition: all 0.3s ease;
+    color: var(--slate-400, #94a3b8);
+    transition: color 0.2s ease;
 }
 
 .file-upload-zone:hover .file-upload-icon {
     color: #60a5fa;
-    transform: scale(1.1);
 }
 
 .file-upload-text {
     font-size: 0.9rem;
-    color: #1e293b;
+    color: var(--slate-800, #1e293b);
     font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+/* Тёмная тема для текста загрузки */
+[data-theme='dark'] .file-upload-text {
+    color: var(--slate-300, #cbd5e1);
 }
 
 .file-upload-hint {
     font-size: 0.8rem;
-    color: #64748b;
+    color: var(--slate-500, #64748b);
     margin-top: 0.5rem;
+    transition: color 0.2s ease;
 }
 
 /* Кнопки */
@@ -401,16 +555,16 @@ body {
     font-weight: 700;
     font-size: 1rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.2);
+    box-shadow: 0 2px 8px rgba(96, 165, 250, 0.2);
 }
 
 .submit-button:hover,
 .delete-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(96, 165, 250, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
 }
 
 .delete-button {
@@ -418,7 +572,7 @@ body {
 }
 
 .delete-button:hover {
-    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 .loading {
@@ -428,12 +582,12 @@ body {
     border: 2px solid transparent;
     border-top: 2px solid white;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: spin 0.8s linear infinite;
+    will-change: transform;
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    to { transform: rotate(360deg); }
 }
 
 /* Основной контент */
@@ -445,12 +599,18 @@ body {
 
 /* Поисковая панель */
 .search-panel {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
+    background: var(--card, #ffffff);
     padding: 1.5rem;
     border-radius: 1rem;
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.08);
-    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--border, #e2e8f0);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Тёмная тема для панели поиска */
+[data-theme='dark'] .search-panel {
+    background: var(--card, #1e293b);
+    border-color: var(--border, #334155);
 }
 
 .search-form {
@@ -471,27 +631,41 @@ body {
     left: 1rem;
     top: 50%;
     transform: translateY(-50%);
-    color: #64748b;
+    color: var(--slate-400, #64748b);
     z-index: 2;
+    transition: color 0.2s ease;
+    pointer-events: none;
 }
 
 .search-input {
     width: 100%;
     padding: 0.875rem 1rem 0.875rem 3rem;
-    background: #ffffff;
-    border: 2px solid #e2e8f0;
+    background: var(--card, #ffffff);
+    border: 2px solid var(--border, #e2e8f0);
     border-radius: 0.75rem;
-    color: #1e293b;
+    color: var(--slate-800, #1e293b);
     font-size: 0.95rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+/* Тёмная тема для поля поиска */
+[data-theme='dark'] .search-input {
+    background: var(--slate-800, #1e293b);
+    border-color: var(--border, #334155);
+    color: var(--slate-200, #e2e8f0);
 }
 
 .search-input:focus {
     outline: none;
     border-color: #60a5fa;
-    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
-    transform: translateY(-1px);
+    box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.1);
+    transform: translateY(0);
+}
+
+/* Тёмная тема для focused поля поиска */
+[data-theme='dark'] .search-input:focus {
+    background: var(--slate-700, #334155);
+    border-color: #60a5fa;
 }
 
 .search-button,
@@ -503,18 +677,18 @@ body {
     border-radius: 0.75rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     text-decoration: none;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.2);
+    box-shadow: 0 2px 8px rgba(96, 165, 250, 0.2);
 }
 
 .search-button:hover,
 .reset-button:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 15px rgba(96, 165, 250, 0.3);
+    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
 }
 
 .reset-button {
@@ -522,17 +696,23 @@ body {
 }
 
 .reset-button:hover {
-    box-shadow: 0 6px 15px rgba(239, 68, 68, 0.3);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 /* Таблица учреждений */
 .schools-table-container {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
+    background: var(--card, #ffffff);
     border-radius: 1rem;
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.08);
-    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--border, #e2e8f0);
     overflow: hidden;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Тёмная тема для контейнера таблицы */
+[data-theme='dark'] .schools-table-container {
+    background: var(--card, #1e293b);
+    border-color: var(--border, #334155);
 }
 
 .table-header {
@@ -540,14 +720,21 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 1.5rem 1.5rem 1rem;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--border, #e2e8f0);
+    transition: border-color 0.2s ease;
 }
 
 .table-header h2 {
     font-size: 1.3rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--slate-800, #1e293b);
     margin: 0;
+    transition: color 0.2s ease;
+}
+
+/* Тёмная тема для заголовка таблицы */
+[data-theme='dark'] .table-header h2 {
+    color: var(--slate-200, #e2e8f0);
 }
 
 .schools-count {
@@ -557,10 +744,18 @@ body {
     border-radius: 1rem;
     font-size: 0.8rem;
     font-weight: 700;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Тёмная тема для счётчика школ */
+[data-theme='dark'] .schools-count {
+    background: rgba(96, 165, 250, 0.25);
+    color: #60a5fa;
 }
 
 .table-wrapper {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .schools-table {
@@ -570,7 +765,13 @@ body {
 }
 
 .schools-table thead {
-    background: #f8fafc;
+    background: var(--surface, #f8fafc);
+    transition: background-color 0.2s ease;
+}
+
+/* Тёмная тема для шапки таблицы */
+[data-theme='dark'] .schools-table thead {
+    background: var(--slate-800, #1e293b);
 }
 
 .schools-table th {
@@ -581,30 +782,49 @@ body {
     color: #60a5fa;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--border, #e2e8f0);
+    transition: border-color 0.2s ease;
 }
 
 .schools-table td {
     padding: 1rem 1.5rem;
-    border-bottom: 1px solid #f1f5f9;
-    transition: all 0.3s ease;
+    border-bottom: 1px solid var(--border, #f1f5f9);
+    transition: border-color 0.2s ease;
+    color: var(--slate-700, #334155);
+}
+
+/* Тёмная тема для ячеек таблицы */
+[data-theme='dark'] .schools-table td {
+    color: var(--slate-300, #cbd5e1);
+    border-bottom-color: var(--border, #334155);
 }
 
 .schools-table tbody tr {
-    transition: all 0.3s ease;
+    transition: background-color 0.15s ease;
 }
 
 .schools-table tbody tr:hover {
-    background: #f1f5f9;
+    background: var(--surface, #f1f5f9);
+}
+
+/* Тёмная тема для hover строк таблицы */
+[data-theme='dark'] .schools-table tbody tr:hover {
+    background: var(--slate-700, #334155);
 }
 
 .schools-table tbody tr:hover td {
-    transform: translateX(4px);
+    transform: none;
 }
 
 .school-name {
     font-weight: 600;
-    color: #1e293b;
+    color: var(--slate-800, #1e293b);
+    transition: color 0.2s ease;
+}
+
+/* Тёмная тема для названия школы */
+[data-theme='dark'] .school-name {
+    color: var(--slate-200, #e2e8f0);
 }
 
 .district-badge {
@@ -615,12 +835,25 @@ body {
     font-size: 0.8rem;
     font-weight: 600;
     display: inline-block;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Тёмная тема для бейджа района */
+[data-theme='dark'] .district-badge {
+    background: rgba(96, 165, 250, 0.25);
+    color: #60a5fa;
 }
 
 .food-type {
     font-size: 0.9rem;
-    color: #64748b;
+    color: var(--slate-500, #64748b);
     font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+/* Тёмная тема для типа питания */
+[data-theme='dark'] .food-type {
+    color: var(--slate-400, #94a3b8);
 }
 
 .robot-link {
@@ -631,6 +864,13 @@ body {
     font-family: 'Monaco', 'Consolas', monospace;
     font-size: 0.8rem;
     font-weight: 600;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Тёмная тема для ссылки робота */
+[data-theme='dark'] .robot-link {
+    background: rgba(96, 165, 250, 0.25);
+    color: #60a5fa;
 }
 
 .manage-button {
@@ -645,22 +885,36 @@ body {
     border: 1px solid rgba(96, 165, 250, 0.3);
     font-size: 0.85rem;
     font-weight: 600;
-    transition: all 0.3s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Тёмная тема для кнопки управления */
+[data-theme='dark'] .manage-button {
+    background: rgba(96, 165, 250, 0.25);
+    color: #60a5fa;
+    border-color: rgba(96, 165, 250, 0.4);
 }
 
 .manage-button:hover {
     background: #60a5fa;
     color: white;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+    transform: none;
+    box-shadow: none;
+}
+
+/* Тёмная тема для hover кнопки управления */
+[data-theme='dark'] .manage-button:hover {
+    background: #60a5fa;
+    color: white;
 }
 
 /* Пагинация */
 .pagination-info {
     margin: 1rem 0;
-    color: #64748b;
+    color: var(--slate-500, #64748b);
     font-size: 0.9rem;
     text-align: center;
+    transition: color 0.2s ease;
 }
 
 .pagination {
@@ -671,14 +925,21 @@ body {
 }
 
 .pagination a {
-    background: #f1f5f9;
+    background: var(--surface, #f1f5f9);
     color: #3b82f6;
     text-decoration: none;
     font-weight: 600;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
-    transition: all 0.3s ease;
-    border: 1px solid #e2e8f0;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    border: 1px solid var(--border, #e2e8f0);
+}
+
+/* Тёмная тема для ссылок пагинации */
+[data-theme='dark'] .pagination a {
+    background: var(--slate-700, #334155);
+    border-color: var(--border, #475569);
+    color: #60a5fa;
 }
 
 .pagination a:hover {
@@ -687,12 +948,59 @@ body {
     border-color: #60a5fa;
 }
 
+/* Тёмная тема для hover ссылок пагинации */
+[data-theme='dark'] .pagination a:hover {
+    background: var(--slate-600, #475569);
+    color: #60a5fa;
+}
+
 .pagination span {
-    color: #64748b;
+    color: var(--slate-500, #64748b);
     font-weight: 600;
     padding: 0.5rem 1rem;
-    border: 1px solid #e2e8f0;
-    background: #f8fafc;
+    border: 1px solid var(--border, #e2e8f0);
+    background: var(--surface, #f8fafc);
+    transition: all 0.2s ease;
+}
+
+/* Тёмная тема для текущей страницы */
+[data-theme='dark'] .pagination span {
+    background: var(--slate-800, #1e293b);
+    border-color: var(--border, #475569);
+    color: var(--slate-400, #94a3b8);
+}
+
+/* Пустое состояние */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.empty-state-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1rem;
+    color: var(--slate-400, #94a3b8);
+    transition: color 0.2s ease;
+}
+
+.empty-state-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--slate-700, #334155);
+    margin-bottom: 0.5rem;
+    transition: color 0.2s ease;
+}
+
+/* Тёмная тема для текста пустого состояния */
+[data-theme='dark'] .empty-state-text {
+    color: var(--slate-300, #cbd5e1);
+}
+
+.empty-state-subtext {
+    color: var(--slate-500, #64748b);
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
 }
 
 /* Уведомления */
@@ -705,10 +1013,11 @@ body {
     background: #10b981;
     color: white;
     font-weight: 600;
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 1000;
     transform: translateX(100%);
     transition: transform 0.3s ease;
+    will-change: transform;
 }
 
 .notification.show {
@@ -880,18 +1189,31 @@ body {
           </div>
         </div>
 
+        <!-- Обновлённые опции удаления -->
         <div class="delete-options">
           <div class="delete-option">
             <input type="checkbox" id="delete_all" name="delete_all" value="true">
-            <label for="delete_all">Удалить все файлы </label>
+            <label for="delete_all">🗑️ Удалить все файлы</label>
           </div>
+          
           <div class="delete-option">
             <input type="checkbox" id="keep_exceptions" name="keep_exceptions" value="true">
-            <label for="keep_exceptions">Сохранить findex.xlsx, tm*.xlsx, kp*.xlsx</label>
+            <label for="keep_exceptions">🔒 Сохранить findex.xlsx, tm*.xlsx, kp*.xlsx</label>
           </div>
-          <div class="delete-option">
+          
+          <div class="delete-option tm-option">
+            <input type="checkbox" id="only_tm_sm" name="only_tm_sm" value="true">
+            <label for="only_tm_sm">🍽️ Только типовое меню (tm*-sm.xlsx)</label>
+          </div>
+          
+          <div class="delete-option findex-option">
+            <input type="checkbox" id="only_findex" name="only_findex" value="true">
+            <label for="only_findex">📊 Только findex.xlsx (для ФЦМПО)</label>
+          </div>
+          
+          <div class="delete-option kp-option">
             <input type="checkbox" id="only_kp" name="only_kp" value="true">
-            <label for="only_kp">Удалить только календари питания (kp*.xlsx)</label>
+            <label for="only_kp">📅 Только календари питания (kp*.xlsx)</label>
           </div>
         </div>
 
@@ -1023,18 +1345,22 @@ body {
 <div class="notification" id="notification"></div>
 
 <script>
+// Оптимизированные функции
+let uploadTimeout, deleteTimeout;
+
 // Обработчик отправки формы рассылки
 function handleUploadSubmit(form) {
   const button = form.querySelector('.submit-button');
   button.classList.add('loading');
   button.disabled = true;
   
-  // Показываем уведомление об успехе через 2 секунды (имитация)
-  setTimeout(() => {
+  if (uploadTimeout) clearTimeout(uploadTimeout);
+  
+  uploadTimeout = setTimeout(() => {
     showNotification('Рассылка успешно запущена!', 'success');
     button.classList.remove('loading');
     button.disabled = false;
-  }, 2000);
+  }, 1000);
 }
 
 // Обработчик отправки формы удаления
@@ -1047,15 +1373,28 @@ function handleDeleteSubmit(form) {
     return false;
   }
   
+  // Проверяем, выбрана ли хоть одна опция удаления
+  const deleteAll = document.getElementById('delete_all')?.checked;
+  const keepExceptions = document.getElementById('keep_exceptions')?.checked;
+  const onlyTmSm = document.getElementById('only_tm_sm')?.checked;
+  const onlyFindex = document.getElementById('only_findex')?.checked;
+  const onlyKp = document.getElementById('only_kp')?.checked;
+  
+  if (!deleteAll && !keepExceptions && !onlyTmSm && !onlyFindex && !onlyKp) {
+    showNotification('Выберите опцию удаления!', 'warning');
+    return false;
+  }
+  
   button.classList.add('loading');
   button.disabled = true;
   
-  // Показываем уведомление об успехе через 2 секунды (имитация)
-  setTimeout(() => {
+  if (deleteTimeout) clearTimeout(deleteTimeout);
+  
+  deleteTimeout = setTimeout(() => {
     showNotification(`Удаление файлов для ${selectedSchools} школ запущено!`, 'success');
     button.classList.remove('loading');
     button.disabled = false;
-  }, 2000);
+  }, 1000);
   
   return false; // Для демонстрации
 }
@@ -1073,45 +1412,105 @@ function handleFileSelect(input) {
     
     text.textContent = `Выбрано файлов: ${fileCount}`;
     hint.textContent = `Общий размер: ${sizeMB} МБ`;
-    
-    zone.style.borderColor = '#10b981';
-    zone.style.background = 'rgba(16, 185, 129, 0.05)';
+    zone.classList.add('has-files');
   } else {
     text.textContent = 'Выберите файлы или перетащите сюда';
     hint.textContent = 'Поддерживаются все форматы';
-    zone.style.borderColor = '';
-    zone.style.background = '';
+    zone.classList.remove('has-files');
   }
 }
 
-// Drag and drop для области загрузки
+// Drag and drop
 document.addEventListener('DOMContentLoaded', function() {
   const uploadZones = document.querySelectorAll('.file-upload-zone');
   
   uploadZones.forEach(zone => {
     zone.addEventListener('dragover', function(e) {
       e.preventDefault();
-      this.style.borderColor = '#4f46e5';
-      this.style.background = 'rgba(79, 70, 229, 0.1)';
-    });
+      this.classList.add('drag-over');
+    }, { passive: false });
     
     zone.addEventListener('dragleave', function(e) {
       e.preventDefault();
-      this.style.borderColor = '';
-      this.style.background = '';
-    });
+      this.classList.remove('drag-over');
+    }, { passive: false });
     
     zone.addEventListener('drop', function(e) {
       e.preventDefault();
+      this.classList.remove('drag-over');
       const input = this.querySelector('input[type="file"]');
       input.files = e.dataTransfer.files;
       handleFileSelect(input);
-    });
+    }, { passive: false });
   });
   
-  // Обновляем счетчик выбранных школ при загрузке
+  // Обновляем счетчик выбранных школ
   updateSelectedCount();
+  
+  // Добавляем обработчики для новых чекбоксов
+  setupDeleteCheckboxes();
+  
+  const animatedElements = document.querySelectorAll('.fade-in-up');
+  animatedElements.forEach(el => {
+    el.style.opacity = '1';
+    el.style.transform = 'translateY(0)';
+  });
 });
+
+// Функция для настройки чекбоксов удаления
+function setupDeleteCheckboxes() {
+  const deleteAllCheckbox = document.getElementById('delete_all');
+  const keepExceptionsCheckbox = document.getElementById('keep_exceptions');
+  const onlyTmSmCheckbox = document.getElementById('only_tm_sm');
+  const onlyFindexCheckbox = document.getElementById('only_findex');
+  const onlyKpCheckbox = document.getElementById('only_kp');
+  
+  const checkboxes = [deleteAllCheckbox, keepExceptionsCheckbox, 
+                      onlyTmSmCheckbox, onlyFindexCheckbox, onlyKpCheckbox];
+  
+  function handleCheckboxChange(changedBox) {
+    if (changedBox.checked) {
+      // Если выбрана специфическая опция, снимаем delete_all и keep_exceptions
+      if (changedBox === onlyTmSmCheckbox || 
+          changedBox === onlyFindexCheckbox || 
+          changedBox === onlyKpCheckbox) {
+        
+        if (deleteAllCheckbox) deleteAllCheckbox.checked = false;
+        if (keepExceptionsCheckbox) keepExceptionsCheckbox.checked = false;
+      }
+      
+      // Если выбран delete_all, снимаем специфические опции
+      if (changedBox === deleteAllCheckbox) {
+        if (onlyTmSmCheckbox) onlyTmSmCheckbox.checked = false;
+        if (onlyFindexCheckbox) onlyFindexCheckbox.checked = false;
+        if (onlyKpCheckbox) onlyKpCheckbox.checked = false;
+        if (keepExceptionsCheckbox) keepExceptionsCheckbox.checked = false;
+      }
+      
+      // Если выбраны специфические опции, они не должны быть вместе
+      if (changedBox === onlyTmSmCheckbox) {
+        if (onlyFindexCheckbox) onlyFindexCheckbox.checked = false;
+        if (onlyKpCheckbox) onlyKpCheckbox.checked = false;
+      }
+      if (changedBox === onlyFindexCheckbox) {
+        if (onlyTmSmCheckbox) onlyTmSmCheckbox.checked = false;
+        if (onlyKpCheckbox) onlyKpCheckbox.checked = false;
+      }
+      if (changedBox === onlyKpCheckbox) {
+        if (onlyTmSmCheckbox) onlyTmSmCheckbox.checked = false;
+        if (onlyFindexCheckbox) onlyFindexCheckbox.checked = false;
+      }
+    }
+  }
+  
+  checkboxes.forEach(checkbox => {
+    if (checkbox) {
+      checkbox.addEventListener('change', function() {
+        handleCheckboxChange(this);
+      });
+    }
+  });
+}
 
 // Функция для выбора/снятия выделения со всех школ
 function selectAllSchools(select) {
@@ -1128,41 +1527,24 @@ function updateSelectedCount() {
   const totalCount = document.querySelectorAll('input[name="school_ids"]').length;
   const counterElement = document.getElementById('selected-schools-count');
   
-  counterElement.textContent = `Выбрано: ${selectedCount} из ${totalCount}`;
+  if (counterElement) {
+    counterElement.textContent = `Выбрано: ${selectedCount} из ${totalCount}`;
+  }
 }
 
 // Показ уведомлений
+let notificationTimeout;
 function showNotification(message, type = 'success') {
   const notification = document.getElementById('notification');
   notification.textContent = message;
   notification.className = `notification ${type} show`;
   
-  setTimeout(() => {
+  if (notificationTimeout) clearTimeout(notificationTimeout);
+  
+  notificationTimeout = setTimeout(() => {
     notification.classList.remove('show');
-  }, 3000);
+  }, 2000);
 }
 
-// Анимация появления элементов
-const observerOptions = {
-  threshold: 0.1,
-  rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.style.opacity = '1';
-      entry.target.style.transform = 'translateY(0)';
-    }
-  });
-}, observerOptions);
-
-// Наблюдаем за всеми элементами с анимацией
-document.querySelectorAll('.fade-in-up').forEach(el => {
-  el.style.opacity = '0';
-  el.style.transform = 'translateY(20px)';
-  el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-  observer.observe(el);
-});
 </script>
 {% endblock %}
