@@ -38,6 +38,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 
 # База данных
 from sqlalchemy.orm import Session
+from sqlalchemy import or_, func, and_  # Добавлен func и and_
 from database import engine, Base, get_db
 import models
 from models import User
@@ -64,9 +65,27 @@ from concurrent.futures import ThreadPoolExecutor
 # Переменные окружения
 from dotenv import load_dotenv
 
+# Сессии
+from starlette.middleware.sessions import SessionMiddleware
+
 import logging
 
 from fastapi.staticfiles import StaticFiles
+
+# Импортируем отдельную БД для библиотеки знаний
+from knowledge_base_db import (
+    get_kb_db, 
+    KnowledgeBaseCategory, 
+    KnowledgeBaseDocument, 
+    KnowledgeBaseFavorite,
+    KnowledgeBaseComment,
+    KnowledgeBaseSearchLog,
+    KnowledgeBaseAdmin,
+    init_db as init_kb_db
+)
+
+# Инициализируем БД библиотеки знаний при запуске
+init_kb_db()
 
 # Загрузка переменных из .env
 load_dotenv()
@@ -85,6 +104,9 @@ IO_EXECUTOR = ThreadPoolExecutor(max_workers=50)
 # Глобальная блокировка для кешей
 CACHE_LOCK = asyncio.Lock()
 
+# Константа для доступа к админке дашбордов
+DASHBOARD_ADMIN_CODE = "admin3377%"
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("🚀 Запуск оптимизированного приложения...")
@@ -97,6 +119,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(GZipMiddleware, minimum_size=100)
+
+# Добавляем middleware для сессий (ВАЖНО: после GZipMiddleware)
+app.add_middleware(
+    SessionMiddleware, 
+    secret_key=os.getenv("SECRET_KEY", "your-very-secret-key-change-in-production-12345")
+)
 
 # Подключаем папку static/
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -307,7 +335,6 @@ async def list_directory_files_optimized(path: Path) -> List[Path]:
     
 async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict):
     """Потоковая генерация HTML для федерального мониторинга"""
-    # ... (код функции без изменений, он очень длинный, оставляем как есть)
     yield f"""
     <html>
         <head>
@@ -471,7 +498,7 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
         try:
             dt = (datetime.strptime(date_str, "%d.%m.%Y %H:%M")
                   if date_str
-                  else datetime.fromtimestamp(await run_in_threadpool(f.stat).st_mtime))
+                  else datetime.fromtimestamp((await run_in_threadpool(f.stat)).st_mtime))
         except Exception as e:
             logger.error(f"Ошибка парсинга даты для {f.name}: {e}")
             dt = datetime.now()
@@ -723,13 +750,23 @@ async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 @app.post("/login")
-async def login(email: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
+async def login(
+    request: Request,  # Добавлен request для сохранения в сессии
+    email: str = Form(...), 
+    password: str = Form(...), 
+    db: Session = Depends(get_db)
+):
     user = await run_in_threadpool(
         lambda: db.query(models.User).filter(models.User.email == email).first()
     )
     
     if not user or not auth.verify_password(password, user.hashed_password):
         return "Неверный логин или пароль"
+    
+    # Сохраняем в сессии для библиотеки знаний
+    request.session["user_email"] = user.email
+    request.session["user_id"] = user.id
+    request.session["user_name"] = user.unit_name
 
     if "admin" in user.role:
         return RedirectResponse(f"/admin?admin_id={user.id}", status_code=303)
@@ -884,16 +921,19 @@ async def bulk_delete_files(
     if not admin:
         return RedirectResponse("/login", status_code=303)
 
-    schools = db.query(models.User).filter(
+    # Получаем школы по ID с учетом прав админа
+    schools_query = db.query(models.User).filter(
         models.User.id.in_(school_ids),
         models.User.role == "user"
     )
     if admin.role == "municipal_admin":
-        schools = schools.filter(models.User.district == admin.district)
-    schools = await run_in_threadpool(schools.all)
+        schools_query = schools_query.filter(models.User.district == admin.district)
+    
+    schools = await run_in_threadpool(schools_query.all)
 
     deleted_count = 0
     errors = []
+    deleted_files_list = []
 
     for school in schools:
         food_path = BASE_DIR / str(school.id) / "food"
@@ -902,17 +942,32 @@ async def bulk_delete_files(
         if not await run_in_threadpool(food_path.exists):
             continue
 
-        manifest = await read_manifest_optimized(manifest_path)
+        # Получаем все файлы в директории
+        try:
+            all_files = await list_directory_files_optimized(food_path)
+        except Exception as e:
+            errors.append(f"Ошибка при чтении папки школы {school.unit_name}: {str(e)}")
+            continue
 
-        to_delete = []
+        # Загружаем манифест для метаданных
+        manifest = await read_manifest_optimized(manifest_path)
         
-        for filename in manifest.keys():
-            filepath = food_path / filename
+        files_to_delete = []
+
+        for file_path in all_files:
+            filename = file_path.name
             
+            # Пропускаем manifest.json
+            if filename == "manifest.json":
+                continue
+
             should_delete = False
-            
+
+            # Определяем, нужно ли удалять файл
             if delete_all:
+                # Удаляем все файлы
                 if keep_exceptions:
+                    # Кроме исключений
                     if filename == "findex.xlsx":
                         continue
                     if re.match(r"^tm\d{4}-sm\.xlsx$", filename):
@@ -920,43 +975,68 @@ async def bulk_delete_files(
                     if re.match(r"^kp\d{4}\.xlsx$", filename):
                         continue
                 should_delete = True
-                
+
             elif only_tm_sm:
+                # Только tm-файлы
                 if re.match(r"^tm\d{4}-sm\.xlsx$", filename):
                     should_delete = True
-                    
+
             elif only_findex:
+                # Только findex.xlsx
                 if filename == "findex.xlsx":
                     should_delete = True
-                    
+
             elif only_kp:
+                # Только kp-файлы
                 if re.match(r"^kp\d{4}\.xlsx$", filename):
                     should_delete = True
-                    
+
             elif keep_exceptions and not any([delete_all, only_tm_sm, only_findex, only_kp]):
+                # Удаляем всё кроме исключений
                 if filename not in ["findex.xlsx"] and \
                    not re.match(r"^tm\d{4}-sm\.xlsx$", filename) and \
                    not re.match(r"^kp\d{4}\.xlsx$", filename):
                     should_delete = True
 
             if should_delete:
-                to_delete.append(filename)
+                files_to_delete.append(file_path)
 
-        for filename in to_delete:
-            filepath = food_path / filename
+        # Удаляем файлы
+        for file_path in files_to_delete:
             try:
-                await delete_file_optimized(filepath)
-                manifest.pop(filename, None)
+                # Удаляем физический файл
+                await delete_file_optimized(file_path)
+                
+                # Удаляем запись из манифеста
+                if file_path.name in manifest:
+                    manifest.pop(file_path.name)
+                
                 deleted_count += 1
+                deleted_files_list.append(f"{school.unit_name}: {file_path.name}")
+                
             except Exception as e:
-                errors.append(f"Ошибка при удалении {filename} у {school.id}: {str(e)}")
+                errors.append(f"Ошибка при удалении {file_path.name} у {school.unit_name}: {str(e)}")
 
-        if to_delete:
+        # Сохраняем обновленный манифест
+        if files_to_delete:
             await write_manifest_optimized(manifest_path, manifest)
 
-    msg = f"Удалено {deleted_count} файлов."
+    # Формируем сообщение о результате
+    if deleted_count > 0:
+        msg = f"✅ Успешно удалено {deleted_count} файлов"
+        if deleted_files_list:
+            # Показываем первые 5 удаленных файлов
+            sample = deleted_files_list[:5]
+            msg += f": {', '.join(sample)}"
+            if len(deleted_files_list) > 5:
+                msg += f" и ещё {len(deleted_files_list) - 5}"
+    else:
+        msg = "ℹ️ Файлы для удаления не найдены"
+    
     if errors:
-        msg += " Ошибки: " + "; ".join(errors)
+        msg += f". ⚠️ Ошибки: {'; '.join(errors[:3])}"
+        if len(errors) > 3:
+            msg += f" и ещё {len(errors) - 3} ошибок"
 
     return RedirectResponse(
         f"/admin?admin_id={admin_id}&message={msg}",
@@ -1026,7 +1106,7 @@ async def dashboard(
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "user": user,
-        "profile": profile_data,  # Передаём данные профиля в шаблон
+        "profile": profile_data,
         "files_grouped": grouped_files,
         "period": f"{year}-{month}",
         "year": year,
@@ -1440,6 +1520,1071 @@ async def health_check():
             "file_exists_cache": len(FILE_EXISTS_CACHE)
         }
     }
+
+# --- НОВЫЕ ЭНДПОИНТЫ ДЛЯ ДАШБОРДОВ ---
+
+@app.get("/dashboards")
+async def dashboards_list(request: Request, db: Session = Depends(get_db)):
+    """Список всех дашбордов"""
+    try:
+        # Для админа показываем все дашборды, для обычных пользователей только опубликованные
+        is_admin = request.session.get("dashboard_admin", False)
+        
+        if is_admin:
+            dashboards = await run_in_threadpool(
+                lambda: db.query(models.Dashboard).order_by(models.Dashboard.updated_at.desc()).all()
+            )
+        else:
+            dashboards = await run_in_threadpool(
+                lambda: db.query(models.Dashboard).filter(models.Dashboard.is_published == True).order_by(models.Dashboard.updated_at.desc()).all()
+            )
+        
+        # Загружаем элементы для каждого дашборда
+        for dashboard in dashboards:
+            elements = await run_in_threadpool(
+                lambda: db.query(models.DashboardElement).filter(
+                    models.DashboardElement.dashboard_id == dashboard.id
+                ).all()
+            )
+            dashboard.elements = elements
+        
+        return templates.TemplateResponse("dashboards_list.html", {
+            "request": request,
+            "dashboards": dashboards,
+            "session": request.session
+        })
+    except Exception as e:
+        print(f"Ошибка в dashboards_list: {e}")
+        return templates.TemplateResponse("dashboards_list.html", {
+            "request": request,
+            "dashboards": [],
+            "session": request.session
+        })
+
+@app.get("/dashboard-admin/login", response_class=HTMLResponse)
+async def dashboard_login_page(request: Request):
+    """Страница входа в админку дашбордов"""
+    return templates.TemplateResponse("dashboard_login.html", {"request": request})
+
+@app.post("/dashboard-admin/login")
+async def dashboard_login(request: Request, access_code: str = Form(...)):
+    """Вход в админку дашбордов"""
+    if access_code == DASHBOARD_ADMIN_CODE:
+        request.session["dashboard_admin"] = True
+        return RedirectResponse("/dashboards", status_code=303)
+    
+    return templates.TemplateResponse("dashboard_login.html", {
+        "request": request,
+        "error": "Неверный код доступа"
+    })
+
+@app.get("/dashboard-admin/logout")
+async def dashboard_logout(request: Request):
+    """Выход из админки дашбордов"""
+    request.session.pop("dashboard_admin", None)
+    return RedirectResponse("/dashboards", status_code=303)
+
+@app.get("/dashboard-admin/create")
+async def create_dashboard_page(request: Request, db: Session = Depends(get_db)):
+    """Страница создания нового дашборда"""
+    if not request.session.get("dashboard_admin"):
+        return RedirectResponse("/dashboard-admin/login", status_code=303)
+    
+    return templates.TemplateResponse("dashboard_editor.html", {
+        "request": request,
+        "dashboard": None
+    })
+
+@app.post("/dashboard-admin/save")
+async def save_dashboard(request: Request, db: Session = Depends(get_db)):
+    """Сохранение дашборда (автоматически публикуется)"""
+    if not request.session.get("dashboard_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    try:
+        data = await request.json()
+        print(f"Сохраняем дашборд: {data.get('title')}")
+        
+        # Генерация slug из названия
+        if data.get('id'):
+            dashboard = await run_in_threadpool(
+                lambda: db.query(models.Dashboard).filter(models.Dashboard.id == data['id']).first()
+            )
+            if not dashboard:
+                raise HTTPException(status_code=404, detail="Дашборд не найден")
+            
+            dashboard.title = data['title']
+            dashboard.description = data.get('description', '')
+            dashboard.updated_at = datetime.utcnow()
+            dashboard.layout_data = json.dumps(data.get('layout', {}))
+            dashboard.is_published = True  # Автоматически публикуем при сохранении
+            
+            # Удаляем старые элементы
+            await run_in_threadpool(
+                lambda: db.query(models.DashboardElement).filter(models.DashboardElement.dashboard_id == dashboard.id).delete()
+            )
+        else:
+            # Создаем новый дашборд
+            slug_base = data['title'].lower().replace(' ', '-')
+            # Удаляем специальные символы
+            slug_base = re.sub(r'[^a-z0-9-]', '', slug_base)
+            if not slug_base:
+                slug_base = 'dashboard'
+            
+            slug = slug_base
+            counter = 1
+            
+            while await run_in_threadpool(
+                lambda: db.query(models.Dashboard).filter(models.Dashboard.slug == slug).first()
+            ):
+                slug = f"{slug_base}-{counter}"
+                counter += 1
+            
+            dashboard = models.Dashboard(
+                title=data['title'],
+                description=data.get('description', ''),
+                slug=slug,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+                layout_data=json.dumps(data.get('layout', {})),
+                is_published=True  # Автоматически публикуем при создании
+            )
+            db.add(dashboard)
+            await run_in_threadpool(db.flush)
+            print(f"Создан новый дашборд с ID: {dashboard.id}")
+        
+        # Сохраняем элементы
+        elements_count = 0
+        for idx, element_data in enumerate(data.get('elements', [])):
+            element = models.DashboardElement(
+                dashboard_id=dashboard.id,
+                element_type=element_data['type'],
+                chart_type=element_data.get('chartType'),
+                title=element_data.get('title', ''),
+                content=json.dumps(element_data.get('content', {}), ensure_ascii=False),
+                settings=json.dumps(element_data.get('settings', {}), ensure_ascii=False),
+                position_x=element_data.get('position', {}).get('x', 0),
+                position_y=element_data.get('position', {}).get('y', 0),
+                width=element_data.get('size', {}).get('w', 4),
+                height=element_data.get('size', {}).get('h', 4),
+                order_index=idx
+            )
+            db.add(element)
+            elements_count += 1
+        
+        await run_in_threadpool(db.commit)
+        print(f"Сохранено {elements_count} элементов для дашборда {dashboard.id}")
+        
+        return {"status": "success", "id": dashboard.id, "slug": dashboard.slug, "published": True}
+    
+    except Exception as e:
+        print(f"Ошибка при сохранении дашборда: {e}")
+        await run_in_threadpool(db.rollback)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/dashboard-admin/edit/{dashboard_id}")
+async def edit_dashboard(request: Request, dashboard_id: int, db: Session = Depends(get_db)):
+    """Редактирование дашборда"""
+    if not request.session.get("dashboard_admin"):
+        return RedirectResponse("/dashboard-admin/login", status_code=303)
+    
+    dashboard = await run_in_threadpool(
+        lambda: db.query(models.Dashboard).filter(models.Dashboard.id == dashboard_id).first()
+    )
+    
+    if not dashboard:
+        raise HTTPException(status_code=404, detail="Дашборд не найден")
+    
+    # Загружаем элементы
+    elements = await run_in_threadpool(
+        lambda: db.query(models.DashboardElement).filter(models.DashboardElement.dashboard_id == dashboard_id).order_by(models.DashboardElement.order_index).all()
+    )
+    
+    dashboard_data = {
+        "id": dashboard.id,
+        "title": dashboard.title,
+        "description": dashboard.description,
+        "slug": dashboard.slug,
+        "is_published": dashboard.is_published,
+        "elements": []
+    }
+    
+    for element in elements:
+        dashboard_data["elements"].append({
+            "id": element.id,
+            "type": element.element_type,
+            "chartType": element.chart_type,
+            "title": element.title,
+            "content": json.loads(element.content) if element.content else {},
+            "settings": json.loads(element.settings) if element.settings else {},
+            "position": {"x": element.position_x, "y": element.position_y},
+            "size": {"w": element.width, "h": element.height}
+        })
+    
+    return templates.TemplateResponse("dashboard_editor.html", {
+        "request": request,
+        "dashboard": dashboard_data
+    })
+
+@app.post("/dashboard-admin/delete/{dashboard_id}")
+async def delete_dashboard(request: Request, dashboard_id: int, db: Session = Depends(get_db)):
+    """Удаление дашборда"""
+    if not request.session.get("dashboard_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    dashboard = await run_in_threadpool(
+        lambda: db.query(models.Dashboard).filter(models.Dashboard.id == dashboard_id).first()
+    )
+    
+    if dashboard:
+        await run_in_threadpool(lambda: db.delete(dashboard))
+        await run_in_threadpool(db.commit)
+    
+    return {"status": "success"}
+
+@app.get("/dashboard/{slug}")
+async def view_dashboard(request: Request, slug: str, db: Session = Depends(get_db)):
+    """Просмотр дашборда"""
+    # Пробуем найти по slug или по id
+    if slug.isdigit():
+        dashboard = await run_in_threadpool(
+            lambda: db.query(models.Dashboard).filter(models.Dashboard.id == int(slug)).first()
+        )
+    else:
+        dashboard = await run_in_threadpool(
+            lambda: db.query(models.Dashboard).filter(models.Dashboard.slug == slug).first()
+        )
+    
+    if not dashboard:
+        raise HTTPException(status_code=404, detail="Дашборд не найден")
+    
+    # Проверяем доступ (если не опубликован, только админ может видеть)
+    if not dashboard.is_published and not request.session.get("dashboard_admin"):
+        raise HTTPException(status_code=404, detail="Дашборд не найден")
+    
+    # Загружаем элементы
+    elements = await run_in_threadpool(
+        lambda: db.query(models.DashboardElement).filter(models.DashboardElement.dashboard_id == dashboard.id).order_by(models.DashboardElement.order_index).all()
+    )
+    
+    # Парсим JSON поля
+    for element in elements:
+        if element.content:
+            try:
+                element.content = json.loads(element.content)
+            except:
+                element.content = {}
+        if element.settings:
+            try:
+                element.settings = json.loads(element.settings)
+            except:
+                element.settings = {}
+    
+    dashboard.elements = elements
+    
+    return templates.TemplateResponse("dashboard_view.html", {
+        "request": request,
+        "dashboard": dashboard,
+        "session": request.session
+    })
+
+# --- БИБЛИОТЕКА ЗНАНИЙ ПО ПИТАНИЮ (ОТДЕЛЬНАЯ БД) ---
+
+KNOWLEDGE_BASE_ADMIN_CODE = "admin3377%"
+
+DOCUMENT_TYPES = {
+    "document": "📄 Документ",
+    "instruction": "📋 Инструкция",
+    "order": "📌 Приказ",
+    "method": "📚 Методичка",
+    "presentation": "📊 Презентация",
+    "video": "🎥 Видео",
+    "spreadsheet": "📊 Таблица",
+    "image": "🖼️ Изображение",
+    "other": "📁 Другое"
+}
+
+CATEGORY_ICONS = ["📁", "📊", "📋", "📌", "📚", "🎥", "📝", "⚖️", "🍎", "🥗", "📈", "🔬", "🏫", "👨‍🍳"]
+
+
+@app.get("/knowledge-base", response_class=HTMLResponse)
+async def knowledge_base(
+    request: Request,
+    category: int = None,
+    search: str = "",
+    page: int = 1,
+    per_page: int = 12,
+    sort: str = "newest",
+    kb_db: Session = Depends(get_kb_db)  # Используем отдельную БД
+):
+    """Главная страница библиотеки знаний"""
+    
+    # Получаем все активные категории
+    categories = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseCategory).filter(
+            KnowledgeBaseCategory.is_active == True
+        ).order_by(KnowledgeBaseCategory.order_index).all()
+    )
+    
+    # Базовый запрос для документов
+    query = kb_db.query(KnowledgeBaseDocument).filter(KnowledgeBaseDocument.is_published == True)
+    
+    # Фильтр по категории
+    if category:
+        query = query.filter(KnowledgeBaseDocument.category_id == category)
+        current_category = await run_in_threadpool(
+            lambda: kb_db.query(KnowledgeBaseCategory).filter(KnowledgeBaseCategory.id == category).first()
+        )
+    else:
+        current_category = None
+    
+    # Поиск
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            or_(
+                KnowledgeBaseDocument.title.ilike(search_term),
+                KnowledgeBaseDocument.description.ilike(search_term),
+                KnowledgeBaseDocument.tags.ilike(search_term)
+            )
+        )
+        
+        # Логируем поиск
+        user_email = request.session.get("user_email")
+        search_log = KnowledgeBaseSearchLog(
+            query=search,
+            user_email=user_email
+        )
+        kb_db.add(search_log)
+        await run_in_threadpool(kb_db.commit)
+    
+    # Сортировка
+    if sort == "newest":
+        query = query.order_by(KnowledgeBaseDocument.created_at.desc())
+    elif sort == "popular":
+        query = query.order_by(KnowledgeBaseDocument.downloads_count.desc())
+    elif sort == "views":
+        query = query.order_by(KnowledgeBaseDocument.views_count.desc())
+    elif sort == "title":
+        query = query.order_by(KnowledgeBaseDocument.title)
+    
+    # Пагинация
+    total = await run_in_threadpool(query.count)
+    offset = (page - 1) * per_page
+    documents = await run_in_threadpool(
+        lambda: query.offset(offset).limit(per_page).all()
+    )
+    
+    # Получаем популярные документы
+    popular_docs = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseDocument).filter(
+            KnowledgeBaseDocument.is_published == True
+        ).order_by(KnowledgeBaseDocument.downloads_count.desc()).limit(5).all()
+    )
+    
+    # Недавно добавленные
+    recent_docs = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseDocument).filter(
+            KnowledgeBaseDocument.is_published == True
+        ).order_by(KnowledgeBaseDocument.created_at.desc()).limit(5).all()
+    )
+    
+    # Получаем email пользователя из сессии
+    user_email = request.session.get("user_email")
+    favorites = []
+    
+    if user_email:
+        favs = await run_in_threadpool(
+            lambda: kb_db.query(KnowledgeBaseFavorite).filter(
+                KnowledgeBaseFavorite.user_email == user_email
+            ).all()
+        )
+        favorites = [fav.document_id for fav in favs]
+    
+    return templates.TemplateResponse("knowledge_base.html", {
+        "request": request,
+        "user_email": user_email,
+        "categories": categories,
+        "documents": documents,
+        "popular_docs": popular_docs,
+        "recent_docs": recent_docs,
+        "current_category": current_category,
+        "favorites": favorites,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "search": search,
+        "sort": sort,
+        "document_types": DOCUMENT_TYPES,
+        "total_pages": (total + per_page - 1) // per_page
+    })
+
+
+@app.get("/knowledge-base/admin/login", response_class=HTMLResponse)
+async def knowledge_base_admin_login(request: Request):
+    """Страница входа в админку библиотеки"""
+    return templates.TemplateResponse("knowledge_base_admin_login.html", {"request": request})
+
+
+@app.post("/knowledge-base/admin/login")
+async def knowledge_base_admin_login_post(
+    request: Request,
+    access_code: str = Form(...),
+    email: str = Form(...),
+    name: str = Form(""),
+    kb_db: Session = Depends(get_kb_db)
+):
+    """Вход в админку библиотеки"""
+    if access_code == KNOWLEDGE_BASE_ADMIN_CODE:
+        # Сохраняем в сессии
+        request.session["knowledge_base_admin"] = True
+        request.session["admin_email"] = email
+        request.session["admin_name"] = name if name else "Администратор"
+        
+        # Сохраняем/обновляем в БД
+        admin = await run_in_threadpool(
+            lambda: kb_db.query(KnowledgeBaseAdmin).filter(
+                KnowledgeBaseAdmin.email == email
+            ).first()
+        )
+        
+        if not admin:
+            admin = KnowledgeBaseAdmin(
+                email=email,
+                name=name if name else "Администратор",
+                access_code=hashlib.sha256(access_code.encode()).hexdigest(),
+                last_login=datetime.utcnow()
+            )
+            kb_db.add(admin)
+        else:
+            admin.last_login = datetime.utcnow()
+        
+        await run_in_threadpool(kb_db.commit)
+        
+        return RedirectResponse("/knowledge-base/admin", status_code=303)
+    
+    return templates.TemplateResponse("knowledge_base_admin_login.html", {
+        "request": request,
+        "error": "Неверный код доступа"
+    })
+
+
+@app.get("/knowledge-base/admin/logout")
+async def knowledge_base_admin_logout(request: Request):
+    """Выход из админки библиотеки"""
+    request.session.pop("knowledge_base_admin", None)
+    request.session.pop("admin_email", None)
+    request.session.pop("admin_name", None)
+    return RedirectResponse("/knowledge-base", status_code=303)
+
+
+@app.get("/knowledge-base/admin", response_class=HTMLResponse)
+async def knowledge_base_admin_panel(
+    request: Request,
+    kb_db: Session = Depends(get_kb_db)
+):
+    """Админ-панель библиотеки знаний"""
+    if not request.session.get("knowledge_base_admin"):
+        return RedirectResponse("/knowledge-base/admin/login", status_code=303)
+    
+    admin_email = request.session.get("admin_email")
+    admin_name = request.session.get("admin_name")
+    
+    # Статистика
+    total_docs = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseDocument).count()
+    )
+    total_categories = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseCategory).count()
+    )
+    total_downloads = await run_in_threadpool(
+        lambda: kb_db.query(func.sum(KnowledgeBaseDocument.downloads_count)).scalar() or 0
+    )
+    total_views = await run_in_threadpool(
+        lambda: kb_db.query(func.sum(KnowledgeBaseDocument.views_count)).scalar() or 0
+    )
+    
+    # Последние загруженные
+    recent_docs = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseDocument).order_by(
+            KnowledgeBaseDocument.created_at.desc()
+        ).limit(10).all()
+    )
+    
+    # Категории с количеством документов
+    categories_stats = await run_in_threadpool(
+        lambda: kb_db.query(
+            KnowledgeBaseCategory,
+            func.count(KnowledgeBaseDocument.id).label('doc_count')
+        ).outerjoin(
+            KnowledgeBaseDocument,
+            KnowledgeBaseCategory.id == KnowledgeBaseDocument.category_id
+        ).group_by(KnowledgeBaseCategory.id).order_by(KnowledgeBaseCategory.order_index).all()
+    )
+    
+    return templates.TemplateResponse("knowledge_base_admin.html", {
+        "request": request,
+        "admin_email": admin_email,
+        "admin_name": admin_name,
+        "total_docs": total_docs,
+        "total_categories": total_categories,
+        "total_downloads": total_downloads,
+        "total_views": total_views,
+        "recent_docs": recent_docs,
+        "categories_stats": categories_stats
+    })
+
+
+@app.get("/knowledge-base/admin/categories", response_class=HTMLResponse)
+async def manage_categories(
+    request: Request,
+    kb_db: Session = Depends(get_kb_db)
+):
+    """Управление категориями"""
+    if not request.session.get("knowledge_base_admin"):
+        return RedirectResponse("/knowledge-base/admin/login", status_code=303)
+    
+    categories = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseCategory).order_by(
+            KnowledgeBaseCategory.order_index
+        ).all()
+    )
+    
+    return templates.TemplateResponse("knowledge_base_categories.html", {
+        "request": request,
+        "categories": categories,
+        "icons": CATEGORY_ICONS
+    })
+
+
+@app.post("/knowledge-base/admin/category/create")
+async def create_category(
+    request: Request,
+    name: str = Form(...),
+    description: str = Form(""),
+    icon: str = Form("📁"),
+    color: str = Form("#667eea"),
+    order_index: int = Form(0),
+    kb_db: Session = Depends(get_kb_db)
+):
+    """Создание новой категории"""
+    if not request.session.get("knowledge_base_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    category = KnowledgeBaseCategory(
+        name=name,
+        description=description,
+        icon=icon,
+        color=color,
+        order_index=order_index
+    )
+    
+    kb_db.add(category)
+    await run_in_threadpool(kb_db.commit)
+    
+    return RedirectResponse("/knowledge-base/admin/categories", status_code=303)
+
+
+@app.post("/knowledge-base/admin/category/{category_id}/update")
+async def update_category(
+    request: Request,
+    category_id: int,
+    name: str = Form(...),
+    description: str = Form(""),
+    icon: str = Form("📁"),
+    color: str = Form("#667eea"),
+    order_index: int = Form(0),
+    is_active: bool = Form(True),
+    kb_db: Session = Depends(get_kb_db)
+):
+    """Обновление категории"""
+    if not request.session.get("knowledge_base_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    category = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseCategory).filter(KnowledgeBaseCategory.id == category_id).first()
+    )
+    
+    if not category:
+        raise HTTPException(status_code=404, detail="Категория не найдена")
+    
+    category.name = name
+    category.description = description
+    category.icon = icon
+    category.color = color
+    category.order_index = order_index
+    category.is_active = is_active
+    
+    await run_in_threadpool(kb_db.commit)
+    
+    return RedirectResponse("/knowledge-base/admin/categories", status_code=303)
+
+
+@app.post("/knowledge-base/admin/category/{category_id}/delete")
+async def delete_category(
+    request: Request,
+    category_id: int,
+    kb_db: Session = Depends(get_kb_db)
+):
+    """Удаление категории"""
+    if not request.session.get("knowledge_base_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    category = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseCategory).filter(KnowledgeBaseCategory.id == category_id).first()
+    )
+    
+    if category:
+        await run_in_threadpool(lambda: kb_db.delete(category))
+        await run_in_threadpool(kb_db.commit)
+    
+    return RedirectResponse("/knowledge-base/admin/categories", status_code=303)
+
+
+@app.get("/knowledge-base/admin/upload", response_class=HTMLResponse)
+async def upload_document_page(
+    request: Request,
+    kb_db: Session = Depends(get_kb_db)
+):
+    """Страница загрузки документа"""
+    if not request.session.get("knowledge_base_admin"):
+        return RedirectResponse("/knowledge-base/admin/login", status_code=303)
+    
+    categories = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseCategory).filter(
+            KnowledgeBaseCategory.is_active == True
+        ).order_by(KnowledgeBaseCategory.order_index).all()
+    )
+    
+    admin_name = request.session.get("admin_name", "Администратор")
+    admin_email = request.session.get("admin_email", "")
+    
+    return templates.TemplateResponse("knowledge_base_upload.html", {
+        "request": request,
+        "categories": categories,
+        "document_types": DOCUMENT_TYPES,
+        "admin_name": admin_name,
+        "admin_email": admin_email
+    })
+
+
+@app.post("/knowledge-base/admin/upload")
+async def upload_document(
+    request: Request,
+    title: str = Form(...),
+    description: str = Form(""),
+    category_id: int = Form(None),
+    document_type: str = Form("document"),
+    tags: str = Form(""),
+    is_featured: bool = Form(False),
+    file: UploadFile = File(...),
+    cover_image: UploadFile = File(None),
+    kb_db: Session = Depends(get_kb_db)
+):
+    """Загрузка документа в библиотеку"""
+    if not request.session.get("knowledge_base_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    admin_name = request.session.get("admin_name", "Администратор")
+    admin_email = request.session.get("admin_email", "")
+    
+    # Создаём директории для файлов библиотеки
+    BASE_DIR = Path(__file__).resolve().parent
+    kb_files_dir = BASE_DIR / "knowledge_base_files"
+    documents_dir = kb_files_dir / "documents"
+    covers_dir = kb_files_dir / "covers"
+    
+    await run_in_threadpool(lambda: documents_dir.mkdir(parents=True, exist_ok=True))
+    await run_in_threadpool(lambda: covers_dir.mkdir(parents=True, exist_ok=True))
+    
+    # Сохраняем основной файл
+    file_ext = Path(file.filename).suffix.lower()
+    safe_filename = f"{int(time.time())}_{secrets.token_hex(8)}{file_ext}"
+    file_path = documents_dir / safe_filename
+    
+    await save_uploaded_file_optimized(file, file_path)
+    
+    # Сохраняем обложку (если есть)
+    cover_path = None
+    if cover_image and cover_image.filename:
+        cover_ext = Path(cover_image.filename).suffix.lower()
+        cover_filename = f"cover_{int(time.time())}_{secrets.token_hex(8)}{cover_ext}"
+        cover_path = covers_dir / cover_filename
+        await save_uploaded_file_optimized(cover_image, cover_path)
+    
+    # Создаем запись в отдельной БД
+    document = KnowledgeBaseDocument(
+        title=title,
+        description=description,
+        category_id=category_id if category_id else None,
+        document_type=document_type,
+        file_extension=file_ext,
+        file_size=file.size,
+        file_path=str(file_path.relative_to(BASE_DIR)),
+        cover_image_path=str(cover_path.relative_to(BASE_DIR)) if cover_path else None,
+        tags=tags,
+        uploaded_by=admin_name,
+        uploaded_by_email=admin_email,
+        is_featured=is_featured
+    )
+    
+    kb_db.add(document)
+    await run_in_threadpool(kb_db.commit)
+    
+    return RedirectResponse(f"/knowledge-base/document/{document.id}", status_code=303)
+
+
+@app.get("/knowledge-base/document/{doc_id}", response_class=HTMLResponse)
+async def view_document(
+    request: Request,
+    doc_id: int,
+    kb_db: Session = Depends(get_kb_db)
+):
+    """Просмотр документа"""
+    document = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseDocument).filter(KnowledgeBaseDocument.id == doc_id).first()
+    )
+    
+    if not document or not document.is_published:
+        # Проверяем, может админ смотрит
+        if not request.session.get("knowledge_base_admin"):
+            raise HTTPException(status_code=404, detail="Документ не найден")
+    
+    # Увеличиваем счетчик просмотров
+    document.views_count += 1
+    await run_in_threadpool(kb_db.commit)
+    
+    # Похожие документы
+    similar_docs = []
+    if document.category_id:
+        similar_docs = await run_in_threadpool(
+            lambda: kb_db.query(KnowledgeBaseDocument).filter(
+                KnowledgeBaseDocument.category_id == document.category_id,
+                KnowledgeBaseDocument.id != doc_id,
+                KnowledgeBaseDocument.is_published == True
+            ).order_by(KnowledgeBaseDocument.downloads_count.desc()).limit(4).all()
+        )
+    
+    # Категория
+    category = None
+    if document.category_id:
+        category = await run_in_threadpool(
+            lambda: kb_db.query(KnowledgeBaseCategory).filter(
+                KnowledgeBaseCategory.id == document.category_id
+            ).first()
+        )
+    
+    # Проверяем избранное
+    user_email = request.session.get("user_email")
+    is_favorite = False
+    
+    if user_email:
+        fav = await run_in_threadpool(
+            lambda: kb_db.query(KnowledgeBaseFavorite).filter(
+                KnowledgeBaseFavorite.user_email == user_email,
+                KnowledgeBaseFavorite.document_id == doc_id
+            ).first()
+        )
+        is_favorite = fav is not None
+    
+    # Получаем комментарии
+    comments = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseComment).filter(
+            KnowledgeBaseComment.document_id == doc_id,
+            KnowledgeBaseComment.is_approved == True
+        ).order_by(KnowledgeBaseComment.created_at.desc()).all()
+    )
+    
+    return templates.TemplateResponse("knowledge_base_document.html", {
+        "request": request,
+        "document": document,
+        "category": category,
+        "similar_docs": similar_docs,
+        "is_favorite": is_favorite,
+        "comments": comments,
+        "user_email": user_email,
+        "document_types": DOCUMENT_TYPES,
+        "is_admin": request.session.get("knowledge_base_admin", False)
+    })
+
+
+@app.get("/knowledge-base/download/{doc_id}")
+async def download_document(
+    request: Request,
+    doc_id: int,
+    kb_db: Session = Depends(get_kb_db)
+):
+    """Скачивание документа"""
+    document = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseDocument).filter(KnowledgeBaseDocument.id == doc_id).first()
+    )
+    
+    if not document:
+        raise HTTPException(status_code=404, detail="Документ не найден")
+    
+    # Проверяем опубликован ли документ (админы могут скачивать и неопубликованные)
+    if not document.is_published and not request.session.get("knowledge_base_admin"):
+        raise HTTPException(status_code=404, detail="Документ не найден")
+    
+    BASE_DIR = Path(__file__).resolve().parent
+    file_path = BASE_DIR / document.file_path
+    
+    if not await run_in_threadpool(file_path.exists):
+        raise HTTPException(status_code=404, detail="Файл не найден")
+    
+    # Увеличиваем счетчик скачиваний
+    document.downloads_count += 1
+    await run_in_threadpool(kb_db.commit)
+    
+    # Формируем имя файла для скачивания
+    filename = f"{document.title}{document.file_extension}"
+    
+    # Кодируем имя файла для корректной обработки русских символов
+    # Используем urlencode для RFC 5987
+    import urllib.parse
+    encoded_filename = urllib.parse.quote(filename)
+    
+    # Возвращаем файл с правильными заголовками
+    return FileResponse(
+        path=file_path,
+        filename=filename,
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
+        }
+    )
+
+@app.post("/knowledge-base/favorite/{doc_id}")
+async def toggle_favorite(
+    request: Request,
+    doc_id: int,
+    kb_db: Session = Depends(get_kb_db)
+):
+    """Добавить/удалить из избранного"""
+    user_email = request.session.get("user_email")
+    if not user_email:
+        return {"status": "error", "message": "Требуется авторизация"}
+    
+    favorite = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseFavorite).filter(
+            KnowledgeBaseFavorite.user_email == user_email,
+            KnowledgeBaseFavorite.document_id == doc_id
+        ).first()
+    )
+    
+    if favorite:
+        await run_in_threadpool(lambda: kb_db.delete(favorite))
+        await run_in_threadpool(kb_db.commit)
+        return {"status": "success", "action": "removed"}
+    else:
+        new_favorite = KnowledgeBaseFavorite(
+            user_email=user_email,
+            document_id=doc_id
+        )
+        kb_db.add(new_favorite)
+        await run_in_threadpool(kb_db.commit)
+        return {"status": "success", "action": "added"}
+
+
+@app.post("/knowledge-base/comment/{doc_id}")
+async def add_comment(
+    request: Request,
+    doc_id: int,
+    content: str = Form(...),
+    user_name: str = Form(""),
+    kb_db: Session = Depends(get_kb_db)
+):
+    """Добавление комментария"""
+    user_email = request.session.get("user_email")
+    
+    comment = KnowledgeBaseComment(
+        document_id=doc_id,
+        user_name=user_name if user_name else "Гость",
+        user_email=user_email,
+        content=content,
+        is_approved=False  # Требуется модерация
+    )
+    
+    kb_db.add(comment)
+    await run_in_threadpool(kb_db.commit)
+    
+    return RedirectResponse(f"/knowledge-base/document/{doc_id}", status_code=303)
+
+
+@app.get("/knowledge-base/admin/edit/{doc_id}", response_class=HTMLResponse)
+async def edit_document_page(
+    request: Request,
+    doc_id: int,
+    kb_db: Session = Depends(get_kb_db)
+):
+    """Редактирование документа"""
+    if not request.session.get("knowledge_base_admin"):
+        return RedirectResponse("/knowledge-base/admin/login", status_code=303)
+    
+    document = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseDocument).filter(KnowledgeBaseDocument.id == doc_id).first()
+    )
+    
+    if not document:
+        raise HTTPException(status_code=404, detail="Документ не найден")
+    
+    categories = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseCategory).filter(
+            KnowledgeBaseCategory.is_active == True
+        ).order_by(KnowledgeBaseCategory.order_index).all()
+    )
+    
+    return templates.TemplateResponse("knowledge_base_edit.html", {
+        "request": request,
+        "document": document,
+        "categories": categories,
+        "document_types": DOCUMENT_TYPES
+    })
+
+
+@app.post("/knowledge-base/admin/edit/{doc_id}")
+async def edit_document(
+    request: Request,
+    doc_id: int,
+    title: str = Form(...),
+    description: str = Form(""),
+    category_id: int = Form(None),
+    document_type: str = Form("document"),
+    tags: str = Form(""),
+    is_published: bool = Form(True),
+    is_featured: bool = Form(False),
+    kb_db: Session = Depends(get_kb_db)
+):
+    """Обновление документа"""
+    if not request.session.get("knowledge_base_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    document = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseDocument).filter(KnowledgeBaseDocument.id == doc_id).first()
+    )
+    
+    if not document:
+        raise HTTPException(status_code=404, detail="Документ не найден")
+    
+    document.title = title
+    document.description = description
+    document.category_id = category_id if category_id else None
+    document.document_type = document_type
+    document.tags = tags
+    document.is_published = is_published
+    document.is_featured = is_featured
+    document.updated_at = datetime.utcnow()
+    
+    await run_in_threadpool(kb_db.commit)
+    
+    return RedirectResponse(f"/knowledge-base/document/{doc_id}", status_code=303)
+
+
+@app.post("/knowledge-base/admin/delete/{doc_id}")
+async def delete_document(
+    request: Request,
+    doc_id: int,
+    kb_db: Session = Depends(get_kb_db)
+):
+    """Удаление документа"""
+    if not request.session.get("knowledge_base_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    document = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseDocument).filter(KnowledgeBaseDocument.id == doc_id).first()
+    )
+    
+    if not document:
+        raise HTTPException(status_code=404, detail="Документ не найден")
+    
+    # Удаляем файлы
+    BASE_DIR = Path(__file__).resolve().parent
+    file_path = BASE_DIR / document.file_path
+    await delete_file_optimized(file_path)
+    
+    if document.cover_image_path:
+        cover_path = BASE_DIR / document.cover_image_path
+        await delete_file_optimized(cover_path)
+    
+    # Удаляем запись из БД
+    await run_in_threadpool(lambda: kb_db.delete(document))
+    await run_in_threadpool(kb_db.commit)
+    
+    return RedirectResponse("/knowledge-base/admin", status_code=303)
+
+
+@app.get("/knowledge-base/api/search")
+async def knowledge_base_search_api(
+    request: Request,
+    q: str = "",
+    kb_db: Session = Depends(get_kb_db)
+):
+    """API для быстрого поиска"""
+    if len(q) < 2:
+        return {"results": []}
+    
+    search_term = f"%{q}%"
+    results = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseDocument).filter(
+            KnowledgeBaseDocument.is_published == True,
+            or_(
+                KnowledgeBaseDocument.title.ilike(search_term),
+                KnowledgeBaseDocument.description.ilike(search_term),
+                KnowledgeBaseDocument.tags.ilike(search_term)
+            )
+        ).limit(10).all()
+    )
+    
+    return {
+        "results": [
+            {
+                "id": doc.id,
+                "title": doc.title,
+                "type": DOCUMENT_TYPES.get(doc.document_type, "Документ"),
+                "url": f"/knowledge-base/document/{doc.id}",
+                "icon": "📄"
+            }
+            for doc in results
+        ]
+    }
+
+
+@app.get("/knowledge-base/stats")
+async def knowledge_base_stats(
+    request: Request,
+    kb_db: Session = Depends(get_kb_db)
+):
+    """Публичная статистика библиотеки"""
+    total_docs = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseDocument).filter(
+            KnowledgeBaseDocument.is_published == True
+        ).count()
+    )
+    
+    total_downloads = await run_in_threadpool(
+        lambda: kb_db.query(func.sum(KnowledgeBaseDocument.downloads_count)).scalar() or 0
+    )
+    
+    # Топ категорий
+    top_categories = await run_in_threadpool(
+        lambda: kb_db.query(
+            KnowledgeBaseCategory.name,
+            KnowledgeBaseCategory.icon,
+            func.count(KnowledgeBaseDocument.id).label('doc_count')
+        ).join(
+            KnowledgeBaseDocument,
+            KnowledgeBaseCategory.id == KnowledgeBaseDocument.category_id
+        ).filter(
+            KnowledgeBaseDocument.is_published == True
+        ).group_by(KnowledgeBaseCategory.id).order_by(func.count(KnowledgeBaseDocument.id).desc()).limit(5).all()
+    )
+    
+    return templates.TemplateResponse("knowledge_base_stats.html", {
+        "request": request,
+        "total_docs": total_docs,
+        "total_downloads": total_downloads,
+        "top_categories": top_categories
+    })
 
 if __name__ == "__main__":
     import uvicorn
