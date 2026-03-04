@@ -1076,6 +1076,96 @@ body {
     }
 }
 
+/* Стили для новой формы удаления по месяцам */
+.bulk-delete-form.month-delete-form {
+    border-left: 4px solid #f59e0b;
+    margin-top: 1.5rem;
+}
+
+.bulk-delete-form.month-delete-form h3 {
+    color: #f59e0b;
+}
+
+[data-theme='dark'] .bulk-delete-form.month-delete-form h3 {
+    color: #fbbf24;
+}
+
+.months-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.5rem;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 1rem;
+    background: var(--card, #ffffff);
+    border-radius: 0.75rem;
+    border: 1px solid var(--border, #e2e8f0);
+    margin-bottom: 1rem;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+[data-theme='dark'] .months-grid {
+    background: var(--slate-800, #1e293b);
+    border-color: var(--border, #334155);
+}
+
+.months-count {
+    font-size: 0.8rem;
+    color: var(--slate-500, #64748b);
+    margin-bottom: 0.5rem;
+    transition: color 0.2s ease;
+}
+
+.month-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.month-checkbox:hover {
+    background: var(--surface, #f1f5f9);
+}
+
+[data-theme='dark'] .month-checkbox:hover {
+    background: var(--slate-700, #334155);
+}
+
+.month-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #f59e0b;
+}
+
+.month-checkbox label {
+    font-size: 0.85rem;
+    color: var(--slate-800, #1e293b);
+    cursor: pointer;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+[data-theme='dark'] .month-checkbox label {
+    color: var(--slate-300, #cbd5e1);
+}
+
+.delete-option.all-months-option {
+    border-left: 3px solid #f59e0b;
+}
+
+.delete-option.all-months-option label {
+    color: #f59e0b;
+    font-weight: 700;
+}
+
+[data-theme='dark'] .delete-option.all-months-option label {
+    color: #fbbf24;
+}
+
 </style>
 
 <div class="container">
@@ -1221,6 +1311,76 @@ body {
           Удалить выбранные файлы
         </button>
       </form>
+
+      <!-- НОВАЯ ФОРМА: Массовое удаление файлов по месяцам -->
+      <form class="bulk-delete-form month-delete-form" action="/admin/bulk-delete-files-by-month" method="post" enctype="multipart/form-data"
+            onsubmit="handleMonthDeleteSubmit(this)">
+        <h3>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"></path>
+          </svg>
+          Удаление файлов по месяцам
+        </h3>
+
+        <input type="hidden" name="admin_id" value="{{ admin.id }}">
+
+        <div class="form-group">
+          <div class="schools-selection-header">
+            <span class="form-label">Выберите школы:</span>
+            <div class="select-all-buttons">
+              <button type="button" class="select-all-button" onclick="selectAllSchoolsMonth(true)">Выбрать все</button>
+              <button type="button" class="select-all-button" onclick="selectAllSchoolsMonth(false)">Снять выделение</button>
+            </div>
+          </div>
+          <div class="schools-count" id="selected-schools-month-count">Выбрано: 0 из {{ schools|length }}</div>
+          
+          <div class="schools-checkbox-grid">
+            {% for school in schools %}
+            <div class="school-checkbox">
+              <input type="checkbox" name="school_ids" value="{{ school.id }}" id="school-month-{{ school.id }}" 
+                     class="school-month-checkbox" onchange="updateSelectedMonthCount()">
+              <label for="school-month-{{ school.id }}">{{ school.unit_name }} ({{ school.district }})</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Год:</label>
+          <input type="number" name="year" value="2025" class="form-input" min="2020" max="2030" style="width: 100%;" id="delete-year">
+        </div>
+
+        <div class="form-group">
+          <div class="schools-selection-header">
+            <span class="form-label">Выберите месяцы:</span>
+            <div class="select-all-buttons">
+              <button type="button" class="select-all-button" onclick="selectAllMonths(true)">Выбрать все</button>
+              <button type="button" class="select-all-button" onclick="selectAllMonths(false)">Снять выделение</button>
+            </div>
+          </div>
+          <div class="months-count" id="selected-months-count">Выбрано: 0 из 12</div>
+          
+          <div class="months-grid">
+            {% for m_id, m_name in months.items() %}
+            <div class="month-checkbox">
+              <input type="checkbox" name="months" value="{{ m_id }}" id="month-{{ m_id }}" class="month-checkbox-input" onchange="updateSelectedMonthCount()">
+              <label for="month-{{ m_id }}">{{ m_name }}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="delete-options">
+          <div class="delete-option all-months-option">
+            <input type="checkbox" id="delete_all_months" name="delete_all_months" value="true" onchange="toggleAllMonths(this)">
+            <label for="delete_all_months">🗓️ Удалить файлы за ВСЕ месяцы</label>
+          </div>
+        </div>
+
+        <button type="submit" class="delete-button" style="background: linear-gradient(135deg, #f59e0b, #d97706); margin-top: 1rem;">
+          Удалить файлы за выбранные месяцы
+        </button>
+      </form>
     </aside>
 
     <!-- Основной контент -->
@@ -1346,7 +1506,7 @@ body {
 
 <script>
 // Оптимизированные функции
-let uploadTimeout, deleteTimeout;
+let uploadTimeout, deleteTimeout, monthDeleteTimeout;
 
 // Обработчик отправки формы рассылки
 function handleUploadSubmit(form) {
@@ -1361,6 +1521,8 @@ function handleUploadSubmit(form) {
     button.classList.remove('loading');
     button.disabled = false;
   }, 1000);
+  
+  return true; // Для реальной отправки формы
 }
 
 // Обработчик отправки формы удаления
@@ -1396,7 +1558,40 @@ function handleDeleteSubmit(form) {
     button.disabled = false;
   }, 1000);
   
-  return false; // Для демонстрации
+  return true; // Для реальной отправки формы
+}
+
+// НОВЫЙ ОБРАБОТЧИК: Отправка формы удаления по месяцам
+function handleMonthDeleteSubmit(form) {
+  const button = form.querySelector('.delete-button');
+  const selectedSchools = form.querySelectorAll('.school-month-checkbox:checked').length;
+  const selectedMonths = form.querySelectorAll('.month-checkbox-input:checked').length;
+  const deleteAllMonths = document.getElementById('delete_all_months')?.checked;
+  
+  if (selectedSchools === 0) {
+    showNotification('Выберите хотя бы одну школу для удаления!', 'warning');
+    return false;
+  }
+  
+  if (!deleteAllMonths && selectedMonths === 0) {
+    showNotification('Выберите хотя бы один месяц или отметьте "Все месяцы"!', 'warning');
+    return false;
+  }
+  
+  button.classList.add('loading');
+  button.disabled = true;
+  
+  if (monthDeleteTimeout) clearTimeout(monthDeleteTimeout);
+  
+  monthDeleteTimeout = setTimeout(() => {
+    const year = document.getElementById('delete-year').value;
+    const period = deleteAllMonths ? `все месяцы ${year} года` : `выбранные месяцы ${year} года`;
+    showNotification(`Удаление файлов за ${period} для ${selectedSchools} школ запущено!`, 'success');
+    button.classList.remove('loading');
+    button.disabled = false;
+  }, 1000);
+  
+  return true; // Для реальной отправки формы
 }
 
 // Обработчик выбора файлов
@@ -1444,10 +1639,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }, { passive: false });
   });
   
-  // Обновляем счетчик выбранных школ
+  // Обновляем счетчики
   updateSelectedCount();
+  updateSelectedMonthCount();
   
-  // Добавляем обработчики для новых чекбоксов
+  // Добавляем обработчики для чекбоксов удаления
   setupDeleteCheckboxes();
   
   const animatedElements = document.querySelectorAll('.fade-in-up');
@@ -1512,7 +1708,7 @@ function setupDeleteCheckboxes() {
   });
 }
 
-// Функция для выбора/снятия выделения со всех школ
+// Функция для выбора/снятия выделения со всех школ (первая форма)
 function selectAllSchools(select) {
   const schoolCheckboxes = document.querySelectorAll('input[name="school_ids"]');
   schoolCheckboxes.forEach(checkbox => {
@@ -1521,7 +1717,37 @@ function selectAllSchools(select) {
   updateSelectedCount();
 }
 
-// Обновление счетчика выбранных школ
+// Функция для выбора/снятия выделения со всех школ (форма по месяцам)
+function selectAllSchoolsMonth(select) {
+  const schoolCheckboxes = document.querySelectorAll('.school-month-checkbox');
+  schoolCheckboxes.forEach(checkbox => {
+    checkbox.checked = select;
+  });
+  updateSelectedMonthCount();
+}
+
+// Функция для выбора/снятия выделения со всех месяцев
+function selectAllMonths(select) {
+  const monthCheckboxes = document.querySelectorAll('.month-checkbox-input');
+  monthCheckboxes.forEach(checkbox => {
+    checkbox.checked = select;
+  });
+  updateSelectedMonthCount();
+}
+
+// Функция для включения/отключения выбора месяцев при выборе "Все месяцы"
+function toggleAllMonths(checkbox) {
+  const monthCheckboxes = document.querySelectorAll('.month-checkbox-input');
+  monthCheckboxes.forEach(cb => {
+    cb.disabled = checkbox.checked;
+    if (checkbox.checked) {
+      cb.checked = false;
+    }
+  });
+  updateSelectedMonthCount();
+}
+
+// Обновление счетчика выбранных школ (первая форма)
 function updateSelectedCount() {
   const selectedCount = document.querySelectorAll('input[name="school_ids"]:checked').length;
   const totalCount = document.querySelectorAll('input[name="school_ids"]').length;
@@ -1529,6 +1755,25 @@ function updateSelectedCount() {
   
   if (counterElement) {
     counterElement.textContent = `Выбрано: ${selectedCount} из ${totalCount}`;
+  }
+}
+
+// НОВАЯ ФУНКЦИЯ: Обновление счетчиков для формы по месяцам
+function updateSelectedMonthCount() {
+  // Счетчик школ
+  const selectedSchools = document.querySelectorAll('.school-month-checkbox:checked').length;
+  const totalSchools = document.querySelectorAll('.school-month-checkbox').length;
+  const schoolsCounter = document.getElementById('selected-schools-month-count');
+  
+  if (schoolsCounter) {
+    schoolsCounter.textContent = `Выбрано: ${selectedSchools} из ${totalSchools}`;
+  }
+  
+  // Счетчик месяцев
+  const selectedMonths = document.querySelectorAll('.month-checkbox-input:checked').length;
+  const monthsCounter = document.getElementById('selected-months-count');
+  if (monthsCounter) {
+    monthsCounter.textContent = `Выбрано: ${selectedMonths} из 12`;
   }
 }
 

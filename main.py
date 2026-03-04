@@ -38,7 +38,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 
 # База данных
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, func, and_  # Добавлен func и and_
+from sqlalchemy import or_, func, and_
 from database import engine, Base, get_db
 import models
 from models import User
@@ -1024,6 +1024,132 @@ async def bulk_delete_files(
     # Формируем сообщение о результате
     if deleted_count > 0:
         msg = f"✅ Успешно удалено {deleted_count} файлов"
+        if deleted_files_list:
+            # Показываем первые 5 удаленных файлов
+            sample = deleted_files_list[:5]
+            msg += f": {', '.join(sample)}"
+            if len(deleted_files_list) > 5:
+                msg += f" и ещё {len(deleted_files_list) - 5}"
+    else:
+        msg = "ℹ️ Файлы для удаления не найдены"
+    
+    if errors:
+        msg += f". ⚠️ Ошибки: {'; '.join(errors[:3])}"
+        if len(errors) > 3:
+            msg += f" и ещё {len(errors) - 3} ошибок"
+
+    return RedirectResponse(
+        f"/admin?admin_id={admin_id}&message={msg}",
+        status_code=303
+    )
+
+# НОВЫЙ ЭНДПОИНТ: Массовое удаление файлов по месяцам
+@app.post("/admin/bulk-delete-files-by-month")
+async def bulk_delete_files_by_month(
+    request: Request,
+    admin_id: int = Form(...),
+    school_ids: List[int] = Form(...),
+    months: List[str] = Form(...),
+    year: str = Form(...),
+    delete_all_months: bool = Form(False),
+    db: Session = Depends(get_db)
+):
+    BASE_DIR = Path(__file__).resolve().parent
+    admin = await get_cached_user(admin_id, db)
+    if not admin:
+        return RedirectResponse("/login", status_code=303)
+
+    # Получаем школы по ID с учетом прав админа
+    schools_query = db.query(models.User).filter(
+        models.User.id.in_(school_ids),
+        models.User.role == "user"
+    )
+    if admin.role == "municipal_admin":
+        schools_query = schools_query.filter(models.User.district == admin.district)
+    
+    schools = await run_in_threadpool(schools_query.all)
+
+    deleted_count = 0
+    errors = []
+    deleted_files_list = []
+
+    # Если выбран "Все месяцы", очищаем список и будем удалять все месяцы
+    selected_months = None if delete_all_months else months
+
+    for school in schools:
+        food_path = BASE_DIR / str(school.id) / "food"
+        manifest_path = food_path / "manifest.json"
+
+        if not await run_in_threadpool(food_path.exists):
+            continue
+
+        # Получаем все файлы в директории
+        try:
+            all_files = await list_directory_files_optimized(food_path)
+        except Exception as e:
+            errors.append(f"Ошибка при чтении папки школы {school.unit_name}: {str(e)}")
+            continue
+
+        # Загружаем манифест для метаданных
+        manifest = await read_manifest_optimized(manifest_path)
+        
+        files_to_delete = []
+
+        for file_path in all_files:
+            filename = file_path.name
+            
+            # Пропускаем manifest.json и специальные файлы
+            if filename == "manifest.json" or \
+               filename == "findex.xlsx" or \
+               re.match(r"^tm\d{4}-sm\.xlsx$", filename) or \
+               re.match(r"^kp\d{4}\.xlsx$", filename):
+                continue
+
+            # Получаем метаданные файла из манифеста
+            file_meta = manifest.get(filename, {})
+            file_year = file_meta.get("assigned_year")
+            file_month = file_meta.get("assigned_month")
+
+            # Если в манифесте нет данных, пробуем извлечь из имени файла
+            if not file_year or not file_month:
+                date_match = re.search(r'(\d{4})-(\d{2})-(\d{2})', filename)
+                if date_match:
+                    file_year, file_month, _ = date_match.groups()
+
+            # Проверяем, соответствует ли файл критериям удаления
+            if file_year == year:
+                if delete_all_months or (file_month and file_month in selected_months):
+                    files_to_delete.append(file_path)
+
+        # Удаляем файлы
+        for file_path in files_to_delete:
+            try:
+                # Удаляем физический файл
+                await delete_file_optimized(file_path)
+                
+                # Удаляем запись из манифеста
+                if file_path.name in manifest:
+                    manifest.pop(file_path.name)
+                
+                deleted_count += 1
+                deleted_files_list.append(f"{school.unit_name}: {file_path.name}")
+                
+            except Exception as e:
+                errors.append(f"Ошибка при удалении {file_path.name} у {school.unit_name}: {str(e)}")
+
+        # Сохраняем обновленный манифест
+        if files_to_delete:
+            await write_manifest_optimized(manifest_path, manifest)
+
+    # Формируем сообщение о результате
+    if deleted_count > 0:
+        if delete_all_months:
+            period = f"за ВСЕ месяцы {year} года"
+        else:
+            month_names = [MONTHS.get(m, m) for m in selected_months]
+            period = f"за {', '.join(month_names)} {year} года"
+        
+        msg = f"✅ Успешно удалено {deleted_count} файлов {period}"
         if deleted_files_list:
             # Показываем первые 5 удаленных файлов
             sample = deleted_files_list[:5]
