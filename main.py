@@ -25,16 +25,19 @@ from fastapi import (
     File,
     UploadFile,
     Depends,
-    HTTPException
+    HTTPException,
+    Response
 )
 from fastapi.responses import (
     HTMLResponse,
     FileResponse,
     StreamingResponse,
-    RedirectResponse
+    RedirectResponse,
+    JSONResponse
 )
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 
 # База данных
 from sqlalchemy.orm import Session
@@ -83,6 +86,15 @@ from knowledge_base_db import (
     KnowledgeBaseAdmin,
     init_kb_db  # Правильное название функции
 )
+
+# НОВЫЙ ИМПОРТ для оптимизации изображений
+try:
+    from PIL import Image
+    HAS_PIL = True
+except ImportError:
+    HAS_PIL = False
+    print("⚠️  PIL не установлен. Оптимизация изображений отключена. Установите: pip install Pillow")
+
 # Инициализируем БД библиотеки знаний при запуске
 init_kb_db()
 
@@ -96,15 +108,224 @@ Base.metadata.create_all(bind=engine)
 MANIFEST_CACHE = TTLCache(maxsize=5000, ttl=300)  # Кеш манифестов
 USER_CACHE = TTLCache(maxsize=1000, ttl=180)      # Кеш пользователей
 FILE_EXISTS_CACHE = TTLCache(maxsize=10000, ttl=60) # Кеш проверки файлов
+IMAGE_RESPONSE_CACHE = TTLCache(maxsize=200, ttl=3600)  # НОВЫЙ: Кеш для изображений (1 час)
 
 # ThreadPool для блокирующих операций
 IO_EXECUTOR = ThreadPoolExecutor(max_workers=50)
+IMAGE_EXECUTOR = ThreadPoolExecutor(max_workers=4)  # НОВЫЙ: Отдельный пул для изображений
 
 # Глобальная блокировка для кешей
 CACHE_LOCK = asyncio.Lock()
 
 # Константа для доступа к админке дашбордов
 DASHBOARD_ADMIN_CODE = "admin3377%"
+
+# НОВЫЕ КОНСТАНТЫ для оптимизации изображений
+THUMBNAIL_SIZES = {
+    'small': (150, 150),    # Для превью
+    'medium': (400, 400),    # Для списков
+    'large': (800, 800),     # Для просмотра
+}
+JPEG_QUALITY = 85
+PNG_COMPRESSION = 6
+MAX_IMAGE_SIZE = (1200, 1200)  # Максимальный размер изображения
+
+# ВАЖНО: ОПРЕДЕЛЯЕМ run_in_threadpool РАНЬШЕ, ЧТОБЫ ОНА БЫЛА ДОСТУПНА ВСЕМ
+async def run_in_threadpool(func, *args, **kwargs):
+    """Запуск блокирующих операций в threadpool"""
+    loop = asyncio.get_event_loop()
+    if kwargs:
+        return await loop.run_in_executor(IO_EXECUTOR, lambda: func(*args, **kwargs))
+    else:
+        return await loop.run_in_executor(IO_EXECUTOR, func, *args)
+
+def get_msk_time():
+    return datetime.utcnow() + timedelta(hours=3)
+
+async def get_cached_user(user_id: int, db: Session) -> Optional[models.User]:
+    """Оптимизированное получение пользователя с кешированием"""
+    cache_key = f"user_{user_id}"
+    
+    async with CACHE_LOCK:
+        if cache_key in USER_CACHE:
+            return USER_CACHE[cache_key]
+        
+        user = await run_in_threadpool(lambda: db.query(models.User).filter(models.User.id == user_id).first())
+        if user:
+            USER_CACHE[cache_key] = user
+        return user
+
+async def read_manifest_optimized(file_path: Path) -> dict:
+    """Оптимизированное чтение manifest с кешированием"""
+    cache_key = str(file_path)
+    
+    async with CACHE_LOCK:
+        if cache_key in MANIFEST_CACHE:
+            return MANIFEST_CACHE[cache_key].copy()
+        
+        manifest = {}
+        exists = await run_in_threadpool(file_path.exists)
+        
+        if exists:
+            try:
+                async with aiofiles.open(file_path, "r", encoding="utf-8") as f:
+                    content = await f.read()
+                    manifest = json.loads(content) if content else {}
+            except Exception:
+                pass
+        
+        MANIFEST_CACHE[cache_key] = manifest.copy()
+        return manifest
+
+async def write_manifest_optimized(file_path: Path, manifest: dict):
+    """Оптимизированная запись manifest с обновлением кеша"""
+    cache_key = str(file_path)
+    
+    async with aiofiles.open(file_path, "w", encoding="utf-8") as f:
+        await f.write(json.dumps(manifest, ensure_ascii=False, indent=2))
+    
+    async with CACHE_LOCK:
+        MANIFEST_CACHE[cache_key] = manifest.copy()
+
+async def save_uploaded_file_optimized(file: UploadFile, dest_path: Path):
+    """Оптимизированное сохранение файла"""
+    content = await file.read()
+    async with aiofiles.open(dest_path, "wb") as buffer:
+        await buffer.write(content)
+    
+    cache_key = str(dest_path)
+    async with CACHE_LOCK:
+        FILE_EXISTS_CACHE[cache_key] = True
+
+async def delete_file_optimized(file_path: Path):
+    """Оптимизированное удаление файла с очисткой кешей"""
+    try:
+        if await run_in_threadpool(file_path.exists):
+            await run_in_threadpool(file_path.unlink)
+            
+            cache_key = str(file_path)
+            async with CACHE_LOCK:
+                if cache_key in FILE_EXISTS_CACHE:
+                    del FILE_EXISTS_CACHE[cache_key]
+    except Exception:
+        pass
+
+async def list_directory_files_optimized(path: Path) -> List[Path]:
+    """Асинхронное получение списка файлов в директории"""
+    if not await run_in_threadpool(path.exists):
+        return []
+    
+    try:
+        items = await run_in_threadpool(lambda: list(path.iterdir()))
+        files = []
+        for item in items:
+            if await run_in_threadpool(item.is_file):
+                files.append(item)
+        return files
+    except OSError:
+        return []
+
+# НОВЫЕ ФУНКЦИИ ДЛЯ ОПТИМИЗАЦИИ ИЗОБРАЖЕНИЙ
+async def optimize_image_async(
+    input_path: Path,
+    output_path: Path = None,
+    max_size: tuple = MAX_IMAGE_SIZE,
+    quality: int = JPEG_QUALITY
+):
+    """
+    Асинхронная оптимизация изображения
+    """
+    if not HAS_PIL:
+        # Если PIL не установлен, просто копируем файл
+        if output_path and output_path != input_path:
+            await asyncio.to_thread(shutil.copy2, input_path, output_path)
+        return {
+            'original_size': input_path.stat().st_size,
+            'new_size': input_path.stat().st_size,
+            'saved_percent': 0,
+            'output_path': output_path or input_path
+        }
+    
+    if output_path is None:
+        output_path = input_path.parent / f"optimized_{input_path.name}"
+    
+    loop = asyncio.get_event_loop()
+    
+    def _optimize():
+        try:
+            # Открываем изображение
+            with Image.open(input_path) as img:
+                # Конвертируем в RGB если нужно
+                if img.mode in ('RGBA', 'P'):
+                    img = img.convert('RGB')
+                
+                # Изменяем размер, сохраняя пропорции
+                img.thumbnail(max_size, Image.Resampling.LANCZOS)
+                
+                # Определяем формат и сохраняем с оптимизацией
+                format = 'JPEG' if input_path.suffix.lower() in ['.jpg', '.jpeg'] else 'PNG'
+                
+                save_kwargs = {
+                    'format': format,
+                    'optimize': True
+                }
+                
+                if format == 'JPEG':
+                    save_kwargs['quality'] = quality
+                    save_kwargs['progressive'] = True
+                else:
+                    save_kwargs['compress_level'] = PNG_COMPRESSION
+                
+                img.save(output_path, **save_kwargs)
+                
+                original_size = input_path.stat().st_size
+                new_size = output_path.stat().st_size
+                
+                return {
+                    'original_size': original_size,
+                    'new_size': new_size,
+                    'saved_percent': (1 - new_size/original_size) * 100 if original_size > 0 else 0,
+                    'output_path': output_path
+                }
+        except Exception as e:
+            logger.error(f"Ошибка оптимизации {input_path}: {e}")
+            # В случае ошибки копируем оригинал
+            if output_path != input_path:
+                shutil.copy2(input_path, output_path)
+            return {
+                'original_size': input_path.stat().st_size,
+                'new_size': input_path.stat().st_size,
+                'saved_percent': 0,
+                'output_path': output_path
+            }
+    
+    return await loop.run_in_executor(IMAGE_EXECUTOR, _optimize)
+
+async def get_thumbnail_path(original_path: Path, size: str = 'medium') -> Path:
+    """
+    Получение пути к уменьшенной версии изображения
+    """
+    thumb_dir = original_path.parent / 'thumbnails'
+    thumb_dir.mkdir(exist_ok=True)
+    
+    stem = original_path.stem
+    ext = original_path.suffix
+    
+    thumbnail_path = thumb_dir / f"{stem}_{size}{ext}"
+    
+    # Если уменьшенная версия не существует или оригинал новее - создаем
+    if not thumbnail_path.exists() or (
+        original_path.stat().st_mtime > thumbnail_path.stat().st_mtime
+    ):
+        dimensions = THUMBNAIL_SIZES.get(size, THUMBNAIL_SIZES['medium'])
+        await optimize_image_async(
+            original_path,
+            output_path=thumbnail_path,
+            max_size=dimensions,
+            quality=75 if size == 'small' else 85
+        )
+    
+    return thumbnail_path
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -114,10 +335,21 @@ async def lifespan(app: FastAPI):
     MANIFEST_CACHE.clear()
     USER_CACHE.clear()
     FILE_EXISTS_CACHE.clear()
+    IMAGE_RESPONSE_CACHE.clear()
     IO_EXECUTOR.shutdown()
+    IMAGE_EXECUTOR.shutdown()  # НОВЫЙ: Очистка пула для изображений
 
 app = FastAPI(lifespan=lifespan)
-app.add_middleware(GZipMiddleware, minimum_size=100)
+app.add_middleware(GZipMiddleware, minimum_size=500)  # Увеличен minimum_size для сжатия
+
+# НОВЫЙ: Добавляем CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Добавляем middleware для сессий (ВАЖНО: после GZipMiddleware)
 app.add_middleware(
@@ -125,8 +357,18 @@ app.add_middleware(
     secret_key=os.getenv("SECRET_KEY", "your-very-secret-key-change-in-production-12345")
 )
 
-# Подключаем папку static/
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# НОВЫЙ: Класс для статических файлов с кешированием
+class CachedStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        if response.status_code == 200:
+            # Добавляем заголовки кеширования
+            response.headers["Cache-Control"] = "public, max-age=3600"
+            response.headers["X-Content-Type-Options"] = "nosniff"
+        return response
+
+# Подключаем папку static/ с кешированием
+app.mount("/static", CachedStaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 # ДЛЯ ПЕРСОНАЛЬНЫХ ДАННЫХ
@@ -237,226 +479,584 @@ async def update_excel_content(
             except:
                 pass
 
-# Оптимизированные утилиты
-async def run_in_threadpool(func, *args, **kwargs):
-    """Запуск блокирующих операций в threadpool"""
-    loop = asyncio.get_event_loop()
-    if kwargs:
-        return await loop.run_in_executor(IO_EXECUTOR, lambda: func(*args, **kwargs))
-    else:
-        return await loop.run_in_executor(IO_EXECUTOR, func, *args)
+# Удаляем дубликат run_in_threadpool, так как он уже определен выше
 
-def get_msk_time():
-    return datetime.utcnow() + timedelta(hours=3)
-
-async def get_cached_user(user_id: int, db: Session) -> Optional[models.User]:
-    """Оптимизированное получение пользователя с кешированием"""
-    cache_key = f"user_{user_id}"
-    
-    async with CACHE_LOCK:
-        if cache_key in USER_CACHE:
-            return USER_CACHE[cache_key]
-        
-        user = await run_in_threadpool(lambda: db.query(models.User).filter(models.User.id == user_id).first())
-        if user:
-            USER_CACHE[cache_key] = user
-        return user
-
-async def read_manifest_optimized(file_path: Path) -> dict:
-    """Оптимизированное чтение manifest с кешированием"""
-    cache_key = str(file_path)
-    
-    async with CACHE_LOCK:
-        if cache_key in MANIFEST_CACHE:
-            return MANIFEST_CACHE[cache_key].copy()
-        
-        manifest = {}
-        exists = await run_in_threadpool(file_path.exists)
-        
-        if exists:
-            try:
-                async with aiofiles.open(file_path, "r", encoding="utf-8") as f:
-                    content = await f.read()
-                    manifest = json.loads(content) if content else {}
-            except Exception:
-                pass
-        
-        MANIFEST_CACHE[cache_key] = manifest.copy()
-        return manifest
-
-async def write_manifest_optimized(file_path: Path, manifest: dict):
-    """Оптимизированная запись manifest с обновлением кеша"""
-    cache_key = str(file_path)
-    
-    async with aiofiles.open(file_path, "w", encoding="utf-8") as f:
-        await f.write(json.dumps(manifest, ensure_ascii=False, indent=2))
-    
-    async with CACHE_LOCK:
-        MANIFEST_CACHE[cache_key] = manifest.copy()
-
-async def save_uploaded_file_optimized(file: UploadFile, dest_path: Path):
-    """Оптимизированное сохранение файла"""
-    content = await file.read()
-    async with aiofiles.open(dest_path, "wb") as buffer:
-        await buffer.write(content)
-    
-    cache_key = str(dest_path)
-    async with CACHE_LOCK:
-        FILE_EXISTS_CACHE[cache_key] = True
-
-async def delete_file_optimized(file_path: Path):
-    """Оптимизированное удаление файла с очисткой кешей"""
-    try:
-        if await run_in_threadpool(file_path.exists):
-            await run_in_threadpool(file_path.unlink)
-            
-            cache_key = str(file_path)
-            async with CACHE_LOCK:
-                if cache_key in FILE_EXISTS_CACHE:
-                    del FILE_EXISTS_CACHE[cache_key]
-    except Exception:
-        pass
-
-async def list_directory_files_optimized(path: Path) -> List[Path]:
-    """Асинхронное получение списка файлов в директории"""
-    if not await run_in_threadpool(path.exists):
-        return []
-    
-    try:
-        items = await run_in_threadpool(lambda: list(path.iterdir()))
-        files = []
-        for item in items:
-            if await run_in_threadpool(item.is_file):
-                files.append(item)
-        return files
-    except OSError:
-        return []
-    
 async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict):
     """Потоковая генерация HTML для федерального мониторинга"""
     yield f"""
-    <html>
-        <head>
-            <meta charset="utf-8">
-            <title>Файлы учреждения {uid}</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }}
-                .container {{ 
-                    max-width: 1200px; 
-                    margin: 0 auto; 
-                    background: white; 
-                    padding: 20px; 
-                    border-radius: 8px; 
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
-                    position: relative;
-                    display: flex;
-                    gap: 30px;
+    <!DOCTYPE html>
+    <html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Ежедневное меню - Учреждение {uid}</title>
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                padding: 30px 20px;
+            }}
+
+            .container {{
+                max-width: 1400px;
+                margin: 0 auto;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+                border-radius: 30px;
+                box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+                overflow: hidden;
+                display: flex;
+                gap: 30px;
+                padding: 30px;
+            }}
+
+            /* Основной контент */
+            .main-content {{
+                flex: 1;
+                min-width: 0;
+            }}
+
+            .main-header {{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                margin: -30px -30px 30px -30px;
+                padding: 40px 30px;
+                color: white;
+                border-radius: 0 0 30px 30px;
+                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            }}
+
+            .main-header h1 {{
+                font-size: 2.5em;
+                font-weight: 700;
+                margin-bottom: 10px;
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }}
+
+            .main-header h1 span {{
+                font-size: 0.5em;
+                background: rgba(255, 255, 255, 0.2);
+                padding: 5px 15px;
+                border-radius: 50px;
+                font-weight: 400;
+            }}
+
+            .main-header p {{
+                font-size: 1.1em;
+                opacity: 0.9;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }}
+
+            .stats-grid {{
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }}
+
+            .stat-card {{
+                background: white;
+                border-radius: 20px;
+                padding: 20px;
+                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                transition: all 0.3s ease;
+                border: 1px solid rgba(102, 126, 234, 0.1);
+            }}
+
+            .stat-card:hover {{
+                transform: translateY(-5px);
+                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+                border-color: #667eea;
+            }}
+
+            .stat-icon {{
+                width: 50px;
+                height: 50px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 15px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5em;
+                color: white;
+            }}
+
+            .stat-info h3 {{
+                font-size: 0.9em;
+                color: #666;
+                margin-bottom: 5px;
+                font-weight: 400;
+            }}
+
+            .stat-info p {{
+                font-size: 1.5em;
+                font-weight: 700;
+                color: #333;
+                line-height: 1;
+            }}
+
+            .year-section {{
+                background: white;
+                border-radius: 20px;
+                margin-bottom: 30px;
+                overflow: hidden;
+                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+                border: 1px solid rgba(102, 126, 234, 0.1);
+            }}
+
+            .year-header {{
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                padding: 20px 25px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                border-bottom: 2px solid #667eea;
+            }}
+
+            .year-header h2 {{
+                font-size: 1.5em;
+                color: #333;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }}
+
+            .year-header .toggle-icon {{
+                font-size: 1.5em;
+                color: #667eea;
+                transition: transform 0.3s ease;
+            }}
+
+            .year-content {{
+                padding: 20px;
+            }}
+
+            .month-grid {{
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 20px;
+            }}
+
+            .month-card {{
+                background: #f8f9fa;
+                border-radius: 15px;
+                overflow: hidden;
+                border: 1px solid rgba(102, 126, 234, 0.1);
+                transition: all 0.3s ease;
+            }}
+
+            .month-card:hover {{
+                transform: translateY(-3px);
+                box-shadow: 0 10px 25px rgba(102, 126, 234, 0.15);
+                border-color: #667eea;
+            }}
+
+            .month-header {{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 15px 20px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }}
+
+            .month-header h3 {{
+                font-size: 1.1em;
+                font-weight: 600;
+            }}
+
+            .month-header .month-count {{
+                background: rgba(255, 255, 255, 0.2);
+                padding: 3px 10px;
+                border-radius: 20px;
+                font-size: 0.85em;
+            }}
+
+            .month-files {{
+                padding: 15px;
+            }}
+
+            .file-item {{
+                background: white;
+                border-radius: 12px;
+                padding: 12px 15px;
+                margin-bottom: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                border: 1px solid #eee;
+                transition: all 0.2s ease;
+            }}
+
+            .file-item:hover {{
+                border-color: #667eea;
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+            }}
+
+            .file-info {{
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                flex: 1;
+                min-width: 0;
+            }}
+
+            .file-icon {{
+                width: 40px;
+                height: 40px;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.2em;
+                color: #667eea;
+            }}
+
+            .file-details {{
+                flex: 1;
+                min-width: 0;
+            }}
+
+            .file-name {{
+                font-weight: 600;
+                color: #333;
+                margin-bottom: 4px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }}
+
+            .file-meta {{
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                font-size: 0.85em;
+                color: #666;
+            }}
+
+            .file-size {{
+                background: #e8f5e9;
+                color: #2e7d32;
+                padding: 2px 8px;
+                border-radius: 20px;
+                font-weight: 500;
+            }}
+
+            .file-date {{
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                color: #666;
+            }}
+
+            .download-btn {{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                padding: 8px 15px;
+                border-radius: 25px;
+                font-size: 0.9em;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                transition: all 0.3s ease;
+                text-decoration: none;
+            }}
+
+            .download-btn:hover {{
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            }}
+
+            /* Сайдбар */
+            .menu-sidebar {{
+                width: 380px;
+                flex-shrink: 0;
+            }}
+
+            .sidebar-sticky {{
+                position: sticky;
+                top: 30px;
+            }}
+
+            .sidebar-card {{
+                background: white;
+                border-radius: 25px;
+                padding: 25px;
+                margin-bottom: 25px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                border: 1px solid rgba(102, 126, 234, 0.2);
+            }}
+
+            .sidebar-title {{
+                font-size: 1.3em;
+                font-weight: 700;
+                color: #333;
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+                border-bottom: 2px solid #667eea;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }}
+
+            .special-file {{
+                background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+                border: 1px solid #ffb74d;
+                border-radius: 15px;
+                padding: 15px;
+                margin-bottom: 15px;
+            }}
+
+            .special-file-title {{
+                font-weight: 700;
+                color: #e65100;
+                margin-bottom: 10px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }}
+
+            .badge {{
+                display: inline-block;
+                padding: 4px 12px;
+                border-radius: 50px;
+                font-size: 0.8em;
+                font-weight: 600;
+                text-transform: uppercase;
+            }}
+
+            .badge-success {{
+                background: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }}
+
+            .badge-warning {{
+                background: #fff3cd;
+                color: #856404;
+                border: 1px solid #ffeeba;
+            }}
+
+            .badge-info {{
+                background: #d1ecf1;
+                color: #0c5460;
+                border: 1px solid #bee5eb;
+            }}
+
+            .compliance-card {{
+                background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+                border: 1px solid #28a745;
+                border-radius: 20px;
+                padding: 20px;
+                margin: 20px 0;
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }}
+
+            .compliance-icon {{
+                width: 50px;
+                height: 50px;
+                background: #28a745;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 1.5em;
+            }}
+
+            .compliance-text {{
+                flex: 1;
+            }}
+
+            .compliance-text strong {{
+                color: #155724;
+                font-size: 1.1em;
+                display: block;
+                margin-bottom: 5px;
+            }}
+
+            .compliance-text p {{
+                color: #155724;
+                font-size: 0.9em;
+                line-height: 1.4;
+                margin: 0;
+            }}
+
+            .link-card {{
+                background: linear-gradient(135deg, #e7f3ff 0%, #b8daff 100%);
+                border: 1px solid #004085;
+                border-radius: 20px;
+                padding: 20px;
+                margin: 20px 0;
+            }}
+
+            .link-card a {{
+                color: #004085;
+                text-decoration: none;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }}
+
+            .link-card a:hover {{
+                text-decoration: underline;
+            }}
+
+            .empty-state {{
+                text-align: center;
+                padding: 60px 20px;
+                background: white;
+                border-radius: 20px;
+            }}
+
+            .empty-state-icon {{
+                font-size: 5em;
+                margin-bottom: 20px;
+                opacity: 0.5;
+            }}
+
+            .empty-state h3 {{
+                color: #333;
+                margin-bottom: 10px;
+            }}
+
+            .empty-state p {{
+                color: #666;
+            }}
+
+            /* Анимации */
+            @keyframes fadeIn {{
+                from {{
+                    opacity: 0;
+                    transform: translateY(20px);
                 }}
-                h1 {{ color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }}
-                .year-section {{ margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px; }}
-                .month-section {{ margin: 10px 0; padding: 10px; background: #fff; border-left: 4px solid #3498db; }}
-                .file-list {{ list-style: none; padding: 0; }}
-                .file-item {{ padding: 8px 12px; margin: 5px 0; background: #f8f9fa; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }}
-                .file-link {{ color: #2980b9; text-decoration: none; font-weight: bold; }}
-                .file-link:hover {{ color: #1a5276; text-decoration: underline; }}
-                .file-date {{ color: #7f8c8d; font-size: 0.9em; }}
-                .no-files {{ color: #95a5a6; font-style: italic; }}
-                .kp-year-header {{ font-weight: bold; color: #16a085; margin: 10px 0 5px 0; }}
-                .tm-year-header {{ font-weight: bold; color: #e67e22; margin: 10px 0 5px 0; }}
-                
-                .main-content {{ 
-                    flex: 1;
-                    min-width: 0;
+                to {{
+                    opacity: 1;
+                    transform: translateY(0);
+                }}
+            }}
+
+            .fade-in {{
+                animation: fadeIn 0.5s ease forwards;
+            }}
+
+            /* Адаптивность */
+            @media (max-width: 1024px) {{
+                .container {{
+                    flex-direction: column;
                 }}
                 
-                .menu-sidebar {{ 
-                    width: 320px;
-                    flex-shrink: 0;
-                    background: #f0f8ff;
-                    padding: 15px;
-                    border-radius: 6px;
-                    border: 1px solid #3498db;
-                    height: fit-content;
-                    position: sticky;
-                    top: 20px;
+                .menu-sidebar {{
+                    width: 100%;
                 }}
                 
-                .sidebar-title {{
-                    font-size: 1.1em;
-                    font-weight: bold;
-                    color: #2c3e50;
-                    margin-bottom: 15px;
-                    text-align: center;
-                    border-bottom: 1px solid #3498db;
-                    padding-bottom: 8px;
+                .sidebar-sticky {{
+                    position: static;
+                }}
+            }}
+
+            @media (max-width: 768px) {{
+                body {{
+                    padding: 15px 10px;
                 }}
                 
-                .sidebar-section {{
-                    margin-bottom: 20px;
+                .container {{
+                    padding: 20px;
                 }}
                 
-                .sidebar-section:last-child {{
-                    margin-bottom: 0;
+                .main-header {{
+                    margin: -20px -20px 20px -20px;
+                    padding: 30px 20px;
                 }}
                 
-                .sanpin-compliance {{
-                    background: #d4edda;
-                    border: 1px solid #c3e6cb;
-                    border-radius: 6px;
-                    padding: 12px 15px;
-                    margin: 20px 0;
-                    display: flex;
-                    align-items: center;
+                .main-header h1 {{
+                    font-size: 1.8em;
+                    flex-direction: column;
+                    align-items: flex-start;
                     gap: 10px;
-                    font-size: 0.95em;
-                    color: #155724;
                 }}
                 
-                .sanpin-checkmark {{
-                    color: #28a745;
-                    font-size: 1.2em;
-                    font-weight: bold;
+                .main-header h1 span {{
+                    font-size: 0.7em;
                 }}
                 
-                .nutrition-info {{
-                    background: #e7f3ff;
-                    border: 1px solid #b8daff;
-                    border-radius: 6px;
-                    padding: 12px 15px;
-                    margin: 15px 0;
-                    font-size: 0.9em;
-                    color: #004085;
-                    line-height: 1.4;
+                .month-grid {{
+                    grid-template-columns: 1fr;
                 }}
-
-                .findex-info {{
-                    background: #fff3cd;
-                    border: 1px solid #f0b400;
-                    border-radius: 6px;
-                    padding: 12px 15px;
-                    margin: 15px 0;
-                    color: #856404;
+                
+                .file-item {{
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 10px;
                 }}
-
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="main-content">
-                    <h1>📁 Ежедневное меню 🍎 </h1>
-                    <hr>
+                
+                .download-btn {{
+                    width: 100%;
+                    justify-content: center;
+                }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="main-content">
+                <div class="main-header">
+                    <h1>
+                        📁 Ежедневное меню
+                        <span>Учреждение №{uid}</span>
+                    </h1>
+                    <p>
+                        <span>📅</span> 
+                        Дата просмотра: {datetime.now().strftime('%d.%m.%Y %H:%M')}
+                    </p>
+                </div>
     """
 
     files = await list_directory_files_optimized(base_path)
+    
     if not files:
-        yield '<div class="no-files">📭 Нет доступных файлов</div>'
-        yield '</div></div></body></html>'
+        yield """
+                <div class="empty-state fade-in">
+                    <div class="empty-state-icon">📭</div>
+                    <h3>Нет доступных файлов</h3>
+                    <p>В данном учреждении пока не загружены файлы меню</p>
+                </div>
+            </div>
+            </div>
+        </body>
+        </html>
+        """
         return
 
-    grouped_files = {}      # {год: {месяц: [файлы]}}
-    tm_files_by_year = {}   # {год: [tm-файлы]}
-    kp_files_by_year = {}   # {год: [kp-файлы]}
-    findex_files = []       # специальная кучка findex.xlsx
+    grouped_files = {}
+    tm_files_by_year = {}
+    kp_files_by_year = {}
+    findex_files = []
+    
+    # Статистика
+    total_files = 0
+    total_size = 0
+    file_types = {}
 
     for f in files:
         if f.name == "manifest.json":
@@ -467,6 +1067,13 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
 
         file_meta = manifest.get(f.name, {})
         date_str = file_meta.get("upload_datetime", "")
+        stat_result = await run_in_threadpool(f.stat)
+        total_files += 1
+        total_size += stat_result.st_size
+        
+        # Определяем тип файла для статистики
+        ext = Path(f.name).suffix.lower()
+        file_types[ext] = file_types.get(ext, 0) + 1
 
         date_from_name_match = re.search(r'(\d{4})-(\d{2})-(\d{2})', f.name)
         if date_from_name_match:
@@ -474,10 +1081,12 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             dt = datetime(int(y), int(m), int(d))
             assigned_year, assigned_month = str(dt.year), str(dt.month).zfill(2)
             month_name = MONTHS.get(assigned_month, assigned_month)
-            stat_result = await run_in_threadpool(f.stat)
-            file_info = {"filename": f.name,
-                         "date": dt.strftime("%d.%m.%Y %H:%M"),
-                         "size": stat_result.st_size}
+            file_info = {
+                "filename": f.name,
+                "date": dt.strftime("%d.%m.%Y %H:%M"),
+                "size": stat_result.st_size,
+                "type": "daily"
+            }
             grouped_files.setdefault(assigned_year, {}).setdefault(month_name, []).append(file_info)
             continue
 
@@ -485,19 +1094,21 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             try:
                 dt = (datetime.strptime(date_str, "%d.%m.%Y %H:%M")
                       if date_str
-                      else datetime.fromtimestamp((await run_in_threadpool(f.stat)).st_mtime))
+                      else datetime.fromtimestamp(stat_result.st_mtime))
             except Exception:
                 dt = datetime.now()
-            stat_result = await run_in_threadpool(f.stat)
-            findex_files.append({"filename": f.name,
-                                 "date": dt.strftime("%d.%m.%Y %H:%M"),
-                                 "size": stat_result.st_size})
+            findex_files.append({
+                "filename": f.name,
+                "date": dt.strftime("%d.%m.%Y %H:%M"),
+                "size": stat_result.st_size,
+                "type": "findex"
+            })
             continue
 
         try:
             dt = (datetime.strptime(date_str, "%d.%m.%Y %H:%M")
                   if date_str
-                  else datetime.fromtimestamp((await run_in_threadpool(f.stat)).st_mtime))
+                  else datetime.fromtimestamp(stat_result.st_mtime))
         except Exception as e:
             logger.error(f"Ошибка парсинга даты для {f.name}: {e}")
             dt = datetime.now()
@@ -505,118 +1116,409 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
         assigned_year = file_meta.get("assigned_year", str(dt.year))
         assigned_month = file_meta.get("assigned_month", dt.strftime("%m"))
         month_name = MONTHS.get(assigned_month, assigned_month)
-        stat_result = await run_in_threadpool(f.stat)
-        file_info = {"filename": f.name,
-                     "date": dt.strftime("%d.%m.%Y %H:%M"),
-                     "size": stat_result.st_size}
+        file_info = {
+            "filename": f.name,
+            "date": dt.strftime("%d.%m.%Y %H:%M"),
+            "size": stat_result.st_size,
+            "type": "other"
+        }
 
         if re.match(r"^tm\d{4}-sm\.xlsx$", f.name):
             tm_year = f.name[2:6]
+            file_info["type"] = "tm"
             tm_files_by_year.setdefault(tm_year, []).append(file_info)
             continue
         if re.match(r"^kp\d{4}\.xlsx$", f.name):
             kp_year = f.name[2:6]
+            file_info["type"] = "kp"
             kp_files_by_year.setdefault(kp_year, []).append(file_info)
             continue
 
         grouped_files.setdefault(assigned_year, {}).setdefault(month_name, []).append(file_info)
 
-    # Вывод основных файлов
+    # Статистика
+    total_size_mb = total_size / (1024 * 1024)
+    
+    yield f"""
+                <!-- Статистика -->
+                <div class="stats-grid">
+                    <div class="stat-card fade-in">
+                        <div class="stat-icon">📄</div>
+                        <div class="stat-info">
+                            <h3>Всего файлов</h3>
+                            <p>{total_files}</p>
+                        </div>
+                    </div>
+                    <div class="stat-card fade-in" style="animation-delay: 0.1s">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-info">
+                            <h3>Общий объем</h3>
+                            <p>{total_size_mb:.1f} MB</p>
+                        </div>
+                    </div>
+                    <div class="stat-card fade-in" style="animation-delay: 0.2s">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-info">
+                            <h3>Лет в архиве</h3>
+                            <p>{len(grouped_files)}</p>
+                        </div>
+                    </div>
+                    <div class="stat-card fade-in" style="animation-delay: 0.3s">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-info">
+                            <h3>Типов меню</h3>
+                            <p>{len(tm_files_by_year)}</p>
+                        </div>
+                    </div>
+                </div>
+    """
+
+    # Вывод основных файлов по годам
     for year in sorted(grouped_files.keys(), reverse=True):
-        yield f'<div class="year-section"><h2>📅 {year} год</h2>'
+        year_total = sum(len(files) for files in grouped_files[year].values())
+        
+        yield f"""
+                <div class="year-section fade-in">
+                    <div class="year-header" onclick="this.nextElementSibling.classList.toggle('active')">
+                        <h2>
+                            <span>📅</span>
+                            {year} год
+                            <span class="badge badge-info">{year_total} файлов</span>
+                        </h2>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="year-content active">
+                        <div class="month-grid">
+        """
+        
         for month in sorted(grouped_files[year].keys(), reverse=True):
-            yield f'<div class="month-section"><h3>📊 {month}</h3><ul class="file-list">'
-            grouped_files[year][month].sort(
-                key=lambda x: datetime.strptime(x["date"], "%d.%m.%Y %H:%M"),
-                reverse=False)
-            for file_info in grouped_files[year][month]:
+            month_files = grouped_files[year][month]
+            month_files.sort(key=lambda x: datetime.strptime(x["date"], "%d.%m.%Y %H:%M"))
+            
+            yield f"""
+                            <div class="month-card">
+                                <div class="month-header">
+                                    <h3>📊 {month}</h3>
+                                    <span class="month-count">{len(month_files)}</span>
+                                </div>
+                                <div class="month-files">
+            """
+            
+            for file_info in month_files:
                 size_kb = file_info["size"] // 1024
-                yield (
-                    f'<li class="file-item">'
-                    f'<a class="file-link" href="{file_info["filename"]}">📄 {file_info["filename"]}</a>'
-                    f'<div><span class="file-date">{file_info["date"]}</span>'
-                    f'<span style="margin-left: 15px; color: #27ae60;">{size_kb} KB</span></div>'
-                    f'</li>'
-                )
-            yield '</ul></div>'
-        yield '</div>'
+                file_ext = Path(file_info["filename"]).suffix.lower()
+                
+                # Выбираем иконку в зависимости от типа файла
+                file_icon = "📄"
+                if file_ext == '.pdf':
+                    file_icon = "📕"
+                elif file_ext in ['.xlsx', '.xls']:
+                    file_icon = "📊"
+                elif file_ext in ['.docx', '.doc']:
+                    file_icon = "📝"
+                
+                yield f"""
+                                    <div class="file-item">
+                                        <div class="file-info">
+                                            <div class="file-icon">{file_icon}</div>
+                                            <div class="file-details">
+                                                <div class="file-name">{file_info["filename"]}</div>
+                                                <div class="file-meta">
+                                                    <span class="file-size">{size_kb} KB</span>
+                                                    <span class="file-date">📅 {file_info["date"]}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <a href="{file_info["filename"]}" class="download-btn" download>
+                                            <span>📥</span>
+                                            <span>Скачать</span>
+                                        </a>
+                                    </div>
+                """
+            
+            yield """
+                                </div>
+                            </div>
+            """
+        
+        yield """
+                        </div>
+                    </div>
+                </div>
+        """
 
     if not grouped_files and not findex_files:
-        yield '<div class="no-files">📭 Нет доступных файлов</div>'
+        yield """
+                <div class="empty-state fade-in">
+                    <div class="empty-state-icon">📭</div>
+                    <h3>Нет доступных файлов</h3>
+                    <p>В данном учреждении пока не загружены файлы меню</p>
+                </div>
+        """
 
-    yield '</div><!-- /main-content -->'
+    yield """
+            </div>
+            <!-- /main-content -->
+    """
 
     if any([findex_files, tm_files_by_year, kp_files_by_year]):
-        yield '<div class="menu-sidebar">'
-        yield '<div class="sidebar-title">🍽️ Типовое меню и календари питания</div>'
+        yield """
+            <div class="menu-sidebar">
+                <div class="sidebar-sticky">
+        """
 
         if findex_files:
-            yield '<div class="sidebar-section">'
-            yield '<div class="findex-info">'
-            yield '<strong>📈 Файл findex.xlsx для ФЦМПО</strong><br>(показатель качества питания)'
-            yield '</div><ul class="file-list">'
+            yield """
+                    <div class="sidebar-card">
+                        <div class="sidebar-title">
+                            <span>📈</span>
+                            ФЦМПО
+                        </div>
+                        <div class="special-file">
+                            <div class="special-file-title">
+                                <span>⭐</span>
+                                Файл качества питания
+                            </div>
+            """
+            
             for fi in findex_files:
                 size_kb = fi["size"] // 1024
-                yield (f'<li class="file-item">'
-                       f'<a class="file-link" href="{fi["filename"]}">📄 {fi["filename"]}</a>'
-                       f'<div><span class="file-date">{fi["date"]}</span> '
-                       f'<span style="margin-left:15px;color:#27ae60">{size_kb} KB</span></div>'
-                       f'</li>')
-            yield '</ul></div>'
+                yield f"""
+                            <div class="file-item">
+                                <div class="file-info">
+                                    <div class="file-icon">📊</div>
+                                    <div class="file-details">
+                                        <div class="file-name">{fi["filename"]}</div>
+                                        <div class="file-meta">
+                                            <span class="file-size">{size_kb} KB</span>
+                                            <span class="file-date">📅 {fi["date"]}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <a href="{fi["filename"]}" class="download-btn" download>
+                                    <span>📥</span>
+                                </a>
+                            </div>
+                """
+            
+            yield """
+                        </div>
+                    </div>
+            """
 
-        for kp_year in sorted(kp_files_by_year.keys(), reverse=True):
-            if not kp_files_by_year[kp_year]:
-                continue
-            yield '<div class="sidebar-section">'
-            yield '<div style="font-weight:bold;color:#16a085;margin-bottom:10px">📅 Календари питания</div>'
-            yield f'<div class="kp-year-header">{kp_year} год</div><ul class="file-list">'
-            for fi in sorted(kp_files_by_year[kp_year], key=lambda x: x["date"], reverse=True):
-                size_kb = fi["size"] // 1024
-                yield (f'<li class="file-item">'
-                       f'<a class="file-link" href="{fi["filename"]}">📄 {fi["filename"]}</a>'
-                       f'<div><span class="file-date">{fi["date"]}</span> '
-                       f'<span style="margin-left:15px;color:#27ae60">{size_kb} KB</span></div>'
-                       f'</li>')
-            yield '</ul></div>'
+        if kp_files_by_year:
+            yield """
+                    <div class="sidebar-card">
+                        <div class="sidebar-title">
+                            <span>📅</span>
+                            Календари питания
+                        </div>
+            """
+            
+            for kp_year in sorted(kp_files_by_year.keys(), reverse=True):
+                if not kp_files_by_year[kp_year]:
+                    continue
+                    
+                yield f"""
+                        <div style="margin-bottom: 20px;">
+                            <h4 style="color: #16a085; margin-bottom: 10px;">{kp_year} год</h4>
+                """
+                
+                for fi in sorted(kp_files_by_year[kp_year], key=lambda x: x["date"], reverse=True):
+                    size_kb = fi["size"] // 1024
+                    yield f"""
+                            <div class="file-item">
+                                <div class="file-info">
+                                    <div class="file-icon">📅</div>
+                                    <div class="file-details">
+                                        <div class="file-name">{fi["filename"]}</div>
+                                        <div class="file-meta">
+                                            <span class="file-size">{size_kb} KB</span>
+                                            <span class="file-date">📅 {fi["date"]}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <a href="{fi["filename"]}" class="download-btn" download>
+                                    <span>📥</span>
+                                </a>
+                            </div>
+                    """
+                
+                yield """
+                        </div>
+                    """
+            
+            yield """
+                    </div>
+            """
 
-        for tm_year in sorted(tm_files_by_year.keys(), reverse=True):
-            if not tm_files_by_year[tm_year]:
-                continue
-            yield '<div class="sidebar-section">'
-            yield '<div style="font-weight:bold;color:#e67e22;margin-bottom:10px">📋 Типовое меню</div>'
-            yield f'<div class="tm-year-header">{tm_year} год</div><ul class="file-list">'
-            for fi in sorted(tm_files_by_year[tm_year], key=lambda x: x["date"], reverse=True):
-                size_kb = fi["size"] // 1024
-                yield (f'<li class="file-item">'
-                       f'<a class="file-link" href="{fi["filename"]}">📄 {fi["filename"]}</a>'
-                       f'<div><span class="file-date">{fi["date"]}</span> '
-                       f'<span style="margin-left:15px;color:#27ae60">{size_kb} KB</span></div>'
-                       f'</li>')
-            yield '</ul></div>'
+        if tm_files_by_year:
+            yield """
+                    <div class="sidebar-card">
+                        <div class="sidebar-title">
+                            <span>📋</span>
+                            Типовое меню
+                        </div>
+            """
+            
+            for tm_year in sorted(tm_files_by_year.keys(), reverse=True):
+                if not tm_files_by_year[tm_year]:
+                    continue
+                    
+                yield f"""
+                        <div style="margin-bottom: 20px;">
+                            <h4 style="color: #e67e22; margin-bottom: 10px;">{tm_year} год</h4>
+                """
+                
+                for fi in sorted(tm_files_by_year[tm_year], key=lambda x: x["date"], reverse=True):
+                    size_kb = fi["size"] // 1024
+                    yield f"""
+                            <div class="file-item">
+                                <div class="file-info">
+                                    <div class="file-icon">📋</div>
+                                    <div class="file-details">
+                                        <div class="file-name">{fi["filename"]}</div>
+                                        <div class="file-meta">
+                                            <span class="file-size">{size_kb} KB</span>
+                                            <span class="file-date">📅 {fi["date"]}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <a href="{fi["filename"]}" class="download-btn" download>
+                                    <span>📥</span>
+                                </a>
+                            </div>
+                    """
+                
+                yield """
+                        </div>
+                    """
+            
+            yield """
+                    </div>
+            """
 
-        yield '''
-        <div class="sanpin-compliance">
-            <span class="sanpin-checkmark">✅</span>
-            <div>
-                <strong>Соответствует нормам СанПиН</strong><br>
-                <span style="font-size:0.9em;color:#0c5460">Меню разработано в соответствии с требованиями санитарных правил и норм</span>
+        yield """
+                    <div class="sidebar-card">
+                        <div class="compliance-card">
+                            <div class="compliance-icon">✅</div>
+                            <div class="compliance-text">
+                                <strong>Соответствует нормам СанПиН</strong>
+                                <p>Меню разработано в соответствии с требованиями санитарных правил и норм</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-card">
+                        <div class="link-card">
+                            <a href="https://opros.cemon.ru/" target="_blank">
+                                <span>🔗 Опрос родителей и обучающихся ФЦМПО</span>
+                                <span>→</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-        '''
-        yield '''
-        <div class="nutrition-info">
-            <strong>🔗 Опрос родителей и обучающихся ФЦМПО</strong><br>
-            <a href="https://opros.cemon.ru/" target="_blank" style="color:#007bff;text-decoration:none;font-weight:bold;border-bottom:1px dotted #007bff">
-                https://opros.cemon.ru/
-            </a>
-            <span style="font-size:0.85em;color:#6c757d;margin-left:5px">(откроется в новой вкладке)</span>
-        </div>
-        '''
-        yield '</div><!-- /menu-sidebar -->'
+        """
 
-    yield '</div><!-- /container --></body></html>'
+    yield """
+        </div>
+        <!-- /container -->
 
-# Middleware для мониторинга производительности
+        <script>
+            // Интерактивность для сворачивания/разворачивания годов
+            document.querySelectorAll('.year-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = header.nextElementSibling;
+                    const icon = header.querySelector('.toggle-icon');
+                    
+                    if (content.style.display === 'none') {
+                        content.style.display = 'block';
+                        icon.textContent = '▼';
+                    } else {
+                        content.style.display = 'none';
+                        icon.textContent = '▶';
+                    }
+                });
+            });
+
+            // Плавная прокрутка к файлам при клике
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            // Анимация при наведении на карточки
+            document.querySelectorAll('.stat-card, .month-card, .file-item').forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.style.transform = 'translateY(-5px)';
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'translateY(0)';
+                });
+            });
+        </script>
+    </body>
+    </html>
+    """
+
+# НОВЫЙ МИДЛВАР ДЛЯ КЕШИРОВАНИЯ ИЗОБРАЖЕНИЙ
+@app.middleware("http")
+async def cache_images_middleware(request: Request, call_next):
+    """Middleware для кеширования изображений"""
+    
+    # Проверяем, запрашивается ли изображение
+    if request.url.path.startswith(('/static/', '/avatar/', '/food/')):
+        # Проверяем заголовки кеширования
+        if_none_match = request.headers.get('if-none-match')
+        cache_key = f"img_{request.url.path}"
+        
+        if cache_key in IMAGE_RESPONSE_CACHE:
+            cached = IMAGE_RESPONSE_CACHE[cache_key]
+            # Проверяем ETag
+            if if_none_match and if_none_match == cached.get('etag'):
+                return Response(status_code=304)
+    
+    response = await call_next(request)
+    
+    # Кешируем ответ с изображением
+    if response.status_code == 200 and request.url.path.startswith(('/static/', '/avatar/')):
+        cache_key = f"img_{request.url.path}"
+        etag = hashlib.md5(str(response.body).encode()).hexdigest()
+        response.headers["ETag"] = etag
+        response.headers["Cache-Control"] = "public, max-age=86400"  # Кеш на сутки
+        
+        IMAGE_RESPONSE_CACHE[cache_key] = {
+            'etag': etag,
+            'body': response.body
+        }
+    
+    return response
+
+# НОВЫЙ МИДЛВАР ДЛЯ МОНИТОРИНГА ПРОИЗВОДИТЕЛЬНОСТИ
+@app.middleware("http")
+async def performance_monitoring(request: Request, call_next):
+    """Мониторинг производительности запросов"""
+    
+    start_time = time.perf_counter()
+    
+    response = await call_next(request)
+    
+    process_time = (time.perf_counter() - start_time) * 1000  # в миллисекундах
+    
+    # Если запрос медленный - логируем
+    if process_time > 1000:  # больше 1 секунды
+        logger.warning(f"Медленный запрос: {request.method} {request.url.path} - {process_time:.2f}ms")
+    
+    response.headers["X-Process-Time"] = f"{process_time:.2f}ms"
+    
+    return response
+
+# ОСТАВЛЯЕМ СТАРЫЙ МИДЛВАР ДЛЯ СОВМЕСТИМОСТИ
 @app.middleware("http")
 async def performance_middleware(request: Request, call_next):
     start_time = time.time()
@@ -668,17 +1570,59 @@ async def get_federal_file(uid: int, filename: str):
 
     raise HTTPException(status_code=404, detail="Файл не найден")
 
-# --- ЭНДПОИНТ ДЛЯ АВАТАРА (НОВЫЙ) ---
-@app.get("/{uid}/avatar/{filename}")
-async def get_avatar(uid: int, filename: str):
-    """Отдача аватара школы"""
+# --- ОБНОВЛЕННЫЙ ЭНДПОИНТ ДЛЯ АВАТАРА С ОПТИМИЗАЦИЕЙ ---
+@app.get("/{uid}/avatar/{filename:path}")
+async def get_avatar(
+    request: Request,
+    uid: int, 
+    filename: str,
+    size: str = "medium"  # small, medium, large
+):
+    """Отдача оптимизированного аватара школы"""
     BASE_DIR = Path(__file__).resolve().parent
-    avatar_path = BASE_DIR / str(uid) / "avatar" / filename
+    
+    # Проверяем, запрашивается ли превью
+    if filename.startswith('thumbnails/'):
+        avatar_path = BASE_DIR / str(uid) / "avatar" / filename
+    else:
+        original_path = BASE_DIR / str(uid) / "avatar" / filename
+        
+        if not await run_in_threadpool(original_path.exists):
+            raise HTTPException(status_code=404, detail="Аватар не найден")
+        
+        # Проверяем заголовки кеширования
+        if_modified_since = request.headers.get('if-modified-since')
+        if if_modified_since:
+            try:
+                mod_time = datetime.strptime(if_modified_since, '%a, %d %b %Y %H:%M:%S GMT')
+                file_mod_time = datetime.fromtimestamp(
+                    (await run_in_threadpool(original_path.stat)).st_mtime
+                )
+                if file_mod_time <= mod_time:
+                    return Response(status_code=304)
+            except:
+                pass
+        
+        # Получаем оптимизированную версию
+        try:
+            avatar_path = await get_thumbnail_path(original_path, size)
+        except Exception as e:
+            logger.error(f"Ошибка получения оптимизированного аватара: {e}")
+            avatar_path = original_path
     
     if await run_in_threadpool(avatar_path.exists):
+        # Добавляем заголовки для кеширования
+        headers = {
+            "Cache-Control": "public, max-age=86400",  # Кеш на сутки
+            "ETag": hashlib.md5(str(avatar_path.stat().st_mtime).encode()).hexdigest(),
+            "Last-Modified": datetime.fromtimestamp(
+                avatar_path.stat().st_mtime
+            ).strftime('%a, %d %b %Y %H:%M:%S GMT')
+        }
+        
         return FileResponse(
             avatar_path,
-            headers={"Cache-Control": "public, max-age=86400"}  # Кеш на сутки
+            headers=headers
         )
     
     raise HTTPException(status_code=404, detail="Аватар не найден")
@@ -1240,7 +2184,7 @@ async def dashboard(
         "monitoring_url": monitoring_url
     })
 
-# --- ЗАГРУЗКА АВАТАРА (НОВЫЙ ЭНДПОИНТ) ---
+# --- ОБНОВЛЕННАЯ ЗАГРУЗКА АВАТАРА С ОПТИМИЗАЦИЕЙ ---
 @app.post("/profile/upload-avatar")
 async def upload_avatar(
     uid: int = Form(...),
@@ -1254,25 +2198,57 @@ async def upload_avatar(
     # Создаём папки
     await run_in_threadpool(lambda: avatar_dir.mkdir(parents=True, exist_ok=True))
     
-    # Удаляем старый аватар
+    # Удаляем старый аватар и его превью
     try:
         old_files = await run_in_threadpool(lambda: list(avatar_dir.glob("*")))
+        old_files.extend(await run_in_threadpool(lambda: list(avatar_dir.glob("thumbnails/*"))))
         for old_file in old_files:
             await run_in_threadpool(old_file.unlink)
     except Exception as e:
         logger.error(f"Ошибка при удалении старого аватара: {e}")
     
-    # Сохраняем новый
+    # Проверяем тип файла
     file_ext = Path(avatar.filename).suffix.lower()
-    if file_ext not in ['.jpg', '.jpeg', '.png', '.gif', '.webp']:
+    allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+    
+    if file_ext not in allowed_extensions:
         file_ext = '.jpg'  # По умолчанию
     
-    avatar_filename = f"avatar{file_ext}"
-    avatar_path = avatar_dir / avatar_filename
-    
+    # Сохраняем временный файл
+    temp_path = avatar_dir / f"temp_{int(time.time())}{file_ext}"
     content = await avatar.read()
-    async with aiofiles.open(avatar_path, "wb") as f:
+    
+    async with aiofiles.open(temp_path, "wb") as f:
         await f.write(content)
+    
+    try:
+        # Оптимизируем основное изображение
+        avatar_filename = f"avatar{file_ext}"
+        avatar_path = avatar_dir / avatar_filename
+        
+        result = await optimize_image_async(
+            temp_path,
+            output_path=avatar_path,
+            max_size=MAX_IMAGE_SIZE,
+            quality=JPEG_QUALITY
+        )
+        
+        if result and result['saved_percent'] > 0:
+            logger.info(f"Аватар оптимизирован: сэкономлено {result['saved_percent']:.1f}%")
+        
+        # Создаем превью разных размеров
+        for size_name in THUMBNAIL_SIZES.keys():
+            await get_thumbnail_path(avatar_path, size_name)
+        
+        # Удаляем временный файл
+        await delete_file_optimized(temp_path)
+        
+    except Exception as e:
+        logger.error(f"Ошибка при оптимизации аватара: {e}")
+        # Если оптимизация не удалась, используем оригинал
+        if temp_path.exists():
+            avatar_path = avatar_dir / f"avatar{file_ext}"
+            await asyncio.to_thread(shutil.move, str(temp_path), str(avatar_path))
     
     # Обновляем profile.json
     profile_data = {}
@@ -1284,14 +2260,19 @@ async def upload_avatar(
         except Exception:
             profile_data = {}
     
-    profile_data["avatar"] = avatar_filename
+    profile_data["avatar"] = f"avatar{file_ext}"
     
     async with aiofiles.open(profile_path, "w", encoding="utf-8") as f:
         await f.write(json.dumps(profile_data, ensure_ascii=False, indent=2))
     
+    # Очищаем кеш для этого аватара
+    cache_key = f"img_/{uid}/avatar/avatar{file_ext}"
+    if cache_key in IMAGE_RESPONSE_CACHE:
+        del IMAGE_RESPONSE_CACHE[cache_key]
+    
     return RedirectResponse(f"/dashboard?uid={uid}", status_code=303)
 
-# --- ОБНОВЛЕНИЕ ССЫЛОК (НОВЫЙ ЭНДПОИНТ) ---
+# --- ОБНОВЛЕНИЕ ССЫЛОК ---
 @app.post("/profile/update-links")
 async def update_links(
     uid: int = Form(...),
@@ -1321,7 +2302,7 @@ async def update_links(
     
     return RedirectResponse(f"/dashboard?uid={uid}", status_code=303)
 
-# --- ОСТАЛЬНЫЕ ЭНДПОИНТЫ (БЕЗ ИЗМЕНЕНИЙ) ---
+# --- ОСТАЛЬНЫЕ ЭНДПОИНТЫ ---
 @app.post("/upload")
 async def upload_files(
     request: Request,
@@ -1427,7 +2408,7 @@ async def update_profile(
 
     return RedirectResponse(f"/dashboard?uid={uid}", status_code=303)
 
-# --- СБРОС ПАРОЛЯ (БЕЗ ИЗМЕНЕНИЙ) ---
+# --- СБРОС ПАРОЛЯ ---
 def is_valid_email(email: str) -> bool:
     if not email or '@' not in email:
         return False
@@ -1484,12 +2465,179 @@ async def send_reset_email(email: str, token: str):
 
         message = MIMEText(f"""
 <html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сброс пароля</title>
+    <style>
+        body {{
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        .container {{
+            max-width: 480px;
+            margin: 20px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }}
+        .header h1 {{
+            margin: 0;
+            color: white;
+            font-size: 28px;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        .content {{
+            padding: 40px 30px;
+            background: white;
+        }}
+        .content h2 {{
+            color: #333;
+            font-size: 24px;
+            margin: 0 0 20px 0;
+            font-weight: 600;
+        }}
+        .content p {{
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+            margin: 0 0 20px 0;
+        }}
+        .email-info {{
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 25px 0;
+            border-left: 4px solid #667eea;
+        }}
+        .email-info p {{
+            margin: 5px 0;
+            color: #555;
+        }}
+        .email-info strong {{
+            color: #333;
+            font-weight: 600;
+        }}
+        .button {{
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+            text-decoration: none;
+            padding: 16px 32px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 20px 0 10px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }}
+        .button:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }}
+        .footer {{
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }}
+        .footer p {{
+            color: #999;
+            font-size: 14px;
+            margin: 5px 0;
+        }}
+        .footer a {{
+            color: #667eea;
+            text-decoration: none;
+        }}
+        .divider {{
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #667eea, transparent);
+            margin: 30px 0 20px;
+        }}
+        .warning {{
+            color: #e74c3c !important;
+            font-size: 14px !important;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }}
+        @media only screen and (max-width: 480px) {{
+            .container {{
+                margin: 10px;
+                border-radius: 16px;
+            }}
+            .header {{
+                padding: 30px 20px;
+            }}
+            .content {{
+                padding: 30px 20px;
+            }}
+            .button {{
+                display: block;
+                text-align: center;
+            }}
+        }}
+    </style>
+</head>
 <body>
-    <h2>Сброс пароля</h2>
-    <p>Чтобы сменить пароль, перейдите по ссылке:</p>
-    <a href="{reset_url}">Сменить пароль</a>
-    <p>Ссылка действительна 1 час.</p>
-    <p>Ваш email: {safe_email}</p>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Сброс пароля</h1>
+        </div>
+        
+        <div class="content">
+            <h2>Здравствуйте!</h2>
+            
+            <p>Мы получили запрос на сброс пароля для вашей учетной записи. Для создания нового пароля нажмите на кнопку ниже:</p>
+            
+            <div style="text-align: center;">
+                <a href="{reset_url}" class="button">🔑 Сменить пароль</a>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="email-info">
+                <p><strong>📧 Email:</strong> {safe_email}</p>
+                <p><strong>⏰ Срок действия:</strong> 1 час</p>
+                <p><strong>🆔 Запрос создан:</strong> {datetime.now().strftime('%d.%m.%Y %H:%M')}</p>
+            </div>
+            
+            <p class="warning">
+                ⚠️ Если вы не запрашивали сброс пароля, просто проигнорируйте это письмо.
+            </p>
+            
+            <p style="font-size: 14px; color: #999; text-align: center; margin-top: 30px;">
+                Никогда не пересылайте это письмо и не сообщайте код никому.<br>
+                Служба поддержки никогда не запрашивает пароли.
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>© 2026 ЕЦМП Мониторинг питания. Все права защищены.</p>
+            <p>
+                <a href="https://monitoring95.ru/privacy.html">Политика конфиденциальности</a> • 
+                <a href="https://monitoring95.ru/agree.html">Пользовательское соглашение</a>
+            </p>
+            <p style="font-size: 12px; margin-top: 15px;">
+                Это автоматическое письмо, пожалуйста, не отвечайте на него.
+            </p>
+        </div>
+    </div>
 </body>
 </html>
 """, "html", "utf-8")
@@ -1642,12 +2790,33 @@ async def health_check():
         "cache_stats": {
             "manifest_cache": len(MANIFEST_CACHE),
             "user_cache": len(USER_CACHE),
-            "file_exists_cache": len(FILE_EXISTS_CACHE)
+            "file_exists_cache": len(FILE_EXISTS_CACHE),
+            "image_cache": len(IMAGE_RESPONSE_CACHE)
         }
     }
 
-# --- НОВЫЕ ЭНДПОИНТЫ ДЛЯ ДАШБОРДОВ ---
+# --- НОВЫЙ ЭНДПОИНТ ДЛЯ СТАТИСТИКИ ПРОИЗВОДИТЕЛЬНОСТИ ---
+@app.get("/performance-stats")
+async def get_performance_stats(request: Request):
+    """Статистика производительности (только для админов)"""
+    
+    if not request.session.get("dashboard_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    return {
+        "cache_stats": {
+            "manifest_cache": len(MANIFEST_CACHE),
+            "user_cache": len(USER_CACHE),
+            "file_exists_cache": len(FILE_EXISTS_CACHE),
+            "image_cache": len(IMAGE_RESPONSE_CACHE)
+        },
+        "thread_pools": {
+            "io_executor": IO_EXECUTOR._max_workers,
+            "image_executor": IMAGE_EXECUTOR._max_workers
+        }
+    }
 
+# --- ДАШБОРДЫ ---
 @app.get("/dashboards")
 async def dashboards_list(request: Request, db: Session = Depends(get_db)):
     """Список всех дашбордов"""
@@ -1913,8 +3082,7 @@ async def view_dashboard(request: Request, slug: str, db: Session = Depends(get_
         "session": request.session
     })
 
-# --- БИБЛИОТЕКА ЗНАНИЙ ПО ПИТАНИЮ (ОТДЕЛЬНАЯ БД) ---
-
+# --- БИБЛИОТЕКА ЗНАНИЙ ПО ПИТАНИЮ ---
 KNOWLEDGE_BASE_ADMIN_CODE = "admin3377%"
 
 DOCUMENT_TYPES = {
@@ -1931,7 +3099,6 @@ DOCUMENT_TYPES = {
 
 CATEGORY_ICONS = ["📁", "📊", "📋", "📌", "📚", "🎥", "📝", "⚖️", "🍎", "🥗", "📈", "🔬", "🏫", "👨‍🍳"]
 
-
 @app.get("/knowledge-base", response_class=HTMLResponse)
 async def knowledge_base(
     request: Request,
@@ -1940,7 +3107,7 @@ async def knowledge_base(
     page: int = 1,
     per_page: int = 12,
     sort: str = "newest",
-    kb_db: Session = Depends(get_kb_db)  # Используем отдельную БД
+    kb_db: Session = Depends(get_kb_db)
 ):
     """Главная страница библиотеки знаний"""
     
@@ -2044,12 +3211,10 @@ async def knowledge_base(
         "total_pages": (total + per_page - 1) // per_page
     })
 
-
 @app.get("/knowledge-base/admin/login", response_class=HTMLResponse)
 async def knowledge_base_admin_login(request: Request):
     """Страница входа в админку библиотеки"""
     return templates.TemplateResponse("knowledge_base_admin_login.html", {"request": request})
-
 
 @app.post("/knowledge-base/admin/login")
 async def knowledge_base_admin_login_post(
@@ -2093,7 +3258,6 @@ async def knowledge_base_admin_login_post(
         "error": "Неверный код доступа"
     })
 
-
 @app.get("/knowledge-base/admin/logout")
 async def knowledge_base_admin_logout(request: Request):
     """Выход из админки библиотеки"""
@@ -2101,7 +3265,6 @@ async def knowledge_base_admin_logout(request: Request):
     request.session.pop("admin_email", None)
     request.session.pop("admin_name", None)
     return RedirectResponse("/knowledge-base", status_code=303)
-
 
 @app.get("/knowledge-base/admin", response_class=HTMLResponse)
 async def knowledge_base_admin_panel(
@@ -2159,7 +3322,6 @@ async def knowledge_base_admin_panel(
         "categories_stats": categories_stats
     })
 
-
 @app.get("/knowledge-base/admin/categories", response_class=HTMLResponse)
 async def manage_categories(
     request: Request,
@@ -2180,7 +3342,6 @@ async def manage_categories(
         "categories": categories,
         "icons": CATEGORY_ICONS
     })
-
 
 @app.post("/knowledge-base/admin/category/create")
 async def create_category(
@@ -2208,7 +3369,6 @@ async def create_category(
     await run_in_threadpool(kb_db.commit)
     
     return RedirectResponse("/knowledge-base/admin/categories", status_code=303)
-
 
 @app.post("/knowledge-base/admin/category/{category_id}/update")
 async def update_category(
@@ -2244,7 +3404,6 @@ async def update_category(
     
     return RedirectResponse("/knowledge-base/admin/categories", status_code=303)
 
-
 @app.post("/knowledge-base/admin/category/{category_id}/delete")
 async def delete_category(
     request: Request,
@@ -2264,7 +3423,6 @@ async def delete_category(
         await run_in_threadpool(kb_db.commit)
     
     return RedirectResponse("/knowledge-base/admin/categories", status_code=303)
-
 
 @app.get("/knowledge-base/admin/upload", response_class=HTMLResponse)
 async def upload_document_page(
@@ -2291,7 +3449,6 @@ async def upload_document_page(
         "admin_name": admin_name,
         "admin_email": admin_email
     })
-
 
 @app.post("/knowledge-base/admin/upload")
 async def upload_document(
@@ -2357,7 +3514,6 @@ async def upload_document(
     await run_in_threadpool(kb_db.commit)
     
     return RedirectResponse(f"/knowledge-base/document/{document.id}", status_code=303)
-
 
 @app.get("/knowledge-base/document/{doc_id}", response_class=HTMLResponse)
 async def view_document(
@@ -2432,7 +3588,6 @@ async def view_document(
         "is_admin": request.session.get("knowledge_base_admin", False)
     })
 
-
 @app.get("/knowledge-base/download/{doc_id}")
 async def download_document(
     request: Request,
@@ -2465,7 +3620,6 @@ async def download_document(
     filename = f"{document.title}{document.file_extension}"
     
     # Кодируем имя файла для корректной обработки русских символов
-    # Используем urlencode для RFC 5987
     import urllib.parse
     encoded_filename = urllib.parse.quote(filename)
     
@@ -2510,7 +3664,6 @@ async def toggle_favorite(
         await run_in_threadpool(kb_db.commit)
         return {"status": "success", "action": "added"}
 
-
 @app.post("/knowledge-base/comment/{doc_id}")
 async def add_comment(
     request: Request,
@@ -2534,7 +3687,6 @@ async def add_comment(
     await run_in_threadpool(kb_db.commit)
     
     return RedirectResponse(f"/knowledge-base/document/{doc_id}", status_code=303)
-
 
 @app.get("/knowledge-base/admin/edit/{doc_id}", response_class=HTMLResponse)
 async def edit_document_page(
@@ -2565,7 +3717,6 @@ async def edit_document_page(
         "categories": categories,
         "document_types": DOCUMENT_TYPES
     })
-
 
 @app.post("/knowledge-base/admin/edit/{doc_id}")
 async def edit_document(
@@ -2604,7 +3755,6 @@ async def edit_document(
     
     return RedirectResponse(f"/knowledge-base/document/{doc_id}", status_code=303)
 
-
 @app.post("/knowledge-base/admin/delete/{doc_id}")
 async def delete_document(
     request: Request,
@@ -2636,7 +3786,6 @@ async def delete_document(
     await run_in_threadpool(kb_db.commit)
     
     return RedirectResponse("/knowledge-base/admin", status_code=303)
-
 
 @app.get("/knowledge-base/api/search")
 async def knowledge_base_search_api(
@@ -2672,7 +3821,6 @@ async def knowledge_base_search_api(
             for doc in results
         ]
     }
-
 
 @app.get("/knowledge-base/stats")
 async def knowledge_base_stats(
