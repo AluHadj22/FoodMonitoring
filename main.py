@@ -1499,22 +1499,36 @@ async def cache_images_middleware(request: Request, call_next):
     
     return response
 
-# НОВЫЙ МИДЛВАР ДЛЯ МОНИТОРИНГА ПРОИЗВОДИТЕЛЬНОСТИ
+# НОВЫЙ МИДЛВАР ДЛЯ КЕШИРОВАНИЯ ИЗОБРАЖЕНИЙ
 @app.middleware("http")
-async def performance_monitoring(request: Request, call_next):
-    """Мониторинг производительности запросов"""
+async def cache_images_middleware(request: Request, call_next):
+    """Middleware для кеширования изображений"""
     
-    start_time = time.perf_counter()
+    # Проверяем, запрашивается ли изображение (но не трогаем статические файлы сайта)
+    if request.url.path.startswith(('/avatar/', '/food/')) and not request.url.path.startswith('/static/'):
+        # Проверяем заголовки кеширования
+        if_none_match = request.headers.get('if-none-match')
+        cache_key = f"img_{request.url.path}"
+        
+        if cache_key in IMAGE_RESPONSE_CACHE:
+            cached = IMAGE_RESPONSE_CACHE[cache_key]
+            # Проверяем ETag
+            if if_none_match and if_none_match == cached.get('etag'):
+                return Response(status_code=304)
     
     response = await call_next(request)
     
-    process_time = (time.perf_counter() - start_time) * 1000  # в миллисекундах
-    
-    # Если запрос медленный - логируем
-    if process_time > 1000:  # больше 1 секунды
-        logger.warning(f"Медленный запрос: {request.method} {request.url.path} - {process_time:.2f}ms")
-    
-    response.headers["X-Process-Time"] = f"{process_time:.2f}ms"
+    # Кешируем ответ с изображением (только для аватаров, не для статики)
+    if response.status_code == 200 and request.url.path.startswith('/avatar/'):
+        cache_key = f"img_{request.url.path}"
+        etag = hashlib.md5(str(response.body).encode()).hexdigest()
+        response.headers["ETag"] = etag
+        response.headers["Cache-Control"] = "public, max-age=86400"  # Кеш на сутки
+        
+        IMAGE_RESPONSE_CACHE[cache_key] = {
+            'etag': etag,
+            'body': response.body
+        }
     
     return response
 
