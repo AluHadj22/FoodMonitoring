@@ -81,9 +81,8 @@ from knowledge_base_db import (
     KnowledgeBaseComment,
     KnowledgeBaseSearchLog,
     KnowledgeBaseAdmin,
-    init_db as init_kb_db
+    init_kb_db  # Правильное название функции
 )
-
 # Инициализируем БД библиотеки знаний при запуске
 init_kb_db()
 
