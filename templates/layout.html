@@ -391,7 +391,7 @@
       left: 100%;
     }
 
-    /* Кнопка Дашборды - НОВАЯ */
+    /* Кнопка Дашборды */
     .dashboards-button {
       background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
       color: white;
@@ -415,7 +415,7 @@
       box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
     }
 
-    /* НОВАЯ КНОПКА - СПРАВОЧНЫЙ ЦЕНТР */
+    /* Кнопка - СПРАВОЧНЫЙ ЦЕНТР */
     .knowledge-base-button {
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       color: white;
@@ -439,7 +439,128 @@
       box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
     }
 
-    /* Новый стиль для выпадающего меню */
+    /* Стили для выпадающих меню */
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      min-width: 260px;
+      background: var(--card);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+    }
+
+    .dropdown-menu.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .dropdown-button {
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+      font-weight: 700;
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--radius-md);
+      transition: var(--transition-base);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dropdown-button:hover {
+      background: linear-gradient(135deg, #ea580c, #c2410c);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4);
+    }
+
+    .dropdown-button.active {
+      background: linear-gradient(135deg, #ea580c, #c2410c);
+      transform: translateY(-1px);
+    }
+
+    .dropdown-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.6s;
+    }
+
+    .dropdown-button:hover::before {
+      left: 100%;
+    }
+
+    .dropdown-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      color: var(--slate-700);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .dropdown-menu-item:last-child {
+      border-bottom: none;
+    }
+
+    .dropdown-menu-item:hover {
+      background: var(--blue-light);
+      color: var(--blue-dark);
+      transform: translateX(4px);
+    }
+
+    .dropdown-menu-item svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+    }
+
+    .dropdown-menu-header {
+      padding: 0.75rem 1.25rem;
+      background: rgba(249, 115, 22, 0.1);
+      color: #f97316;
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Стили для пунктов меню отчётов */
+    .menu-item-regional {
+      border-left: 3px solid #f97316;
+    }
+
+    .menu-item-public {
+      border-left: 3px solid #2563eb;
+    }
+
+    /* Стили для мониторинга */
     .monitoring-dropdown {
       position: relative;
       display: inline-block;
@@ -508,7 +629,6 @@
       border-bottom: 1px solid var(--border);
     }
 
-    /* Стили для пунктов меню */
     .menu-item-stats {
       border-left: 3px solid #10b981;
     }
@@ -526,15 +646,18 @@
     }
 
     /* Тёмная тема для меню */
+    [data-theme='dark'] .dropdown-menu,
     [data-theme='dark'] .monitoring-menu {
       background: var(--card);
       border-color: var(--border);
     }
 
+    [data-theme='dark'] .dropdown-menu-item,
     [data-theme='dark'] .monitoring-menu-item {
       color: var(--slate-300);
     }
 
+    [data-theme='dark'] .dropdown-menu-item:hover,
     [data-theme='dark'] .monitoring-menu-item:hover {
       background: var(--slate-700);
     }
@@ -616,7 +739,7 @@
             </svg>
           </button>
           
-          <!-- Выпадающее меню мониторинга (без дашборда питания) -->
+          <!-- Выпадающее меню мониторинга -->
           <div class="monitoring-menu" id="monitoring-menu">
             <div class="monitoring-menu-header">
               📊 Меню мониторинга питания
@@ -666,7 +789,7 @@
           Дашборды
         </a>
 
-        <!-- НОВАЯ КНОПКА - СПРАВОЧНЫЙ ЦЕНТР -->
+        <!-- Кнопка "Справочный центр" -->
         <a href="/knowledge-base" class="knowledge-base-button">
           <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
@@ -674,6 +797,42 @@
           </svg>
           Справочный центр
         </a>
+
+        <!-- НОВОЕ ВЫПАДАЮЩЕЕ МЕНЮ: Отчёты региона -->
+        <div class="dropdown">
+          <button class="dropdown-button" id="reports-toggle">
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16v16H4z"/>
+              <path d="M8 8h8M8 12h6M8 16h4"/>
+            </svg>
+            Отчёты региона
+            <svg style="width:12px;height:12px; margin-left:4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          
+          <div class="dropdown-menu" id="reports-menu">
+            <div class="dropdown-menu-header">
+              📋 Управление отчётностью
+            </div>
+            <a href="/regional-admin/login" class="dropdown-menu-item menu-item-regional">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              Региональная отчётность
+              <span style="margin-left: auto; font-size: 0.7rem; color: var(--slate-400);">Админ</span>
+            </a>
+            <a href="/public-reports" class="dropdown-menu-item menu-item-public">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              Публичные отчёты
+              <span style="margin-left: auto; font-size: 0.7rem; color: var(--slate-400);">Публичные</span>
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </nav>
@@ -716,35 +875,54 @@
       setTheme(current === 'dark' ? 'light' : 'dark');
     });
 
-    // Навигация с выпадающим меню
+    // Навигация с выпадающими меню
     document.addEventListener('DOMContentLoaded', function() {
+      // Меню мониторинга питания
       const monitoringButton = document.getElementById('monitoring-toggle');
       const monitoringMenu = document.getElementById('monitoring-menu');
       
       if (monitoringButton && monitoringMenu) {
-        // Открытие/закрытие меню при клике на кнопку
         monitoringButton.addEventListener('click', function(e) {
           e.stopPropagation();
           monitoringMenu.classList.toggle('show');
           monitoringButton.classList.toggle('active');
         });
+      }
 
-        // Закрытие меню при клике вне его
-        document.addEventListener('click', function(e) {
-          if (!monitoringButton.contains(e.target) && !monitoringMenu.contains(e.target)) {
-            monitoringMenu.classList.remove('show');
-            monitoringButton.classList.remove('active');
-          }
-        });
-
-        // Закрытие меню при клике на пункт меню
-        monitoringMenu.querySelectorAll('a').forEach(link => {
-          link.addEventListener('click', function() {
-            monitoringMenu.classList.remove('show');
-            monitoringButton.classList.remove('active');
-          });
+      // Меню отчётов региона
+      const reportsButton = document.getElementById('reports-toggle');
+      const reportsMenu = document.getElementById('reports-menu');
+      
+      if (reportsButton && reportsMenu) {
+        reportsButton.addEventListener('click', function(e) {
+          e.stopPropagation();
+          reportsMenu.classList.toggle('show');
+          reportsButton.classList.toggle('active');
         });
       }
+
+      // Закрытие всех меню при клике вне их
+      document.addEventListener('click', function(e) {
+        if (monitoringButton && monitoringMenu && !monitoringButton.contains(e.target) && !monitoringMenu.contains(e.target)) {
+          monitoringMenu.classList.remove('show');
+          monitoringButton.classList.remove('active');
+        }
+        if (reportsButton && reportsMenu && !reportsButton.contains(e.target) && !reportsMenu.contains(e.target)) {
+          reportsMenu.classList.remove('show');
+          reportsButton.classList.remove('active');
+        }
+      });
+
+      // Закрытие меню при клике на пункты
+      const allMenuItems = document.querySelectorAll('.dropdown-menu-item, .monitoring-menu-item');
+      allMenuItems.forEach(item => {
+        item.addEventListener('click', function() {
+          if (monitoringMenu) monitoringMenu.classList.remove('show');
+          if (monitoringButton) monitoringButton.classList.remove('active');
+          if (reportsMenu) reportsMenu.classList.remove('show');
+          if (reportsButton) reportsButton.classList.remove('active');
+        });
+      });
 
       // Анимация появления элементов
       const elements = document.querySelectorAll('.fade-in');
@@ -762,7 +940,7 @@
       });
 
       document.addEventListener('click', e => {
-        if (e.target.closest('.nav-link, .nav-button, .dashboards-button, .knowledge-base-button, .monitoring-menu-item')) {
+        if (e.target.closest('.nav-link, .nav-button, .dashboards-button, .knowledge-base-button, .dropdown-menu-item, .monitoring-menu-item')) {
           const b = e.target.closest('a, button');
           if (b) {
             b.style.transform = 'translateY(0)';

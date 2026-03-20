@@ -3873,6 +3873,1033 @@ async def knowledge_base_stats(
         "top_categories": top_categories
     })
 
+# ========== УНИВЕРСАЛЬНАЯ СИСТЕМА УПРАВЛЕНИЯ ОТЧЁТНОСТЬЮ ==========
+# Константа для регионального доступа
+REGIONAL_REPORT_CODE = "MoinCHR3377"
+
+# Создаём папку для файлов отчётов при старте приложения
+REPORTS_DIR = Path(__file__).resolve().parent / "reports_files"
+REPORTS_DIR.mkdir(exist_ok=True)
+
+@app.get("/regional-admin/login", response_class=HTMLResponse)
+async def regional_admin_login_page(request: Request):
+    """Страница входа в региональную систему отчётности"""
+    return templates.TemplateResponse("regional_admin_login.html", {"request": request})
+
+@app.post("/regional-admin/login")
+async def regional_admin_login(request: Request, access_code: str = Form(...)):
+    """Вход в региональную систему отчётности"""
+    if access_code == REGIONAL_REPORT_CODE:
+        request.session["regional_admin"] = True
+        request.session["regional_admin_login_time"] = datetime.now().isoformat()
+        return RedirectResponse("/regional-admin/dashboard", status_code=303)
+    
+    return templates.TemplateResponse("regional_admin_login.html", {
+        "request": request,
+        "error": "Неверный код доступа"
+    })
+
+@app.get("/regional-admin/logout")
+async def regional_admin_logout(request: Request):
+    """Выход из региональной системы отчётности"""
+    request.session.pop("regional_admin", None)
+    return RedirectResponse("/regional-admin/login", status_code=303)
+
+@app.get("/regional-admin/dashboard", response_class=HTMLResponse)
+async def regional_admin_dashboard(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Дашборд регионального администратора"""
+    if not request.session.get("regional_admin"):
+        return RedirectResponse("/regional-admin/login", status_code=303)
+    
+    # Статистика
+    total_reports = await run_in_threadpool(lambda: db.query(models.Report).count())
+    total_categories = await run_in_threadpool(lambda: db.query(models.ReportCategory).count())
+    total_files = await run_in_threadpool(lambda: db.query(models.ReportFile).count())
+    
+    # Отчёты по статусам
+    draft_count = await run_in_threadpool(lambda: db.query(models.Report).filter(models.Report.status == "draft").count())
+    published_count = await run_in_threadpool(lambda: db.query(models.Report).filter(models.Report.is_published == True).count())
+    archived_count = await run_in_threadpool(lambda: db.query(models.Report).filter(models.Report.status == "archived").count())
+    
+    # Отчёты по годам
+    years_stats = await run_in_threadpool(
+        lambda: db.query(models.Report.year, func.count(models.Report.id))
+        .group_by(models.Report.year)
+        .order_by(models.Report.year.desc())
+        .limit(5)
+        .all()
+    )
+    
+    # Последние 10 отчётов
+    recent_reports = await run_in_threadpool(
+        lambda: db.query(models.Report)
+        .order_by(models.Report.created_at.desc())
+        .limit(10)
+        .all()
+    )
+    
+    # Категории с количеством отчётов
+    categories = await run_in_threadpool(
+        lambda: db.query(models.ReportCategory)
+        .filter(models.ReportCategory.is_active == True)
+        .order_by(models.ReportCategory.order_index)
+        .all()
+    )
+    
+    for cat in categories:
+        cat.report_count = await run_in_threadpool(
+            lambda: db.query(models.Report).filter(models.Report.category_id == cat.id).count()
+        )
+    
+    return templates.TemplateResponse("regional_admin_dashboard.html", {
+        "request": request,
+        "total_reports": total_reports,
+        "total_categories": total_categories,
+        "total_files": total_files,
+        "draft_count": draft_count,
+        "published_count": published_count,
+        "archived_count": archived_count,
+        "years_stats": years_stats,
+        "recent_reports": recent_reports,
+        "categories": categories,
+        "months": MONTHS
+    })
+
+@app.get("/regional-admin/categories", response_class=HTMLResponse)
+async def regional_admin_categories(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Управление категориями отчётов"""
+    if not request.session.get("regional_admin"):
+        return RedirectResponse("/regional-admin/login", status_code=303)
+    
+    categories = await run_in_threadpool(
+        lambda: db.query(models.ReportCategory)
+        .order_by(models.ReportCategory.order_index)
+        .all()
+    )
+    
+    for cat in categories:
+        cat.report_count = await run_in_threadpool(
+            lambda: db.query(models.Report).filter(models.Report.category_id == cat.id).count()
+        )
+    
+    return templates.TemplateResponse("regional_admin_categories.html", {
+        "request": request,
+        "categories": categories
+    })
+
+@app.post("/regional-admin/category/create")
+async def regional_admin_create_category(
+    request: Request,
+    name: str = Form(...),
+    description: str = Form(""),
+    icon: str = Form("📊"),
+    color: str = Form("#667eea"),
+    parent_id: int = Form(None),
+    order_index: int = Form(0),
+    db: Session = Depends(get_db)
+):
+    """Создание категории отчётов"""
+    if not request.session.get("regional_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    category = models.ReportCategory(
+        name=name,
+        description=description,
+        icon=icon,
+        color=color,
+        parent_id=parent_id if parent_id else None,
+        order_index=order_index
+    )
+    
+    db.add(category)
+    await run_in_threadpool(db.commit)
+    
+    return RedirectResponse("/regional-admin/categories", status_code=303)
+
+@app.post("/regional-admin/category/{category_id}/update")
+async def regional_admin_update_category(
+    request: Request,
+    category_id: int,
+    name: str = Form(...),
+    description: str = Form(""),
+    icon: str = Form("📊"),
+    color: str = Form("#667eea"),
+    order_index: int = Form(0),
+    is_active: bool = Form(True),
+    db: Session = Depends(get_db)
+):
+    """Обновление категории"""
+    if not request.session.get("regional_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    category = await run_in_threadpool(
+        lambda: db.query(models.ReportCategory).filter(models.ReportCategory.id == category_id).first()
+    )
+    
+    if category:
+        category.name = name
+        category.description = description
+        category.icon = icon
+        category.color = color
+        category.order_index = order_index
+        category.is_active = is_active
+        await run_in_threadpool(db.commit)
+    
+    return RedirectResponse("/regional-admin/categories", status_code=303)
+
+@app.post("/regional-admin/category/{category_id}/delete")
+async def regional_admin_delete_category(
+    request: Request,
+    category_id: int,
+    db: Session = Depends(get_db)
+):
+    """Удаление категории"""
+    if not request.session.get("regional_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    category = await run_in_threadpool(
+        lambda: db.query(models.ReportCategory).filter(models.ReportCategory.id == category_id).first()
+    )
+    
+    if category:
+        await run_in_threadpool(lambda: db.delete(category))
+        await run_in_threadpool(db.commit)
+    
+    return RedirectResponse("/regional-admin/categories", status_code=303)
+
+@app.get("/regional-admin/reports", response_class=HTMLResponse)
+async def regional_admin_reports(
+    request: Request,
+    category_id: str = None,  # Изменяем на str, чтобы принимать пустые строки
+    year: str = None,         # Изменяем на str
+    status: str = None,
+    search: str = "",
+    page: int = 1,
+    per_page: int = 20,
+    db: Session = Depends(get_db)
+):
+    """Список отчётов"""
+    if not request.session.get("regional_admin"):
+        return RedirectResponse("/regional-admin/login", status_code=303)
+    
+    query = db.query(models.Report)
+    
+    # Преобразуем строки в числа, если они не пустые
+    category_id_int = None
+    if category_id and category_id.strip():
+        try:
+            category_id_int = int(category_id)
+        except ValueError:
+            pass
+    
+    year_int = None
+    if year and year.strip():
+        try:
+            year_int = int(year)
+        except ValueError:
+            pass
+    
+    # Применяем фильтры
+    if category_id_int:
+        query = query.filter(models.Report.category_id == category_id_int)
+    if year_int:
+        query = query.filter(models.Report.year == year_int)
+    if status:
+        query = query.filter(models.Report.status == status)
+    if search:
+        query = query.filter(
+            or_(
+                models.Report.title.ilike(f"%{search}%"),
+                models.Report.description.ilike(f"%{search}%")
+            )
+        )
+    
+    total = await run_in_threadpool(query.count)
+    offset = (page - 1) * per_page
+    reports = await run_in_threadpool(
+        lambda: query.order_by(models.Report.created_at.desc())
+        .offset(offset).limit(per_page).all()
+    )
+    
+    # Получаем категории для фильтра
+    categories = await run_in_threadpool(
+        lambda: db.query(models.ReportCategory).filter(models.ReportCategory.is_active == True).all()
+    )
+    
+    # Получаем доступные годы
+    years_result = await run_in_threadpool(
+        lambda: db.query(models.Report.year).distinct().order_by(models.Report.year.desc()).all()
+    )
+    years = [str(y[0]) for y in years_result if y[0]]
+    
+    return templates.TemplateResponse("regional_admin_reports.html", {
+        "request": request,
+        "reports": reports,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "categories": categories,
+        "years": years,
+        "selected_category": category_id if category_id else "",
+        "selected_year": year if year else "",
+        "selected_status": status if status else "",
+        "search": search
+    })
+
+@app.get("/regional-admin/report/create", response_class=HTMLResponse)
+async def regional_admin_create_report_page(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Страница создания отчёта"""
+    if not request.session.get("regional_admin"):
+        return RedirectResponse("/regional-admin/login", status_code=303)
+    
+    categories = await run_in_threadpool(
+        lambda: db.query(models.ReportCategory).filter(models.ReportCategory.is_active == True).all()
+    )
+    
+    # Доступные типы отчётов
+    report_types = [
+        {"value": "hot_meal", "name": "Горячее питание", "icon": "🍲", "description": "Отчёты по организации горячего питания"},
+        {"value": "salary", "name": "Зарплата педработников", "icon": "💰", "description": "Мониторинг трудовой нагрузки и доходов"},
+        {"value": "accidents", "name": "Несчастные случаи", "icon": "⚠️", "description": "Отчёты о несчастных случаях"},
+        {"value": "building", "name": "Перепрофилирование", "icon": "🏫", "description": "Перепрофилирование сооружений"},
+        {"value": "cadet", "name": "Кадетское образование", "icon": "🎖️", "description": "Кадетские корпуса и классы"},
+        {"value": "benefits", "name": "Льготы на питание", "icon": "🎁", "description": "Региональные и муниципальные льготы"},
+        {"value": "custom", "name": "Произвольный отчёт", "icon": "📝", "description": "Создать отчёт с произвольными данными"}
+    ]
+    
+    return templates.TemplateResponse("regional_admin_report_create.html", {
+        "request": request,
+        "categories": categories,
+        "report_types": report_types,
+        "months": MONTHS
+    })
+
+@app.post("/regional-admin/report/create")
+async def regional_admin_create_report(
+    request: Request,
+    title: str = Form(...),
+    description: str = Form(""),
+    category_id: int = Form(None),
+    report_type: str = Form("custom"),
+    year: int = Form(...),
+    month: int = Form(None),
+    quarter: int = Form(None),
+    report_data: str = Form("{}"),
+    status: str = Form("draft"),
+    files: List[UploadFile] = File(None),
+    db: Session = Depends(get_db)
+):
+    """Создание нового отчёта"""
+    if not request.session.get("regional_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    # Парсим данные отчёта
+    try:
+        if report_data and report_data.strip():
+            data = json.loads(report_data)
+        else:
+            data = {}
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON decode error: {e}, data: {report_data}")
+        data = {}
+    
+    # Создаём отчёт
+    report = models.Report(
+        title=title,
+        description=description,
+        category_id=category_id if category_id else None,
+        report_type=report_type,
+        year=year,
+        month=month,
+        quarter=quarter,
+        data=json.dumps(data, ensure_ascii=False),
+        status=status,
+        is_published=(status == "published")
+    )
+    
+    db.add(report)
+    await run_in_threadpool(db.flush)
+    
+    # Сохраняем прикреплённые файлы
+    if files:
+        for file in files:
+            if file.filename:
+                file_ext = Path(file.filename).suffix.lower()
+                safe_name = f"report_{report.id}_{int(time.time())}_{secrets.token_hex(8)}{file_ext}"
+                file_path = REPORTS_DIR / safe_name
+                
+                await save_uploaded_file_optimized(file, file_path)
+                
+                report_file = models.ReportFile(
+                    report_id=report.id,
+                    filename=safe_name,
+                    original_name=file.filename,
+                    file_path=str(file_path.relative_to(Path(__file__).resolve().parent)),
+                    file_size=file.size,
+                    file_type=file_ext[1:] if file_ext else "unknown"
+                )
+                db.add(report_file)
+    
+    await run_in_threadpool(db.commit)
+    
+    return RedirectResponse(f"/regional-admin/report/{report.id}", status_code=303)
+
+@app.get("/regional-admin/report/{report_id}", response_class=HTMLResponse)
+async def regional_admin_view_report(
+    request: Request,
+    report_id: int,
+    db: Session = Depends(get_db)
+):
+    """Просмотр отчёта"""
+    if not request.session.get("regional_admin"):
+        return RedirectResponse("/regional-admin/login", status_code=303)
+    
+    report = await run_in_threadpool(
+        lambda: db.query(models.Report).filter(models.Report.id == report_id).first()
+    )
+    
+    if not report:
+        raise HTTPException(status_code=404, detail="Отчёт не найден")
+    
+    # Парсим данные
+    try:
+        report.data = json.loads(report.data) if report.data else {}
+    except:
+        report.data = {}
+    
+    # Получаем файлы
+    files = await run_in_threadpool(
+        lambda: db.query(models.ReportFile).filter(models.ReportFile.report_id == report_id).all()
+    )
+    
+    # Получаем категорию
+    category = None
+    if report.category_id:
+        category = await run_in_threadpool(
+            lambda: db.query(models.ReportCategory).filter(models.ReportCategory.id == report.category_id).first()
+        )
+    
+    # Получаем версии
+    versions = await run_in_threadpool(
+        lambda: db.query(models.ReportVersion).filter(models.ReportVersion.report_id == report_id).order_by(models.ReportVersion.version_number.desc()).all()
+    )
+    
+    # Получаем комментарии
+    comments = await run_in_threadpool(
+        lambda: db.query(models.ReportComment).filter(models.ReportComment.report_id == report_id).order_by(models.ReportComment.created_at.desc()).all()
+    )
+    
+    return templates.TemplateResponse("regional_admin_report_view.html", {
+        "request": request,
+        "report": report,
+        "category": category,
+        "files": files,
+        "versions": versions,
+        "comments": comments,
+        "months": MONTHS
+    })
+
+@app.get("/regional-admin/report/{report_id}/edit", response_class=HTMLResponse)
+async def regional_admin_edit_report_page(
+    request: Request,
+    report_id: int,
+    db: Session = Depends(get_db)
+):
+    """Страница редактирования отчёта"""
+    if not request.session.get("regional_admin"):
+        return RedirectResponse("/regional-admin/login", status_code=303)
+    
+    report = await run_in_threadpool(
+        lambda: db.query(models.Report).filter(models.Report.id == report_id).first()
+    )
+    
+    if not report:
+        raise HTTPException(status_code=404, detail="Отчёт не найден")
+    
+    # Парсим данные
+    try:
+        report.data = json.loads(report.data) if report.data else {}
+    except:
+        report.data = {}
+    
+    categories = await run_in_threadpool(
+        lambda: db.query(models.ReportCategory).filter(models.ReportCategory.is_active == True).all()
+    )
+    
+    files = await run_in_threadpool(
+        lambda: db.query(models.ReportFile).filter(models.ReportFile.report_id == report_id).all()
+    )
+    
+    return templates.TemplateResponse("regional_admin_report_edit.html", {
+        "request": request,
+        "report": report,
+        "categories": categories,
+        "files": files,
+        "months": MONTHS
+    })
+
+@app.post("/regional-admin/report/{report_id}/edit")
+async def regional_admin_update_report(
+    request: Request,
+    report_id: int,
+    title: str = Form(...),
+    description: str = Form(""),
+    category_id: int = Form(None),
+    year: int = Form(...),
+    month: int = Form(None),
+    quarter: int = Form(None),
+    report_data: str = Form("{}"),
+    status: str = Form("draft"),
+    db: Session = Depends(get_db)
+):
+    """Обновление отчёта"""
+    if not request.session.get("regional_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    report = await run_in_threadpool(
+        lambda: db.query(models.Report).filter(models.Report.id == report_id).first()
+    )
+    
+    if not report:
+        raise HTTPException(status_code=404, detail="Отчёт не найден")
+    
+    # Сохраняем текущую версию перед изменением
+    current_version = models.ReportVersion(
+        report_id=report.id,
+        version_number=(await run_in_threadpool(
+            lambda: db.query(models.ReportVersion).filter(models.ReportVersion.report_id == report_id).count()
+        )) + 1,
+        data_snapshot=json.dumps(report.data) if report.data else "{}",
+        changed_at=datetime.utcnow(),
+        change_comment="Автоматическое сохранение версии перед редактированием"
+    )
+    db.add(current_version)
+    
+    # Обновляем отчёт
+    report.title = title
+    report.description = description
+    report.category_id = category_id if category_id else None
+    report.year = year
+    report.month = month
+    report.quarter = quarter
+    report.data = report_data
+    report.status = status
+    report.is_published = (status == "published")
+    report.updated_at = datetime.utcnow()
+    
+    await run_in_threadpool(db.commit)
+    
+    return RedirectResponse(f"/regional-admin/report/{report_id}", status_code=303)
+
+@app.post("/regional-admin/report/{report_id}/add-files")
+async def regional_admin_add_report_files(
+    request: Request,
+    report_id: int,
+    files: List[UploadFile] = File(...),
+    db: Session = Depends(get_db)
+):
+    """Добавление файлов к отчёту"""
+    if not request.session.get("regional_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    report = await run_in_threadpool(
+        lambda: db.query(models.Report).filter(models.Report.id == report_id).first()
+    )
+    
+    if not report:
+        raise HTTPException(status_code=404, detail="Отчёт не найден")
+    
+    for file in files:
+        if file.filename:
+            file_ext = Path(file.filename).suffix.lower()
+            safe_name = f"report_{report_id}_{int(time.time())}_{secrets.token_hex(8)}{file_ext}"
+            file_path = REPORTS_DIR / safe_name
+            
+            await save_uploaded_file_optimized(file, file_path)
+            
+            report_file = models.ReportFile(
+                report_id=report_id,
+                filename=safe_name,
+                original_name=file.filename,
+                file_path=str(file_path.relative_to(Path(__file__).resolve().parent)),
+                file_size=file.size,
+                file_type=file_ext[1:] if file_ext else "unknown"
+            )
+            db.add(report_file)
+    
+    await run_in_threadpool(db.commit)
+    
+    return RedirectResponse(f"/regional-admin/report/{report_id}", status_code=303)
+
+@app.get("/regional-admin/report/{report_id}/delete-file/{file_id}")
+async def regional_admin_delete_report_file(
+    request: Request,
+    report_id: int,
+    file_id: int,
+    db: Session = Depends(get_db)
+):
+    """Удаление файла из отчёта"""
+    if not request.session.get("regional_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    file = await run_in_threadpool(
+        lambda: db.query(models.ReportFile).filter(models.ReportFile.id == file_id, models.ReportFile.report_id == report_id).first()
+    )
+    
+    if file:
+        # Удаляем физический файл
+        BASE_DIR = Path(__file__).resolve().parent
+        file_path = BASE_DIR / file.file_path
+        await delete_file_optimized(file_path)
+        
+        # Удаляем запись из БД
+        await run_in_threadpool(lambda: db.delete(file))
+        await run_in_threadpool(db.commit)
+    
+    return RedirectResponse(f"/regional-admin/report/{report_id}", status_code=303)
+
+@app.post("/regional-admin/report/{report_id}/delete")
+async def regional_admin_delete_report(
+    request: Request,
+    report_id: int,
+    db: Session = Depends(get_db)
+):
+    """Удаление отчёта"""
+    if not request.session.get("regional_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    report = await run_in_threadpool(
+        lambda: db.query(models.Report).filter(models.Report.id == report_id).first()
+    )
+    
+    if report:
+        # Удаляем связанные файлы
+        files = await run_in_threadpool(
+            lambda: db.query(models.ReportFile).filter(models.ReportFile.report_id == report_id).all()
+        )
+        BASE_DIR = Path(__file__).resolve().parent
+        for file in files:
+            file_path = BASE_DIR / file.file_path
+            await delete_file_optimized(file_path)
+        
+        # Удаляем отчёт (каскадно удалятся связанные записи)
+        await run_in_threadpool(lambda: db.delete(report))
+        await run_in_threadpool(db.commit)
+    
+    return RedirectResponse("/regional-admin/reports", status_code=303)
+
+@app.post("/regional-admin/report/{report_id}/comment")
+async def regional_admin_add_comment(
+    request: Request,
+    report_id: int,
+    content: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Добавление комментария к отчёту"""
+    if not request.session.get("regional_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    comment = models.ReportComment(
+        report_id=report_id,
+        user_name="Региональный администратор",
+        content=content
+    )
+    
+    db.add(comment)
+    await run_in_threadpool(db.commit)
+    
+    return RedirectResponse(f"/regional-admin/report/{report_id}", status_code=303)
+
+@app.get("/regional-admin/report/{report_id}/export/{format}")
+async def regional_admin_export_report(
+    request: Request,
+    report_id: int,
+    format: str,  # json, html
+    db: Session = Depends(get_db)
+):
+    """Экспорт отчёта в разных форматах"""
+    if not request.session.get("regional_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    report = await run_in_threadpool(
+        lambda: db.query(models.Report).filter(models.Report.id == report_id).first()
+    )
+    
+    if not report:
+        raise HTTPException(status_code=404, detail="Отчёт не найден")
+    
+    try:
+        report.data = json.loads(report.data) if report.data else {}
+    except:
+        report.data = {}
+    
+    if format == "json":
+        return JSONResponse({
+            "id": report.id,
+            "title": report.title,
+            "description": report.description,
+            "year": report.year,
+            "month": report.month,
+            "quarter": report.quarter,
+            "data": report.data,
+            "status": report.status,
+            "created_at": report.created_at.isoformat() if report.created_at else None,
+            "updated_at": report.updated_at.isoformat() if report.updated_at else None
+        })
+    
+    elif format == "html":
+        # Генерируем HTML страницу с отчётом
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>{report.title}</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }}
+                h1 {{ color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; }}
+                .meta {{ color: #666; margin-bottom: 20px; }}
+                .data-section {{ background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; }}
+                pre {{ background: #fff; padding: 15px; overflow-x: auto; }}
+            </style>
+        </head>
+        <body>
+            <h1>{report.title}</h1>
+            <div class="meta">
+                <strong>Год:</strong> {report.year} | 
+                <strong>Статус:</strong> {report.status} |
+                <strong>Создан:</strong> {report.created_at.strftime('%d.%m.%Y %H:%M') if report.created_at else '—'}
+            </div>
+            <p>{report.description or 'Нет описания'}</p>
+            <div class="data-section">
+                <h3>Данные отчёта</h3>
+                <pre>{json.dumps(report.data, ensure_ascii=False, indent=2)}</pre>
+            </div>
+        </body>
+        </html>
+        """
+        return HTMLResponse(content=html_content)
+    
+    else:
+        raise HTTPException(status_code=400, detail="Неподдерживаемый формат экспорта")
+
+@app.get("/regional-admin/import-report-form", response_class=HTMLResponse)
+async def regional_admin_import_report_form(request: Request, db: Session = Depends(get_db)):
+    """Форма для импорта отчёта"""
+    if not request.session.get("regional_admin"):
+        return RedirectResponse("/regional-admin/login", status_code=303)
+    
+    categories = await run_in_threadpool(
+        lambda: db.query(models.ReportCategory).filter(models.ReportCategory.is_active == True).all()
+    )
+    
+    return templates.TemplateResponse("regional_admin_import_report.html", {
+        "request": request,
+        "categories": categories
+    })
+
+@app.post("/regional-admin/import-report")
+async def regional_admin_import_report(
+    request: Request,
+    title: str = Form(...),
+    description: str = Form(""),
+    category_id: int = Form(None),
+    year: int = Form(...),
+    month: int = Form(None),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """Импорт отчёта из файла (PDF, DOCX, XLSX, JSON)"""
+    if not request.session.get("regional_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    # Определяем тип файла
+    file_ext = Path(file.filename).suffix.lower()
+    
+    # Пытаемся извлечь данные из файла
+    report_data = {}
+    
+    if file_ext == '.json':
+        content = await file.read()
+        try:
+            report_data = json.loads(content.decode('utf-8'))
+        except:
+            pass
+    
+    # Создаём отчёт
+    report = models.Report(
+        title=title,
+        description=description,
+        category_id=category_id if category_id else None,
+        year=year,
+        month=month,
+        data=json.dumps(report_data, ensure_ascii=False) if report_data else "{}",
+        status="draft"
+    )
+    
+    db.add(report)
+    await run_in_threadpool(db.flush)
+    
+    # Сохраняем загруженный файл
+    safe_name = f"import_{report.id}_{int(time.time())}_{secrets.token_hex(8)}{file_ext}"
+    file_path = REPORTS_DIR / safe_name
+    
+    await save_uploaded_file_optimized(file, file_path)
+    
+    report_file = models.ReportFile(
+        report_id=report.id,
+        filename=safe_name,
+        original_name=file.filename,
+        file_path=str(file_path.relative_to(Path(__file__).resolve().parent)),
+        file_size=file.size,
+        file_type=file_ext[1:] if file_ext else "unknown"
+    )
+    db.add(report_file)
+    
+    await run_in_threadpool(db.commit)
+    
+    return RedirectResponse(f"/regional-admin/report/{report.id}", status_code=303)
+
+# Добавляем ссылку на региональную админку в layout.html через контекстный процессор
+@app.middleware("http")
+async def add_regional_admin_link(request: Request, call_next):
+    response = await call_next(request)
+    return response
+
+@app.get("/regional-admin/report/{report_id}/download-file/{file_id}")
+async def regional_admin_download_report_file(
+    request: Request,
+    report_id: int,
+    file_id: int,
+    db: Session = Depends(get_db)
+):
+    """Скачивание файла из отчёта"""
+    if not request.session.get("regional_admin"):
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
+    
+    file = await run_in_threadpool(
+        lambda: db.query(models.ReportFile).filter(
+            models.ReportFile.id == file_id,
+            models.ReportFile.report_id == report_id
+        ).first()
+    )
+    
+    if not file:
+        raise HTTPException(status_code=404, detail="Файл не найден")
+    
+    BASE_DIR = Path(__file__).resolve().parent
+    file_path = BASE_DIR / file.file_path
+    
+    if not await run_in_threadpool(file_path.exists):
+        raise HTTPException(status_code=404, detail="Файл не найден на диске")
+    
+    # Кодируем имя файла для корректной обработки русских символов
+    import urllib.parse
+    encoded_filename = urllib.parse.quote(file.original_name)
+    
+    return FileResponse(
+        path=file_path,
+        filename=file.original_name,
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
+        }
+    )
+
+# ========== ПУБЛИЧНЫЕ ОТЧЁТЫ ==========
+@app.get("/public-reports", response_class=HTMLResponse)
+async def public_reports(
+    request: Request,
+    category_id: str = None,
+    year: str = None,
+    search: str = "",
+    page: int = 1,
+    per_page: int = 20,
+    db: Session = Depends(get_db)
+):
+    """Публичная страница с опубликованными отчётами"""
+    
+    query = db.query(models.Report).filter(
+        models.Report.is_published == True,
+        models.Report.status == "published"
+    )
+    
+    # Преобразуем строки в числа, если они не пустые
+    category_id_int = None
+    if category_id and category_id.strip():
+        try:
+            category_id_int = int(category_id)
+        except ValueError:
+            pass
+    
+    year_int = None
+    if year and year.strip():
+        try:
+            year_int = int(year)
+        except ValueError:
+            pass
+    
+    # Применяем фильтры
+    if category_id_int:
+        query = query.filter(models.Report.category_id == category_id_int)
+    if year_int:
+        query = query.filter(models.Report.year == year_int)
+    if search:
+        query = query.filter(
+            or_(
+                models.Report.title.ilike(f"%{search}%"),
+                models.Report.description.ilike(f"%{search}%")
+            )
+        )
+    
+    total = await run_in_threadpool(query.count)
+    offset = (page - 1) * per_page
+    reports = await run_in_threadpool(
+        lambda: query.order_by(models.Report.created_at.desc())
+        .offset(offset).limit(per_page).all()
+    )
+    
+    # Получаем категории для фильтра
+    categories = await run_in_threadpool(
+        lambda: db.query(models.ReportCategory).filter(
+            models.ReportCategory.is_active == True
+        ).all()
+    )
+    
+    # Получаем доступные годы
+    years_result = await run_in_threadpool(
+        lambda: db.query(models.Report.year).distinct().order_by(models.Report.year.desc()).all()
+    )
+    years = [str(y[0]) for y in years_result if y[0]]
+    
+    # Загружаем данные отчётов
+    for report in reports:
+        try:
+            report.data = json.loads(report.data) if report.data else {}
+        except:
+            report.data = {}
+        
+        if report.category_id:
+            report.category = await run_in_threadpool(
+                lambda: db.query(models.ReportCategory).filter(models.ReportCategory.id == report.category_id).first()
+            )
+    
+    return templates.TemplateResponse("public_reports.html", {
+        "request": request,
+        "reports": reports,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "categories": categories,
+        "years": years,
+        "selected_category": category_id if category_id else "",
+        "selected_year": year if year else "",
+        "search": search
+    })
+
+@app.get("/public-reports/{report_id}", response_class=HTMLResponse)
+async def public_report_detail(
+    request: Request,
+    report_id: int,
+    db: Session = Depends(get_db)
+):
+    """Публичный просмотр отдельного отчёта"""
+    
+    report = await run_in_threadpool(
+        lambda: db.query(models.Report).filter(
+            models.Report.id == report_id,
+            models.Report.is_published == True,
+            models.Report.status == "published"
+        ).first()
+    )
+    
+    if not report:
+        raise HTTPException(status_code=404, detail="Отчёт не найден")
+    
+    # Парсим данные
+    try:
+        report.data = json.loads(report.data) if report.data else {}
+    except:
+        report.data = {}
+    
+    # Получаем категорию
+    category = None
+    if report.category_id:
+        category = await run_in_threadpool(
+            lambda: db.query(models.ReportCategory).filter(models.ReportCategory.id == report.category_id).first()
+        )
+    
+    # Получаем файлы
+    files = await run_in_threadpool(
+        lambda: db.query(models.ReportFile).filter(models.ReportFile.report_id == report_id).all()
+    )
+    
+    return templates.TemplateResponse("public_report_detail.html", {
+        "request": request,
+        "report": report,
+        "category": category,
+        "files": files
+    })
+
+@app.get("/public-reports/download/{file_id}")
+async def public_download_file(
+    request: Request,
+    file_id: int,
+    db: Session = Depends(get_db)
+):
+    """Публичное скачивание файла из отчёта"""
+    
+    file = await run_in_threadpool(
+        lambda: db.query(models.ReportFile).filter(models.ReportFile.id == file_id).first()
+    )
+    
+    if not file:
+        raise HTTPException(status_code=404, detail="Файл не найден")
+    
+    # Проверяем, что отчёт опубликован
+    report = await run_in_threadpool(
+        lambda: db.query(models.Report).filter(
+            models.Report.id == file.report_id,
+            models.Report.is_published == True,
+            models.Report.status == "published"
+        ).first()
+    )
+    
+    if not report:
+        raise HTTPException(status_code=404, detail="Файл не найден")
+    
+    BASE_DIR = Path(__file__).resolve().parent
+    file_path = BASE_DIR / file.file_path
+    
+    if not await run_in_threadpool(file_path.exists):
+        raise HTTPException(status_code=404, detail="Файл не найден на диске")
+    
+    # Увеличиваем счётчик просмотров
+    report.views_count = (report.views_count or 0) + 1
+    await run_in_threadpool(db.commit)
+    
+    # Кодируем имя файла
+    import urllib.parse
+    encoded_filename = urllib.parse.quote(file.original_name)
+    
+    return FileResponse(
+        path=file_path,
+        filename=file.original_name,
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
+        }
+    )
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(

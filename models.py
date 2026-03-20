@@ -24,6 +24,9 @@ class User(Base):
     
     # Связь с дашбордами
     dashboards = relationship("Dashboard", back_populates="creator", cascade="all, delete-orphan")
+    # Связь с отчётами (без cascade, так как ondelete SET NULL на уровне БД)
+    reports = relationship("Report", back_populates="creator")
+
 
 class Dashboard(Base):
     __tablename__ = "dashboards"
@@ -42,6 +45,7 @@ class Dashboard(Base):
     # Связи
     creator = relationship("User", back_populates="dashboards")
     elements = relationship("DashboardElement", back_populates="dashboard", cascade="all, delete-orphan")
+
 
 class DashboardElement(Base):
     __tablename__ = "dashboard_elements"
@@ -165,3 +169,130 @@ class KnowledgeBaseComment(Base):
     
     # Связи
     document = relationship("KnowledgeBaseDocument")
+
+
+# ========== МОДЕЛИ ДЛЯ УНИВЕРСАЛЬНОЙ СИСТЕМЫ УПРАВЛЕНИЯ ОТЧЁТНОСТЬЮ ==========
+
+class ReportCategory(Base):
+    """Категории отчётов"""
+    __tablename__ = "report_categories"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(500), nullable=False)
+    description = Column(Text)
+    icon = Column(String(50), default="📊")
+    color = Column(String(20), default="#667eea")
+    parent_id = Column(Integer, ForeignKey("report_categories.id", ondelete="CASCADE"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    order_index = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)
+    
+    # Связи
+    parent = relationship("ReportCategory", remote_side=[id], backref="children")
+    reports = relationship("Report", back_populates="category", cascade="all, delete-orphan")
+
+
+class Report(Base):
+    """Универсальные отчёты"""
+    __tablename__ = "reports"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(1000), nullable=False)
+    description = Column(Text)
+    category_id = Column(Integer, ForeignKey("report_categories.id", ondelete="SET NULL"), nullable=True)
+    
+    # Тип отчёта (питание, несчастные случаи, кадетское образование и т.д.)
+    report_type = Column(String(100), default="standard", index=True)
+    
+    # Период
+    year = Column(Integer, index=True)
+    month = Column(Integer, nullable=True)
+    quarter = Column(Integer, nullable=True)  # 1-4
+    
+    # Данные отчёта в JSON (универсальное хранение)
+    data = Column(Text, default="{}")  # JSON строка
+    
+    # Файлы, прикреплённые к отчёту (пути к файлам) - для обратной совместимости
+    file_paths = Column(Text, default="[]")  # JSON список путей
+    
+    # Статистика просмотров (добавлено)
+    views_count = Column(BigInteger, default=0, index=True)
+    
+    # Статус
+    status = Column(String(50), default="draft", index=True)  # draft, published, archived
+    is_published = Column(Boolean, default=False, index=True)
+    
+    # Метаданные
+    created_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Связи
+    category = relationship("ReportCategory", back_populates="reports")
+    creator = relationship("User", back_populates="reports")
+    files = relationship("ReportFile", back_populates="report", cascade="all, delete-orphan")
+    versions = relationship("ReportVersion", back_populates="report", cascade="all, delete-orphan")
+    comments = relationship("ReportComment", back_populates="report", cascade="all, delete-orphan")
+
+
+class ReportFile(Base):
+    """Файлы, прикреплённые к отчётам"""
+    __tablename__ = "report_files"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    report_id = Column(Integer, ForeignKey("reports.id", ondelete="CASCADE"), nullable=False, index=True)
+    filename = Column(String(500), nullable=False)
+    original_name = Column(String(500), nullable=False)
+    file_path = Column(String(1000), nullable=False)
+    file_size = Column(BigInteger, default=0)
+    file_type = Column(String(100))  # pdf, docx, xlsx, jpg и т.д.
+    uploaded_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    uploaded_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Связи
+    report = relationship("Report", back_populates="files")
+
+
+class ReportVersion(Base):
+    """История версий отчётов"""
+    __tablename__ = "report_versions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    report_id = Column(Integer, ForeignKey("reports.id", ondelete="CASCADE"), nullable=False, index=True)
+    version_number = Column(Integer, default=1)
+    data_snapshot = Column(Text, default="{}")  # JSON строка с данными
+    changed_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    changed_at = Column(DateTime, default=datetime.utcnow)
+    change_comment = Column(String(500))
+    
+    # Связи
+    report = relationship("Report", back_populates="versions")
+
+
+class ReportTemplate(Base):
+    """Шаблоны для создания отчётов"""
+    __tablename__ = "report_templates"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(500), nullable=False)
+    description = Column(Text)
+    report_type = Column(String(100), default="standard")
+    structure = Column(Text, default="{}")  # JSON со структурой данных
+    fields = Column(Text, default="[]")  # JSON со списком полей
+    is_default = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ReportComment(Base):
+    """Комментарии к отчётам"""
+    __tablename__ = "report_comments"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    report_id = Column(Integer, ForeignKey("reports.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    user_name = Column(String(500))
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Связи
+    report = relationship("Report", back_populates="comments")
