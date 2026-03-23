@@ -11,6 +11,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Optional, Dict
 from contextlib import asynccontextmanager
+from fastapi.responses import JSONResponse  # Уже есть, не меняем
+from fastapi.middleware.cors import CORSMiddleware  # Добавить, если нет
 
 # Файловый ввод‑вывод
 import aiofiles
@@ -393,11 +395,97 @@ async def get_oferta(request: Request):
     except Exception:
         raise HTTPException(status_code=404, detail="Документ не найден")
     
+@app.get("/pay.html", response_class=HTMLResponse)
+async def get_pay(request: Request):
+    try:
+        return templates.TemplateResponse("pay.html", {"request": request})
+    except Exception:
+        raise HTTPException(status_code=404, detail="Документ не найден")
+    
 # --- СТРАНИЦА АНАЛИЗА СТАТИСТИКИ ---
 @app.get("/analis", response_class=HTMLResponse)
 async def analis_page(request: Request):
     """Страница анализа статистики"""
     return templates.TemplateResponse("analis.html", {"request": request})
+# ========== СТРАНИЦА УТИЛИТ ЕЦМП ==========
+@app.get("/util", response_class=HTMLResponse)
+async def utilities_page(request: Request):
+    """Страница с утилитами ЕЦМП"""
+    return templates.TemplateResponse("util.html", {"request": request})
+
+# ========== НОВЫЕ СТРАНИЦЫ ==========
+
+# Страница ФЦМПО
+@app.get("/fcmp-support", response_class=HTMLResponse)
+async def fcmp_support(request: Request):
+    """Страница базы данных ФЦМПО"""
+    # Проверяем, является ли пользователь админом
+    is_admin = request.session.get("knowledge_base_admin", False)
+    
+    # Загружаем заявки из JSON файла
+    import json
+    requests_file = Path(__file__).resolve().parent / "data" / "fcmp_requests.json"
+    
+    requests = []
+    if requests_file.exists():
+        async with aiofiles.open(requests_file, "r", encoding="utf-8") as f:
+            content = await f.read()
+            if content:
+                requests = json.loads(content)
+    
+    return templates.TemplateResponse("fcmp_support.html", {
+        "request": request,
+        "is_admin": is_admin,
+        "requests": requests
+    })
+
+# Страница техподдержки
+@app.get("/support", response_class=HTMLResponse)
+async def support_page(request: Request):
+    """Страница технической поддержки"""
+    return templates.TemplateResponse("support.html", {"request": request})
+
+# Страница инструктаж
+@app.get("/tutorials", response_class=HTMLResponse)
+async def tutorials_page(request: Request):
+    """Страница с видеоинструкциями"""
+    return templates.TemplateResponse("tutorials.html", {"request": request})
+
+# API для работы с заявками (сохранение в JSON)
+@app.post("/api/fcmp-request")
+async def save_fcmp_request(request: Request):
+    """Сохранение заявки в JSON файл"""
+    import json
+    data = await request.json()
+    
+    requests_file = Path(__file__).resolve().parent / "data" / "fcmp_requests.json"
+    requests_file.parent.mkdir(exist_ok=True)
+    
+    # Загружаем существующие заявки
+    requests = []
+    if requests_file.exists():
+        async with aiofiles.open(requests_file, "r", encoding="utf-8") as f:
+            content = await f.read()
+            if content:
+                requests = json.loads(content)
+    
+    # Добавляем новую заявку
+    new_request = {
+        "id": len(requests) + 1,
+        "date": datetime.now().strftime("%d.%m.%Y %H:%M"),
+        "school": data.get("school"),
+        "email": data.get("email"),
+        "problem": data.get("problem"),
+        "status": "pending",
+        "reply": None
+    }
+    requests.append(new_request)
+    
+    # Сохраняем
+    async with aiofiles.open(requests_file, "w", encoding="utf-8") as f:
+        await f.write(json.dumps(requests, ensure_ascii=False, indent=2))
+    
+    return {"status": "success", "id": new_request["id"]}
 
 # Константы
 FOOD_TYPES = ["Только завтраки", "Завтраки и обеды", "Интернаты", "Обеды"]
@@ -491,6 +579,8 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Ежедневное меню - Учреждение {uid}</title>
         <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
             * {{
                 margin: 0;
                 padding: 0;
@@ -498,23 +588,19 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             }}
 
             body {{
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: linear-gradient(135deg, #f5f7fa 0%, #e9edf2 100%);
                 min-height: 100vh;
-                padding: 30px 20px;
+                padding: 32px 24px;
             }}
 
-            .container {{
-                max-width: 1400px;
+            /* Контейнер */
+            .dashboard-container {{
+                max-width: 1440px;
                 margin: 0 auto;
-                background: rgba(255, 255, 255, 0.95);
-                backdrop-filter: blur(10px);
-                border-radius: 30px;
-                box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
-                overflow: hidden;
                 display: flex;
-                gap: 30px;
-                padding: 30px;
+                gap: 32px;
+                flex-wrap: wrap;
             }}
 
             /* Основной контент */
@@ -523,188 +609,265 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
                 min-width: 0;
             }}
 
-            .main-header {{
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                margin: -30px -30px 30px -30px;
-                padding: 40px 30px;
-                color: white;
-                border-radius: 0 0 30px 30px;
-                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            /* Шапка */
+            .hero-section {{
+                background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+                border-radius: 24px;
+                padding: 32px 40px;
+                margin-bottom: 32px;
+                position: relative;
+                overflow: hidden;
             }}
 
-            .main-header h1 {{
-                font-size: 2.5em;
+            .hero-section::before {{
+                content: '';
+                position: absolute;
+                top: -50%;
+                right: -20%;
+                width: 300px;
+                height: 300px;
+                background: radial-gradient(circle, rgba(79, 70, 229, 0.3) 0%, transparent 70%);
+                border-radius: 50%;
+                pointer-events: none;
+            }}
+
+            .hero-section::after {{
+                content: '';
+                position: absolute;
+                bottom: -30%;
+                left: -10%;
+                width: 250px;
+                height: 250px;
+                background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%);
+                border-radius: 50%;
+                pointer-events: none;
+            }}
+
+            .hero-title {{
+                font-size: 2rem;
                 font-weight: 700;
-                margin-bottom: 10px;
+                color: white;
+                margin-bottom: 12px;
                 display: flex;
                 align-items: center;
-                gap: 15px;
+                gap: 12px;
+                flex-wrap: wrap;
+                position: relative;
+                z-index: 1;
             }}
 
-            .main-header h1 span {{
-                font-size: 0.5em;
+            .hero-title span {{
+                font-size: 0.85rem;
                 background: rgba(255, 255, 255, 0.2);
-                padding: 5px 15px;
-                border-radius: 50px;
-                font-weight: 400;
+                padding: 4px 12px;
+                border-radius: 100px;
+                font-weight: 500;
             }}
 
-            .main-header p {{
-                font-size: 1.1em;
-                opacity: 0.9;
+            .hero-meta {{
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                gap: 16px;
+                color: rgba(255, 255, 255, 0.7);
+                font-size: 0.85rem;
+                position: relative;
+                z-index: 1;
             }}
 
+            .hero-meta svg {{
+                width: 16px;
+                height: 16px;
+                stroke: currentColor;
+            }}
+
+            /* Карточки статистики */
             .stats-grid {{
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
                 gap: 20px;
-                margin-bottom: 30px;
+                margin-bottom: 32px;
             }}
 
             .stat-card {{
                 background: white;
                 border-radius: 20px;
                 padding: 20px;
-                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
                 display: flex;
                 align-items: center;
-                gap: 15px;
-                transition: all 0.3s ease;
-                border: 1px solid rgba(102, 126, 234, 0.1);
+                gap: 16px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+                transition: all 0.2s ease;
+                border: 1px solid #eef2f6;
             }}
 
             .stat-card:hover {{
-                transform: translateY(-5px);
-                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
-                border-color: #667eea;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+                border-color: #e2e8f0;
             }}
 
             .stat-icon {{
-                width: 50px;
-                height: 50px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                border-radius: 15px;
+                width: 52px;
+                height: 52px;
+                background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                border-radius: 16px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 1.5em;
-                color: white;
+                color: #4f46e5;
+            }}
+
+            .stat-icon svg {{
+                width: 28px;
+                height: 28px;
+                stroke-width: 1.5;
             }}
 
             .stat-info h3 {{
-                font-size: 0.9em;
-                color: #666;
-                margin-bottom: 5px;
-                font-weight: 400;
+                font-size: 0.75rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: #64748b;
+                margin-bottom: 6px;
             }}
 
             .stat-info p {{
-                font-size: 1.5em;
+                font-size: 1.75rem;
                 font-weight: 700;
-                color: #333;
-                line-height: 1;
+                color: #0f172a;
+                line-height: 1.2;
             }}
 
+            /* Секция года */
             .year-section {{
                 background: white;
                 border-radius: 20px;
-                margin-bottom: 30px;
+                margin-bottom: 24px;
+                border: 1px solid #eef2f6;
                 overflow: hidden;
-                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-                border: 1px solid rgba(102, 126, 234, 0.1);
+                transition: all 0.2s ease;
+            }}
+
+            .year-section:hover {{
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
             }}
 
             .year-header {{
-                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-                padding: 20px 25px;
-                cursor: pointer;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                border-bottom: 2px solid #667eea;
+                padding: 18px 24px;
+                background: #fafcfd;
+                cursor: pointer;
+                border-bottom: 1px solid #eef2f6;
+                transition: all 0.2s ease;
+            }}
+
+            .year-header:hover {{
+                background: #ffffff;
             }}
 
             .year-header h2 {{
-                font-size: 1.5em;
-                color: #333;
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: #0f172a;
                 display: flex;
                 align-items: center;
                 gap: 10px;
             }}
 
-            .year-header .toggle-icon {{
-                font-size: 1.5em;
-                color: #667eea;
-                transition: transform 0.3s ease;
+            .year-badge {{
+                background: #eef2ff;
+                color: #4f46e5;
+                padding: 4px 10px;
+                border-radius: 100px;
+                font-size: 0.7rem;
+                font-weight: 600;
+            }}
+
+            .toggle-icon {{
+                color: #94a3b8;
+                transition: transform 0.2s ease;
             }}
 
             .year-content {{
-                padding: 20px;
+                padding: 24px;
+                display: block;
             }}
 
-            .month-grid {{
+            .year-content.active {{
+                display: block;
+            }}
+
+            /* Сетка месяцев */
+            .months-grid {{
                 display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
                 gap: 20px;
             }}
 
             .month-card {{
-                background: #f8f9fa;
-                border-radius: 15px;
+                background: #fafcfd;
+                border-radius: 16px;
+                border: 1px solid #eef2f6;
                 overflow: hidden;
-                border: 1px solid rgba(102, 126, 234, 0.1);
-                transition: all 0.3s ease;
-            }}
-
-            .month-card:hover {{
-                transform: translateY(-3px);
-                box-shadow: 0 10px 25px rgba(102, 126, 234, 0.15);
-                border-color: #667eea;
-            }}
-
-            .month-header {{
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 15px 20px;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }}
-
-            .month-header h3 {{
-                font-size: 1.1em;
-                font-weight: 600;
-            }}
-
-            .month-header .month-count {{
-                background: rgba(255, 255, 255, 0.2);
-                padding: 3px 10px;
-                border-radius: 20px;
-                font-size: 0.85em;
-            }}
-
-            .month-files {{
-                padding: 15px;
-            }}
-
-            .file-item {{
-                background: white;
-                border-radius: 12px;
-                padding: 12px 15px;
-                margin-bottom: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                border: 1px solid #eee;
                 transition: all 0.2s ease;
             }}
 
-            .file-item:hover {{
-                border-color: #667eea;
-                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+            .month-card:hover {{
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+                border-color: #e2e8f0;
+            }}
+
+            .month-header {{
+                background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                padding: 14px 20px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                border-bottom: 1px solid #eef2f6;
+            }}
+
+            .month-header h3 {{
+                font-size: 1rem;
+                font-weight: 600;
+                color: #1e293b;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }}
+
+            .month-count {{
+                background: #eef2ff;
+                color: #4f46e5;
+                padding: 2px 10px;
+                border-radius: 100px;
+                font-size: 0.7rem;
+                font-weight: 600;
+            }}
+
+            .month-files {{
+                padding: 16px;
+            }}
+
+            /* Файлы */
+            .file-row {{
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 12px;
+                background: white;
+                border-radius: 12px;
+                margin-bottom: 8px;
+                border: 1px solid #f1f5f9;
+                transition: all 0.2s ease;
+            }}
+
+            .file-row:hover {{
+                border-color: #e2e8f0;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
             }}
 
             .file-info {{
@@ -716,15 +879,20 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             }}
 
             .file-icon {{
-                width: 40px;
-                height: 40px;
-                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                width: 36px;
+                height: 36px;
+                background: #f1f5f9;
                 border-radius: 10px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 1.2em;
-                color: #667eea;
+                flex-shrink: 0;
+            }}
+
+            .file-icon svg {{
+                width: 18px;
+                height: 18px;
+                color: #4f46e5;
             }}
 
             .file-details {{
@@ -733,240 +901,224 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             }}
 
             .file-name {{
-                font-weight: 600;
-                color: #333;
-                margin-bottom: 4px;
+                font-weight: 500;
+                font-size: 0.85rem;
+                color: #1e293b;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                margin-bottom: 4px;
             }}
 
             .file-meta {{
                 display: flex;
                 align-items: center;
-                gap: 15px;
-                font-size: 0.85em;
-                color: #666;
+                gap: 12px;
+                font-size: 0.7rem;
+                color: #64748b;
             }}
 
             .file-size {{
-                background: #e8f5e9;
-                color: #2e7d32;
+                background: #f1f5f9;
                 padding: 2px 8px;
                 border-radius: 20px;
                 font-weight: 500;
             }}
 
-            .file-date {{
-                display: flex;
+            .download-link {{
+                background: #f1f5f9;
+                padding: 8px 12px;
+                border-radius: 10px;
+                display: inline-flex;
                 align-items: center;
-                gap: 4px;
-                color: #666;
-            }}
-
-            .download-btn {{
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                border: none;
-                padding: 8px 15px;
-                border-radius: 25px;
-                font-size: 0.9em;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 5px;
-                transition: all 0.3s ease;
+                gap: 6px;
                 text-decoration: none;
+                color: #4f46e5;
+                font-size: 0.75rem;
+                font-weight: 500;
+                transition: all 0.2s ease;
+                flex-shrink: 0;
             }}
 
-            .download-btn:hover {{
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            .download-link:hover {{
+                background: #4f46e5;
+                color: white;
+            }}
+
+            .download-link svg {{
+                width: 14px;
+                height: 14px;
+                stroke: currentColor;
             }}
 
             /* Сайдбар */
-            .menu-sidebar {{
-                width: 380px;
+            .sidebar {{
+                width: 360px;
                 flex-shrink: 0;
             }}
 
             .sidebar-sticky {{
                 position: sticky;
-                top: 30px;
+                top: 32px;
             }}
 
             .sidebar-card {{
                 background: white;
-                border-radius: 25px;
-                padding: 25px;
-                margin-bottom: 25px;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-                border: 1px solid rgba(102, 126, 234, 0.2);
+                border-radius: 20px;
+                padding: 24px;
+                margin-bottom: 24px;
+                border: 1px solid #eef2f6;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
             }}
 
             .sidebar-title {{
-                font-size: 1.3em;
-                font-weight: 700;
-                color: #333;
+                font-size: 1rem;
+                font-weight: 600;
+                color: #0f172a;
                 margin-bottom: 20px;
-                padding-bottom: 15px;
-                border-bottom: 2px solid #667eea;
+                padding-bottom: 12px;
+                border-bottom: 2px solid #eef2f6;
                 display: flex;
                 align-items: center;
                 gap: 10px;
             }}
 
-            .special-file {{
-                background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-                border: 1px solid #ffb74d;
-                border-radius: 15px;
-                padding: 15px;
-                margin-bottom: 15px;
+            .sidebar-title svg {{
+                width: 20px;
+                height: 20px;
+                color: #4f46e5;
             }}
 
-            .special-file-title {{
-                font-weight: 700;
-                color: #e65100;
-                margin-bottom: 10px;
+            .special-card {{
+                background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+                border: 1px solid #fde047;
+                border-radius: 16px;
+                padding: 16px;
+                margin-bottom: 16px;
+            }}
+
+            .special-title {{
+                font-weight: 600;
+                color: #b45309;
+                margin-bottom: 12px;
                 display: flex;
                 align-items: center;
                 gap: 8px;
+                font-size: 0.85rem;
             }}
 
-            .badge {{
-                display: inline-block;
-                padding: 4px 12px;
-                border-radius: 50px;
-                font-size: 0.8em;
+            .category-group {{
+                margin-bottom: 20px;
+            }}
+
+            .category-group h4 {{
+                font-size: 0.75rem;
                 font-weight: 600;
                 text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: #4f46e5;
+                margin-bottom: 12px;
             }}
 
-            .badge-success {{
-                background: #d4edda;
-                color: #155724;
-                border: 1px solid #c3e6cb;
-            }}
-
-            .badge-warning {{
-                background: #fff3cd;
-                color: #856404;
-                border: 1px solid #ffeeba;
-            }}
-
-            .badge-info {{
-                background: #d1ecf1;
-                color: #0c5460;
-                border: 1px solid #bee5eb;
-            }}
-
+            /* Карточка соответствия */
             .compliance-card {{
-                background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-                border: 1px solid #28a745;
-                border-radius: 20px;
+                background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+                border: 1px solid #6ee7b7;
+                border-radius: 16px;
                 padding: 20px;
-                margin: 20px 0;
                 display: flex;
-                align-items: center;
-                gap: 15px;
+                gap: 16px;
+                margin: 20px 0;
             }}
 
             .compliance-icon {{
-                width: 50px;
-                height: 50px;
-                background: #28a745;
+                width: 48px;
+                height: 48px;
+                background: #10b981;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: white;
-                font-size: 1.5em;
+                flex-shrink: 0;
             }}
 
-            .compliance-text {{
-                flex: 1;
+            .compliance-icon svg {{
+                width: 24px;
+                height: 24px;
+                stroke: white;
             }}
 
             .compliance-text strong {{
-                color: #155724;
-                font-size: 1.1em;
+                font-size: 0.9rem;
+                color: #065f46;
                 display: block;
-                margin-bottom: 5px;
+                margin-bottom: 4px;
             }}
 
             .compliance-text p {{
-                color: #155724;
-                font-size: 0.9em;
+                font-size: 0.75rem;
+                color: #047857;
                 line-height: 1.4;
-                margin: 0;
             }}
 
+            /* Карточка ссылки */
             .link-card {{
-                background: linear-gradient(135deg, #e7f3ff 0%, #b8daff 100%);
-                border: 1px solid #004085;
-                border-radius: 20px;
-                padding: 20px;
-                margin: 20px 0;
+                background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+                border: 1px solid #93c5fd;
+                border-radius: 16px;
+                padding: 16px;
+                margin-top: 16px;
             }}
 
             .link-card a {{
-                color: #004085;
-                text-decoration: none;
-                font-weight: 600;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
+                text-decoration: none;
+                color: #1e40af;
+                font-weight: 500;
+                font-size: 0.85rem;
             }}
 
             .link-card a:hover {{
                 text-decoration: underline;
             }}
 
+            /* Пустое состояние */
             .empty-state {{
                 text-align: center;
-                padding: 60px 20px;
+                padding: 64px 32px;
                 background: white;
-                border-radius: 20px;
+                border-radius: 24px;
+                border: 1px solid #eef2f6;
             }}
 
-            .empty-state-icon {{
-                font-size: 5em;
-                margin-bottom: 20px;
-                opacity: 0.5;
+            .empty-icon {{
+                width: 80px;
+                height: 80px;
+                margin: 0 auto 20px;
+                color: #cbd5e1;
             }}
 
             .empty-state h3 {{
-                color: #333;
-                margin-bottom: 10px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: #1e293b;
+                margin-bottom: 8px;
             }}
 
             .empty-state p {{
-                color: #666;
-            }}
-
-            /* Анимации */
-            @keyframes fadeIn {{
-                from {{
-                    opacity: 0;
-                    transform: translateY(20px);
-                }}
-                to {{
-                    opacity: 1;
-                    transform: translateY(0);
-                }}
-            }}
-
-            .fade-in {{
-                animation: fadeIn 0.5s ease forwards;
+                color: #64748b;
+                font-size: 0.85rem;
             }}
 
             /* Адаптивность */
             @media (max-width: 1024px) {{
-                .container {{
+                .dashboard-container {{
                     flex-direction: column;
                 }}
                 
-                .menu-sidebar {{
+                .sidebar {{
                     width: 100%;
                 }}
                 
@@ -977,58 +1129,73 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
 
             @media (max-width: 768px) {{
                 body {{
-                    padding: 15px 10px;
+                    padding: 16px;
                 }}
                 
-                .container {{
-                    padding: 20px;
+                .hero-section {{
+                    padding: 24px 20px;
                 }}
                 
-                .main-header {{
-                    margin: -20px -20px 20px -20px;
-                    padding: 30px 20px;
+                .hero-title {{
+                    font-size: 1.5rem;
                 }}
                 
-                .main-header h1 {{
-                    font-size: 1.8em;
-                    flex-direction: column;
-                    align-items: flex-start;
-                    gap: 10px;
+                .stats-grid {{
+                    grid-template-columns: repeat(2, 1fr);
                 }}
                 
-                .main-header h1 span {{
-                    font-size: 0.7em;
-                }}
-                
-                .month-grid {{
+                .months-grid {{
                     grid-template-columns: 1fr;
                 }}
                 
-                .file-item {{
+                .file-row {{
                     flex-direction: column;
                     align-items: flex-start;
-                    gap: 10px;
+                    gap: 12px;
                 }}
                 
-                .download-btn {{
+                .download-link {{
                     width: 100%;
                     justify-content: center;
                 }}
             }}
+
+            /* Анимации */
+            @keyframes fadeInUp {{
+                from {{
+                    opacity: 0;
+                    transform: translateY(12px);
+                }}
+                to {{
+                    opacity: 1;
+                    transform: translateY(0);
+                }}
+            }}
+
+            .animate-in {{
+                animation: fadeInUp 0.4s ease-out forwards;
+                opacity: 0;
+            }}
         </style>
     </head>
     <body>
-        <div class="container">
+        <div class="dashboard-container">
             <div class="main-content">
-                <div class="main-header">
-                    <h1>
-                        📁 Ежедневное меню
+                <!-- Hero секция -->
+                <div class="hero-section animate-in">
+                    <div class="hero-title">
+                        Ежедневное меню
                         <span>Учреждение №{uid}</span>
-                    </h1>
-                    <p>
-                        <span>📅</span> 
-                        Дата просмотра: {datetime.now().strftime('%d.%m.%Y %H:%M')}
-                    </p>
+                    </div>
+                    <div class="hero-meta">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        {datetime.now().strftime('%d.%m.%Y %H:%M')}
+                    </div>
                 </div>
     """
 
@@ -1036,15 +1203,20 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
     
     if not files:
         yield """
-                <div class="empty-state fade-in">
-                    <div class="empty-state-icon">📭</div>
+                <div class="empty-state animate-in">
+                    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="12" y1="18" x2="12" y2="12"/>
+                        <line x1="9" y1="15" x2="15" y2="15"/>
+                    </svg>
                     <h3>Нет доступных файлов</h3>
                     <p>В данном учреждении пока не загружены файлы меню</p>
                 </div>
             </div>
-            </div>
-        </body>
-        </html>
+        </div>
+    </body>
+    </html>
         """
         return
 
@@ -1053,16 +1225,13 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
     kp_files_by_year = {}
     findex_files = []
     
-    # Статистика
     total_files = 0
     total_size = 0
-    file_types = {}
 
     for f in files:
         if f.name == "manifest.json":
             continue
         if not await run_in_threadpool(f.exists):
-            logger.warning(f"Файл {f.name} не найден на диске, пропускаем")
             continue
 
         file_meta = manifest.get(f.name, {})
@@ -1070,10 +1239,6 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
         stat_result = await run_in_threadpool(f.stat)
         total_files += 1
         total_size += stat_result.st_size
-        
-        # Определяем тип файла для статистики
-        ext = Path(f.name).suffix.lower()
-        file_types[ext] = file_types.get(ext, 0) + 1
 
         date_from_name_match = re.search(r'(\d{4})-(\d{2})-(\d{2})', f.name)
         if date_from_name_match:
@@ -1084,8 +1249,7 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             file_info = {
                 "filename": f.name,
                 "date": dt.strftime("%d.%m.%Y %H:%M"),
-                "size": stat_result.st_size,
-                "type": "daily"
+                "size": stat_result.st_size
             }
             grouped_files.setdefault(assigned_year, {}).setdefault(month_name, []).append(file_info)
             continue
@@ -1100,8 +1264,7 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             findex_files.append({
                 "filename": f.name,
                 "date": dt.strftime("%d.%m.%Y %H:%M"),
-                "size": stat_result.st_size,
-                "type": "findex"
+                "size": stat_result.st_size
             })
             continue
 
@@ -1109,8 +1272,7 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             dt = (datetime.strptime(date_str, "%d.%m.%Y %H:%M")
                   if date_str
                   else datetime.fromtimestamp(stat_result.st_mtime))
-        except Exception as e:
-            logger.error(f"Ошибка парсинга даты для {f.name}: {e}")
+        except Exception:
             dt = datetime.now()
 
         assigned_year = file_meta.get("assigned_year", str(dt.year))
@@ -1119,52 +1281,71 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
         file_info = {
             "filename": f.name,
             "date": dt.strftime("%d.%m.%Y %H:%M"),
-            "size": stat_result.st_size,
-            "type": "other"
+            "size": stat_result.st_size
         }
 
         if re.match(r"^tm\d{4}-sm\.xlsx$", f.name):
             tm_year = f.name[2:6]
-            file_info["type"] = "tm"
             tm_files_by_year.setdefault(tm_year, []).append(file_info)
             continue
         if re.match(r"^kp\d{4}\.xlsx$", f.name):
             kp_year = f.name[2:6]
-            file_info["type"] = "kp"
             kp_files_by_year.setdefault(kp_year, []).append(file_info)
             continue
 
         grouped_files.setdefault(assigned_year, {}).setdefault(month_name, []).append(file_info)
 
-    # Статистика
     total_size_mb = total_size / (1024 * 1024)
     
     yield f"""
                 <!-- Статистика -->
                 <div class="stats-grid">
-                    <div class="stat-card fade-in">
-                        <div class="stat-icon">📄</div>
+                    <div class="stat-card animate-in" style="animation-delay: 0s">
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                            </svg>
+                        </div>
                         <div class="stat-info">
                             <h3>Всего файлов</h3>
                             <p>{total_files}</p>
                         </div>
                     </div>
-                    <div class="stat-card fade-in" style="animation-delay: 0.1s">
-                        <div class="stat-icon">📦</div>
+                    <div class="stat-card animate-in" style="animation-delay: 0.05s">
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                        </div>
                         <div class="stat-info">
                             <h3>Общий объем</h3>
                             <p>{total_size_mb:.1f} MB</p>
                         </div>
                     </div>
-                    <div class="stat-card fade-in" style="animation-delay: 0.2s">
-                        <div class="stat-icon">📅</div>
+                    <div class="stat-card animate-in" style="animation-delay: 0.1s">
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                        </div>
                         <div class="stat-info">
                             <h3>Лет в архиве</h3>
                             <p>{len(grouped_files)}</p>
                         </div>
                     </div>
-                    <div class="stat-card fade-in" style="animation-delay: 0.3s">
-                        <div class="stat-icon">📊</div>
+                    <div class="stat-card animate-in" style="animation-delay: 0.15s">
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M4 4h16v16H4z"/>
+                                <path d="M8 8h8M8 12h6M8 16h4"/>
+                            </svg>
+                        </div>
                         <div class="stat-info">
                             <h3>Типов меню</h3>
                             <p>{len(tm_files_by_year)}</p>
@@ -1173,22 +1354,28 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
                 </div>
     """
 
-    # Вывод основных файлов по годам
     for year in sorted(grouped_files.keys(), reverse=True):
         year_total = sum(len(files) for files in grouped_files[year].values())
         
         yield f"""
-                <div class="year-section fade-in">
-                    <div class="year-header" onclick="this.nextElementSibling.classList.toggle('active')">
+                <div class="year-section animate-in">
+                    <div class="year-header" onclick="toggleYear(this)">
                         <h2>
-                            <span>📅</span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
                             {year} год
-                            <span class="badge badge-info">{year_total} файлов</span>
+                            <span class="year-badge">{year_total} файлов</span>
                         </h2>
-                        <span class="toggle-icon">▼</span>
+                        <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
                     </div>
-                    <div class="year-content active">
-                        <div class="month-grid">
+                    <div class="year-content">
+                        <div class="months-grid">
         """
         
         for month in sorted(grouped_files[year].keys(), reverse=True):
@@ -1198,7 +1385,12 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             yield f"""
                             <div class="month-card">
                                 <div class="month-header">
-                                    <h3>📊 {month}</h3>
+                                    <h3>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                            <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/>
+                                        </svg>
+                                        {month}
+                                    </h3>
                                     <span class="month-count">{len(month_files)}</span>
                                 </div>
                                 <div class="month-files">
@@ -1208,30 +1400,30 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
                 size_kb = file_info["size"] // 1024
                 file_ext = Path(file_info["filename"]).suffix.lower()
                 
-                # Выбираем иконку в зависимости от типа файла
-                file_icon = "📄"
-                if file_ext == '.pdf':
-                    file_icon = "📕"
-                elif file_ext in ['.xlsx', '.xls']:
-                    file_icon = "📊"
-                elif file_ext in ['.docx', '.doc']:
-                    file_icon = "📝"
-                
                 yield f"""
-                                    <div class="file-item">
+                                    <div class="file-row">
                                         <div class="file-info">
-                                            <div class="file-icon">{file_icon}</div>
+                                            <div class="file-icon">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                    <polyline points="14 2 14 8 20 8"/>
+                                                </svg>
+                                            </div>
                                             <div class="file-details">
                                                 <div class="file-name">{file_info["filename"]}</div>
                                                 <div class="file-meta">
                                                     <span class="file-size">{size_kb} KB</span>
-                                                    <span class="file-date">📅 {file_info["date"]}</span>
+                                                    <span>{file_info["date"]}</span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <a href="{file_info["filename"]}" class="download-btn" download>
-                                            <span>📥</span>
-                                            <span>Скачать</span>
+                                        <a href="{file_info["filename"]}" class="download-link" download>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                                <polyline points="7 10 12 15 17 10"/>
+                                                <line x1="12" y1="15" x2="12" y2="3"/>
+                                            </svg>
+                                            Скачать
                                         </a>
                                     </div>
                 """
@@ -1249,8 +1441,13 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
 
     if not grouped_files and not findex_files:
         yield """
-                <div class="empty-state fade-in">
-                    <div class="empty-state-icon">📭</div>
+                <div class="empty-state animate-in">
+                    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="12" y1="18" x2="12" y2="12"/>
+                        <line x1="9" y1="15" x2="15" y2="15"/>
+                    </svg>
                     <h3>Нет доступных файлов</h3>
                     <p>В данном учреждении пока не загружены файлы меню</p>
                 </div>
@@ -1263,7 +1460,7 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
 
     if any([findex_files, tm_files_by_year, kp_files_by_year]):
         yield """
-            <div class="menu-sidebar">
+            <div class="sidebar">
                 <div class="sidebar-sticky">
         """
 
@@ -1271,12 +1468,17 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             yield """
                     <div class="sidebar-card">
                         <div class="sidebar-title">
-                            <span>📈</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M4 4h16v16H4z"/>
+                                <path d="M8 8h8M8 12h6M8 16h4"/>
+                            </svg>
                             ФЦМПО
                         </div>
-                        <div class="special-file">
-                            <div class="special-file-title">
-                                <span>⭐</span>
+                        <div class="special-card">
+                            <div class="special-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                                </svg>
                                 Файл качества питания
                             </div>
             """
@@ -1284,19 +1486,28 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             for fi in findex_files:
                 size_kb = fi["size"] // 1024
                 yield f"""
-                            <div class="file-item">
+                            <div class="file-row">
                                 <div class="file-info">
-                                    <div class="file-icon">📊</div>
+                                    <div class="file-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                            <path d="M4 4h16v16H4z"/>
+                                            <polyline points="8 12 12 16 16 8"/>
+                                        </svg>
+                                    </div>
                                     <div class="file-details">
                                         <div class="file-name">{fi["filename"]}</div>
                                         <div class="file-meta">
                                             <span class="file-size">{size_kb} KB</span>
-                                            <span class="file-date">📅 {fi["date"]}</span>
+                                            <span>{fi["date"]}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <a href="{fi["filename"]}" class="download-btn" download>
-                                    <span>📥</span>
+                                <a href="{fi["filename"]}" class="download-link" download>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
                                 </a>
                             </div>
                 """
@@ -1310,7 +1521,12 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             yield """
                     <div class="sidebar-card">
                         <div class="sidebar-title">
-                            <span>📅</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
                             Календари питания
                         </div>
             """
@@ -1320,26 +1536,37 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
                     continue
                     
                 yield f"""
-                        <div style="margin-bottom: 20px;">
-                            <h4 style="color: #16a085; margin-bottom: 10px;">{kp_year} год</h4>
+                        <div class="category-group">
+                            <h4>{kp_year} год</h4>
                 """
                 
                 for fi in sorted(kp_files_by_year[kp_year], key=lambda x: x["date"], reverse=True):
                     size_kb = fi["size"] // 1024
                     yield f"""
-                            <div class="file-item">
+                            <div class="file-row">
                                 <div class="file-info">
-                                    <div class="file-icon">📅</div>
+                                    <div class="file-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                            <line x1="16" y1="2" x2="16" y2="6"/>
+                                            <line x1="8" y1="2" x2="8" y2="6"/>
+                                            <line x1="3" y1="10" x2="21" y2="10"/>
+                                        </svg>
+                                    </div>
                                     <div class="file-details">
                                         <div class="file-name">{fi["filename"]}</div>
                                         <div class="file-meta">
                                             <span class="file-size">{size_kb} KB</span>
-                                            <span class="file-date">📅 {fi["date"]}</span>
+                                            <span>{fi["date"]}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <a href="{fi["filename"]}" class="download-btn" download>
-                                    <span>📥</span>
+                                <a href="{fi["filename"]}" class="download-link" download>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
                                 </a>
                             </div>
                     """
@@ -1356,7 +1583,10 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
             yield """
                     <div class="sidebar-card">
                         <div class="sidebar-title">
-                            <span>📋</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M4 4h16v16H4z"/>
+                                <path d="M8 8h8M8 12h6M8 16h4"/>
+                            </svg>
                             Типовое меню
                         </div>
             """
@@ -1366,26 +1596,35 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
                     continue
                     
                 yield f"""
-                        <div style="margin-bottom: 20px;">
-                            <h4 style="color: #e67e22; margin-bottom: 10px;">{tm_year} год</h4>
+                        <div class="category-group">
+                            <h4>{tm_year} год</h4>
                 """
                 
                 for fi in sorted(tm_files_by_year[tm_year], key=lambda x: x["date"], reverse=True):
                     size_kb = fi["size"] // 1024
                     yield f"""
-                            <div class="file-item">
+                            <div class="file-row">
                                 <div class="file-info">
-                                    <div class="file-icon">📋</div>
+                                    <div class="file-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                            <path d="M4 4h16v16H4z"/>
+                                            <path d="M8 8h8M8 12h6M8 16h4"/>
+                                        </svg>
+                                    </div>
                                     <div class="file-details">
                                         <div class="file-name">{fi["filename"]}</div>
                                         <div class="file-meta">
                                             <span class="file-size">{size_kb} KB</span>
-                                            <span class="file-date">📅 {fi["date"]}</span>
+                                            <span>{fi["date"]}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <a href="{fi["filename"]}" class="download-btn" download>
-                                    <span>📥</span>
+                                <a href="{fi["filename"]}" class="download-link" download>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
                                 </a>
                             </div>
                     """
@@ -1401,7 +1640,11 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
         yield """
                     <div class="sidebar-card">
                         <div class="compliance-card">
-                            <div class="compliance-icon">✅</div>
+                            <div class="compliance-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
                             <div class="compliance-text">
                                 <strong>Соответствует нормам СанПиН</strong>
                                 <p>Меню разработано в соответствии с требованиями санитарных правил и норм</p>
@@ -1412,8 +1655,12 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
                     <div class="sidebar-card">
                         <div class="link-card">
                             <a href="https://opros.cemon.ru/" target="_blank">
-                                <span>🔗 Опрос родителей и обучающихся ФЦМПО</span>
-                                <span>→</span>
+                                <span>Опрос родителей и обучающихся ФЦМПО</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                    <polyline points="15 3 21 3 21 9"></polyline>
+                                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                                </svg>
                             </a>
                         </div>
                     </div>
@@ -1423,43 +1670,25 @@ async def generate_federal_html_stream(uid: int, base_path: Path, manifest: dict
 
     yield """
         </div>
-        <!-- /container -->
+        <!-- /dashboard-container -->
 
         <script>
-            // Интерактивность для сворачивания/разворачивания годов
-            document.querySelectorAll('.year-header').forEach(header => {
-                header.addEventListener('click', () => {
-                    const content = header.nextElementSibling;
-                    const icon = header.querySelector('.toggle-icon');
-                    
-                    if (content.style.display === 'none') {
-                        content.style.display = 'block';
-                        icon.textContent = '▼';
-                    } else {
-                        content.style.display = 'none';
-                        icon.textContent = '▶';
-                    }
-                });
-            });
-
-            // Плавная прокрутка к файлам при клике
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    document.querySelector(this.getAttribute('href')).scrollIntoView({
-                        behavior: 'smooth'
-                    });
-                });
-            });
-
-            // Анимация при наведении на карточки
-            document.querySelectorAll('.stat-card, .month-card, .file-item').forEach(card => {
-                card.addEventListener('mouseenter', () => {
-                    card.style.transform = 'translateY(-5px)';
-                });
-                card.addEventListener('mouseleave', () => {
-                    card.style.transform = 'translateY(0)';
-                });
+            function toggleYear(header) {
+                const content = header.nextElementSibling;
+                const icon = header.querySelector('.toggle-icon');
+                
+                if (content.style.display === 'none') {
+                    content.style.display = 'block';
+                    icon.style.transform = 'rotate(0deg)';
+                } else {
+                    content.style.display = 'none';
+                    icon.style.transform = 'rotate(-90deg)';
+                }
+            }
+            
+            // Плавная анимация появления
+            document.querySelectorAll('.animate-in').forEach((el, i) => {
+                el.style.animationDelay = `${i * 0.05}s`;
             });
         </script>
     </body>
@@ -1660,6 +1889,7 @@ async def register(
     unit_name: str = Form(...),
     director_name: str = Form(...),
     district: str = Form(...),
+    region: str = Form(...),  # ДОБАВИТЬ ЭТО ПОЛЕ
     food_type: str = Form(...),
     secret_code: Optional[str] = Form(None),
     db: Session = Depends(get_db)
@@ -1683,6 +1913,7 @@ async def register(
         unit_name=unit_name,
         director_name=director_name,
         district=district,
+        region=region,  # ДОБАВИТЬ ЭТО
         food_type=food_type,
         role=role
     )
@@ -1743,11 +1974,13 @@ async def admin_panel(
         return RedirectResponse("/login")
 
     query = db.query(models.User).filter(models.User.role == "user")
-    if admin.role == "municipal_admin":
+    # Фильтрация по региону для регионального админа
+    if admin.role == "regional_admin":
+        query = query.filter(models.User.region == admin.region)
+    # Фильтрация по району для муниципального админа
+    elif admin.role == "municipal_admin":
         query = query.filter(models.User.district == admin.district)
 
-    if q:
-        query = query.filter(models.User.unit_name.ilike(f"%{q}%"))
 
     total_count = await run_in_threadpool(query.count)
     offset = (page - 1) * per_page
@@ -1794,6 +2027,8 @@ async def bulk_upload(
 
     uploader_name = admin.unit_name if admin else f"ADMIN {admin_id}"
     uploader_ip = request.client.host if request.client else "—"
+    
+    current_time = get_msk_time()
 
     temp_uploads = BASE_DIR / "temp_uploads"
     await asyncio.to_thread(lambda: temp_uploads.mkdir(parents=True, exist_ok=True))
@@ -1822,19 +2057,17 @@ async def bulk_upload(
 
             await asyncio.to_thread(lambda: shutil.copy2(orig_path, dest_path))
 
-            file_type = None
-            date_str = None
-            if file.filename.startswith("tm"):
-                file_type = "tm"
-            elif file.filename.startswith("kp"):
-                file_type = "kp"
-            else:
-                try:
-                    date_parts = file.filename.split("-")[:3]
-                    date_str = f"{date_parts[0]}-{date_parts[1]}-{date_parts[2]}"
-                except:
-                    pass
+            # ========== ИСПРАВЛЕНИЕ: Сохраняем метаданные с правильными годом и месяцем ==========
+            manifest[file.filename] = {
+                "assigned_year": year,           # Год из формы
+                "assigned_month": month,         # Месяц из формы
+                "uploader_name": uploader_name,
+                "uploader_ip": uploader_ip,
+                "upload_datetime": current_time.strftime("%d.%m.%Y %H:%M")
+            }
 
+            # Обновляем содержимое Excel файла
+            date_str = f"{year}-{month}-01"
             await update_excel_content(
                 dest_path,
                 school.unit_name,
@@ -1842,14 +2075,6 @@ async def bulk_upload(
                 year,
                 date_str
             )
-
-            manifest[file.filename] = {
-                "assigned_year": year,
-                "assigned_month": month,
-                "uploader_name": uploader_name,
-                "uploader_ip": uploader_ip,
-                "upload_datetime": get_msk_time().strftime("%d.%m.%Y %H:%M")
-            }
 
         await write_manifest_optimized(manifest_path, manifest)
 
@@ -2130,8 +2355,8 @@ async def bulk_delete_files_by_month(
 async def dashboard(
     request: Request,
     uid: int,
-    year: str = "2025",
-    month: str = "05",
+    year: str = None,      # Изменяем на None, чтобы можно было не передавать
+    month: str = None,     # Изменяем на None
     db: Session = Depends(get_db)
 ):
     user = await get_cached_user(uid, db)
@@ -2142,9 +2367,14 @@ async def dashboard(
     food_path = BASE_DIR / str(uid) / "food"
     profile_path = BASE_DIR / str(uid) / "profile.json"
     
-    await run_in_threadpool(lambda: food_path.mkdir(parents=True, exist_ok=True))
+    # Проверка существования папки
+    if not await run_in_threadpool(food_path.exists):
+        await run_in_threadpool(lambda: food_path.mkdir(parents=True, exist_ok=True))
+        manifest_path = food_path / "manifest.json"
+        await write_manifest_optimized(manifest_path, {})
+        print(f"📁 Создана папка для пользователя {uid} при входе в дашборд")
 
-    # Загружаем данные профиля (аватар, ссылки)
+    # Загружаем данные профиля
     profile_data = {}
     if await run_in_threadpool(profile_path.exists):
         try:
@@ -2161,27 +2391,66 @@ async def dashboard(
         MANIFEST_CACHE[str(manifest_path)] = manifest.copy()
 
     files = await list_directory_files_optimized(food_path)
+    
+    # ========== ИСПРАВЛЕНИЕ: Группируем файлы по годам и месяцам из manifest ==========
     grouped_files = {}
-
+    
     for f in files:
         if f.name == "manifest.json":
             continue
 
         file_meta = manifest.get(f.name, {})
+        
+        # Получаем год и месяц из метаданных
+        assigned_year = file_meta.get("assigned_year")
+        assigned_month = file_meta.get("assigned_month")
+        
+        # Если в манифесте нет данных, пробуем извлечь из имени файла
+        if not assigned_year or not assigned_month:
+            date_match = re.search(r'(\d{4})-(\d{2})', f.name)
+            if date_match:
+                assigned_year = date_match.group(1)
+                assigned_month = date_match.group(2)
+            else:
+                # Если не удалось определить, используем текущую дату
+                assigned_year = str(get_msk_time().year)
+                assigned_month = get_msk_time().strftime("%m")
+        
+        # Получаем имя месяца для отображения
+        month_name = MONTHS.get(assigned_month, assigned_month)
+        
         upload_time = file_meta.get("upload_datetime", get_msk_time().strftime("%d.%m.%Y %H:%M"))
-
-        assigned_year = file_meta.get("assigned_year", str(get_msk_time().year))
-        assigned_month = file_meta.get("assigned_month", f"{get_msk_time().month:02d}")
         uploader_name = file_meta.get("uploader_name", user.unit_name)
         uploader_ip = file_meta.get("uploader_ip", "—")
-        month_name = MONTHS.get(assigned_month, assigned_month)
-
+        
+        # Добавляем файл в группу
         grouped_files.setdefault(assigned_year, {}).setdefault(month_name, []).append({
             "filename": f.name,
             "date": upload_time,
             "uploader": uploader_name,
             "ip": uploader_ip,
         })
+
+    # Если year и month не переданы, выбираем последний доступный год и месяц
+    if not year or not month:
+        # Находим последний год
+        if grouped_files:
+            latest_year = max(grouped_files.keys())
+            # Находим последний месяц в этом году
+            if grouped_files[latest_year]:
+                latest_month = max(grouped_files[latest_year].keys())
+                # Конвертируем название месяца обратно в номер
+                for num, name in MONTHS.items():
+                    if name == latest_month:
+                        month = num
+                        break
+                year = latest_year
+            else:
+                year = "2025"
+                month = "05"
+        else:
+            year = "2025"
+            month = "05"
 
     monitoring_url = f"{request.base_url}{uid}/food/"
 
@@ -2336,20 +2605,36 @@ async def upload_files(
     uploader_name = user.unit_name if user else f"UID {uid}"
     client_ip = request.client.host if request.client else "—"
 
+    # Получаем текущую дату для загрузки
+    current_time = get_msk_time()
+    
     for file in files:
         if not file.filename:
             continue
         
+        # Проверяем, не существует ли уже файл с таким именем
         dest_path = food_path / file.filename
-        await save_uploaded_file_optimized(file, dest_path)
-
+        
+        # ========== ИСПРАВЛЕНИЕ: Сохраняем метаданные с правильными годом и месяцем ==========
         manifest[file.filename] = {
-            "assigned_year": year,
-            "assigned_month": month,
+            "assigned_year": year,           # Год из формы
+            "assigned_month": month,         # Месяц из формы
             "uploader_name": uploader_name,
             "uploader_ip": client_ip,
-            "upload_datetime": get_msk_time().strftime("%d.%m.%Y %H:%M")
+            "upload_datetime": current_time.strftime("%d.%m.%Y %H:%M")
         }
+        
+        # Сохраняем файл
+        await save_uploaded_file_optimized(file, dest_path)
+        
+        # Обновляем содержимое Excel файла (если нужно)
+        await update_excel_content(
+            dest_path,
+            user.unit_name,
+            user.director_name,
+            year,
+            f"{year}-{month}-01"  # Дата в формате YYYY-MM-DD
+        )
 
     await write_manifest_optimized(manifest_path, manifest)
 
@@ -2369,6 +2654,7 @@ async def delete_file(uid: int, year: str, month: str, filename: str):
         del manifest[filename]
         await write_manifest_optimized(manifest_path, manifest)
 
+    # Перенаправляем обратно с сохранением года и месяца
     return RedirectResponse(
         f"/dashboard?uid={uid}&year={year}&month={month}",
         status_code=303
@@ -2867,7 +3153,7 @@ async def dashboards_list(request: Request, db: Session = Depends(get_db)):
             "dashboards": [],
             "session": request.session
         })
-
+    
 @app.get("/dashboard-admin/login", response_class=HTMLResponse)
 async def dashboard_login_page(request: Request):
     """Страница входа в админку дашбордов"""
@@ -3012,7 +3298,7 @@ async def edit_dashboard(request: Request, dashboard_id: int, db: Session = Depe
         "title": dashboard.title,
         "description": dashboard.description,
         "slug": dashboard.slug,
-        "is_published": dashboard.is_published,
+        "is_published": dashboard.is_published,  # Добавляем поле публикации
         "elements": []
     }
     
@@ -4898,6 +5184,209 @@ async def public_download_file(
             "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
         }
     )
+
+#Поддержка ФЦМПО
+# Папка для хранения данных
+DATA_DIR = Path(__file__).resolve().parent / "data"
+DATA_DIR.mkdir(exist_ok=True)
+
+REQUESTS_FILE = DATA_DIR / "fcmp_requests.json"
+
+def load_requests():
+    """Загрузка заявок из JSON файла"""
+    try:
+        if REQUESTS_FILE.exists():
+            with open(REQUESTS_FILE, "r", encoding="utf-8") as f:
+                content = f.read()
+                if content:
+                    return json.loads(content)
+    except Exception as e:
+        print(f"Ошибка загрузки заявок: {e}")
+    return []
+
+def save_requests(requests):
+    """Сохранение заявок в JSON файл"""
+    try:
+        with open(REQUESTS_FILE, "w", encoding="utf-8") as f:
+            json.dump(requests, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        print(f"Ошибка сохранения заявок: {e}")
+        return False
+
+# API эндпоинты
+@app.post("/api/fcmp-request")
+async def create_fcmp_request(request: Request):
+    """Создание новой заявки"""
+    try:
+        data = await request.json()
+        
+        requests = load_requests()
+        
+        new_request = {
+            "id": int(time.time() * 1000),
+            "date": datetime.now().strftime("%d.%m.%Y %H:%M"),
+            "region": data.get("region", ""),
+            "school": data.get("school", ""),
+            "email": data.get("email", ""),
+            "problem": data.get("problem", ""),
+            "status": "pending",
+            "reply": None,
+            "reply_date": None
+        }
+        
+        requests.append(new_request)
+        save_requests(requests)
+        
+        return {"status": "success", "id": new_request["id"]}
+    except Exception as e:
+        print(f"Ошибка создания заявки: {e}")
+        return {"status": "error", "message": str(e)}
+
+@app.post("/api/fcmp-admin-login")
+async def fcmp_admin_login(request: Request):
+    """Вход в админ-панель"""
+    try:
+        data = await request.json()
+        code = data.get("code", "")
+        
+        if code == "alu3377%":
+            request.session["fcmp_admin"] = True
+            return {"status": "success"}
+        return {"status": "error", "message": "Неверный код"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.post("/api/fcmp-complete-request")
+async def complete_fcmp_request(request: Request):
+    """Отметить заявку как выполненную"""
+    if not request.session.get("fcmp_admin"):
+        return {"status": "error", "message": "Не авторизован"}
+    
+    try:
+        data = await request.json()
+        request_id = data.get("id")
+        
+        requests = load_requests()
+        found = False
+        for req in requests:
+            if req["id"] == request_id:
+                req["status"] = "completed"
+                found = True
+                break
+        
+        if found:
+            save_requests(requests)
+            return {"status": "success"}
+        return {"status": "error", "message": "Заявка не найдена"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.post("/api/fcmp-reply-request")
+async def reply_fcmp_request(request: Request):
+    """Ответить на заявку"""
+    if not request.session.get("fcmp_admin"):
+        return {"status": "error", "message": "Не авторизован"}
+    
+    try:
+        data = await request.json()
+        request_id = data.get("id")
+        reply = data.get("reply", "")
+        
+        requests = load_requests()
+        found = False
+        for req in requests:
+            if req["id"] == request_id:
+                req["reply"] = reply
+                req["reply_date"] = datetime.now().strftime("%d.%m.%Y %H:%M")
+                found = True
+                break
+        
+        if found:
+            save_requests(requests)
+            return {"status": "success"}
+        return {"status": "error", "message": "Заявка не найдена"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.post("/api/fcmp-delete-request")
+async def delete_fcmp_request(request: Request):
+    """Удалить заявку"""
+    if not request.session.get("fcmp_admin"):
+        return {"status": "error", "message": "Не авторизован"}
+    
+    try:
+        data = await request.json()
+        request_id = data.get("id")
+        
+        requests = load_requests()
+        new_requests = [req for req in requests if req["id"] != request_id]
+        
+        if len(new_requests) != len(requests):
+            save_requests(new_requests)
+            return {"status": "success"}
+        return {"status": "error", "message": "Заявка не найдена"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+# Страница ФЦМПО
+@app.get("/fcmp-support", response_class=HTMLResponse)
+async def fcmp_support_page(request: Request):
+    """Страница базы данных ФЦМПО"""
+    requests = load_requests()
+    is_admin = request.session.get("fcmp_admin", False)
+    
+    return templates.TemplateResponse("fcmp_support.html", {
+        "request": request,
+        "requests": requests,
+        "is_admin": is_admin,
+        "session": request.session
+    })
+
+# ========== ВИДЕОИНСТРУКЦИИ ==========
+VIDEOS_FILE = DATA_DIR / "videos.json"
+
+def load_videos():
+    """Загрузка видео из JSON файла"""
+    try:
+        if VIDEOS_FILE.exists():
+            with open(VIDEOS_FILE, "r", encoding="utf-8") as f:
+                content = f.read()
+                if content:
+                    return json.loads(content)
+    except Exception as e:
+        print(f"Ошибка загрузки видео: {e}")
+    return []
+
+def save_videos(videos):
+    """Сохранение видео в JSON файл"""
+    try:
+        with open(VIDEOS_FILE, "w", encoding="utf-8") as f:
+            json.dump(videos, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        print(f"Ошибка сохранения видео: {e}")
+        return False
+
+
+# API для получения видео
+@app.get("/api/videos")
+async def get_videos():
+    """Получение списка видео"""
+    videos = load_videos()
+    return {"videos": videos}
+
+# API для сохранения видео
+@app.post("/api/videos")
+async def save_videos_api(request: Request):
+    """Сохранение списка видео"""
+    try:
+        data = await request.json()
+        videos = data.get("videos", [])
+        save_videos(videos)
+        return {"status": "success"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 if __name__ == "__main__":
     import uvicorn

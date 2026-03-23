@@ -7,24 +7,27 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    email = Column(String(255), unique=True, index=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    role = Column(String(50), default="user", index=True)  # Добавлен индекс
+    email = Column(String(255), unique=True, index=True)  # Явно задаём длину
+    hashed_password = Column(String(255))  # Явно задаём длину
+    role = Column(String(50), default="user")  # user, municipal_admin, regional_admin
 
-    unit_name = Column(String(500), nullable=True)  # Увеличена длина
-    director_name = Column(String(255), nullable=True)  # Увеличена длина
+    unit_name = Column(String(200), nullable=True)  # Название школы (до 200 символов)
+    director_name = Column(String(100), nullable=True)  # ФИО директора (до 100 символов)
 
-    district = Column(String(200), nullable=True, index=True)  # Добавлен индекс
-    food_type = Column(String(100), nullable=True)
+    # НОВОЕ ПОЛЕ - регион (субъект РФ)
+    region = Column(String(200), nullable=True, index=True)
+    
+    district = Column(String(100), nullable=True)  # Район (опционально)
+    food_type = Column(String(50), nullable=True)  # Тип питания (опционально)
     url_1c = Column(
-        String(500),
+        String(255),
         default="https://cemon.ru/MSHP/ru/",
-        nullable=True
+        nullable=True  # Ссылка на 1С (может быть пустой)
     )
     
     # Связь с дашбордами
-    dashboards = relationship("Dashboard", back_populates="creator", cascade="all, delete-orphan")
-    # Связь с отчётами (без cascade, так как ondelete SET NULL на уровне БД)
+    dashboards = relationship("Dashboard", back_populates="creator")
+    # Связь с отчётами
     reports = relationship("Report", back_populates="creator")
 
 
@@ -32,15 +35,15 @@ class Dashboard(Base):
     __tablename__ = "dashboards"
     
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(500), nullable=False)  # Увеличена длина
+    title = Column(String(255), nullable=False)
     description = Column(Text)
-    slug = Column(String(200), unique=True, index=True, nullable=False)  # Увеличена длина
+    slug = Column(String(100), unique=True, index=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    is_published = Column(Boolean, default=False, index=True)  # Добавлен индекс
-    created_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    layout_data = Column(Text, default="{}")
-    theme = Column(String(100), default="light")
+    is_published = Column(Boolean, default=False)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    layout_data = Column(Text, default="{}")  # JSON с расположением элементов
+    theme = Column(String(50), default="light")
     
     # Связи
     creator = relationship("User", back_populates="dashboards")
@@ -51,15 +54,15 @@ class DashboardElement(Base):
     __tablename__ = "dashboard_elements"
     
     id = Column(Integer, primary_key=True, index=True)
-    dashboard_id = Column(Integer, ForeignKey("dashboards.id", ondelete="CASCADE"), nullable=False, index=True)
-    element_type = Column(String(100), nullable=False)
-    chart_type = Column(String(100))
-    title = Column(String(500))
-    content = Column(Text, default="{}")
-    settings = Column(Text, default="{}")
+    dashboard_id = Column(Integer, ForeignKey("dashboards.id", ondelete="CASCADE"), nullable=False)
+    element_type = Column(String(50), nullable=False)  # chart, text, list, table
+    chart_type = Column(String(50))  # line, bar, pie, doughnut
+    title = Column(String(255))
+    content = Column(Text, default="{}")  # JSON с данными
+    settings = Column(Text, default="{}")  # JSON с настройками (цвета, размеры)
     position_x = Column(Integer, default=0)
     position_y = Column(Integer, default=0)
-    width = Column(Integer, default=4)
+    width = Column(Integer, default=4)  # в условных единицах сетки
     height = Column(Integer, default=4)
     order_index = Column(Integer, default=0)
     
@@ -72,10 +75,10 @@ class KnowledgeBaseCategory(Base):
     __tablename__ = "knowledge_base_categories"
     
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(500), nullable=False)  # Увеличена длина
+    name = Column(String(500), nullable=False)
     description = Column(Text, nullable=True)
     icon = Column(String(100), default="📁")
-    color = Column(String(50), default="#667eea")  # Добавлено поле color
+    color = Column(String(50), default="#667eea")
     order_index = Column(Integer, default=0)
     is_active = Column(Boolean, default=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -89,27 +92,27 @@ class KnowledgeBaseDocument(Base):
     __tablename__ = "knowledge_base_documents"
     
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(1000), nullable=False)  # Увеличена длина
+    title = Column(String(1000), nullable=False)
     description = Column(Text, nullable=True)
     category_id = Column(Integer, ForeignKey("knowledge_base_categories.id", ondelete="SET NULL"), nullable=True, index=True)
     
     # Метаданные
     document_type = Column(String(100), default="document", index=True)
     file_extension = Column(String(50), nullable=True)
-    file_size = Column(BigInteger, default=0)  # Изменено на BigInteger для больших файлов
+    file_size = Column(BigInteger, default=0)
     file_path = Column(String(1000), nullable=False)
     cover_image_path = Column(String(1000), nullable=True)
     
     # Статистика
-    downloads_count = Column(BigInteger, default=0, index=True)  # Изменено на BigInteger
-    views_count = Column(BigInteger, default=0, index=True)  # Изменено на BigInteger
+    downloads_count = Column(BigInteger, default=0, index=True)
+    views_count = Column(BigInteger, default=0, index=True)
     
     # Для поиска
     tags = Column(String(1000), nullable=True)
     
     # Кто загрузил
-    uploaded_by = Column(String(500), nullable=True)  # Изменено, т.к. может быть email
-    uploaded_by_email = Column(String(500), nullable=True)  # Добавлено поле
+    uploaded_by = Column(String(500), nullable=True)
+    uploaded_by_email = Column(String(500), nullable=True)
     
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -125,7 +128,7 @@ class KnowledgeBaseFavorite(Base):
     __tablename__ = "knowledge_base_favorites"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_email = Column(String(500), nullable=False, index=True)  # Изменено с user_id
+    user_email = Column(String(500), nullable=False, index=True)
     document_id = Column(Integer, ForeignKey("knowledge_base_documents.id", ondelete="CASCADE"), nullable=False, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     
@@ -139,7 +142,7 @@ class KnowledgeBaseSearchLog(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     query = Column(String(1000), nullable=False)
-    user_email = Column(String(500), nullable=True, index=True)  # Изменено с user_id
+    user_email = Column(String(500), nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
 
@@ -204,22 +207,25 @@ class Report(Base):
     # Тип отчёта (питание, несчастные случаи, кадетское образование и т.д.)
     report_type = Column(String(100), default="standard", index=True)
     
+    # ========== НОВОЕ ПОЛЕ - регион, к которому привязан отчёт ==========
+    region = Column(String(200), nullable=True, index=True)
+    
     # Период
     year = Column(Integer, index=True)
     month = Column(Integer, nullable=True)
-    quarter = Column(Integer, nullable=True)  # 1-4
+    quarter = Column(Integer, nullable=True)
     
     # Данные отчёта в JSON (универсальное хранение)
-    data = Column(Text, default="{}")  # JSON строка
+    data = Column(Text, default="{}")
     
     # Файлы, прикреплённые к отчёту (пути к файлам) - для обратной совместимости
-    file_paths = Column(Text, default="[]")  # JSON список путей
+    file_paths = Column(Text, default="[]")
     
-    # Статистика просмотров (добавлено)
+    # Статистика просмотров
     views_count = Column(BigInteger, default=0, index=True)
     
     # Статус
-    status = Column(String(50), default="draft", index=True)  # draft, published, archived
+    status = Column(String(50), default="draft", index=True)
     is_published = Column(Boolean, default=False, index=True)
     
     # Метаданные
@@ -245,7 +251,7 @@ class ReportFile(Base):
     original_name = Column(String(500), nullable=False)
     file_path = Column(String(1000), nullable=False)
     file_size = Column(BigInteger, default=0)
-    file_type = Column(String(100))  # pdf, docx, xlsx, jpg и т.д.
+    file_type = Column(String(100))
     uploaded_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     uploaded_at = Column(DateTime, default=datetime.utcnow)
     
@@ -260,7 +266,7 @@ class ReportVersion(Base):
     id = Column(Integer, primary_key=True, index=True)
     report_id = Column(Integer, ForeignKey("reports.id", ondelete="CASCADE"), nullable=False, index=True)
     version_number = Column(Integer, default=1)
-    data_snapshot = Column(Text, default="{}")  # JSON строка с данными
+    data_snapshot = Column(Text, default="{}")
     changed_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     changed_at = Column(DateTime, default=datetime.utcnow)
     change_comment = Column(String(500))
@@ -277,8 +283,8 @@ class ReportTemplate(Base):
     name = Column(String(500), nullable=False)
     description = Column(Text)
     report_type = Column(String(100), default="standard")
-    structure = Column(Text, default="{}")  # JSON со структурой данных
-    fields = Column(Text, default="[]")  # JSON со списком полей
+    structure = Column(Text, default="{}")
+    fields = Column(Text, default="[]")
     is_default = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
