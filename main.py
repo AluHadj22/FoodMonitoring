@@ -1980,6 +1980,11 @@ async def admin_panel(
     # Фильтрация по району для муниципального админа
     elif admin.role == "municipal_admin":
         query = query.filter(models.User.district == admin.district)
+    
+    # ДОБАВЛЯЕМ ПОИСК ПО НАЗВАНИЮ
+    if q:
+        query = query.filter(models.User.unit_name.ilike(f"%{q}%"))
+
 
 
     total_count = await run_in_threadpool(query.count)

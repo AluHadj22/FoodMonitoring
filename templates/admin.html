@@ -603,11 +603,13 @@
 
     .table-wrapper {
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .schools-table {
         width: 100%;
         border-collapse: collapse;
+        min-width: 600px;
     }
 
     .schools-table th {
@@ -631,6 +633,11 @@
         border-bottom: 1px solid var(--border);
         color: var(--text-primary);
         font-size: 0.8rem;
+    }
+
+    .schools-table tbody tr {
+        transition: background 0.2s ease;
+        cursor: pointer;
     }
 
     .schools-table tbody tr:hover {
@@ -699,6 +706,39 @@
         height: 12px;
     }
 
+    /* Дополнительная информация для мобильных (скрыта по умолчанию) */
+    .mobile-row-details {
+        display: none;
+        background: var(--gray-50);
+        padding: 0.75rem 1rem;
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border);
+    }
+
+    [data-theme='dark'] .mobile-row-details {
+        background: rgba(30, 41, 59, 0.4);
+    }
+
+    .mobile-row-details.show {
+        display: table-row;
+    }
+
+    .mobile-row-details td {
+        padding: 0.75rem 1rem;
+    }
+
+    .mobile-detail-item {
+        display: inline-block;
+        margin-right: 1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .mobile-detail-item strong {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
     /* Пагинация */
     .pagination-info {
         text-align: center;
@@ -712,6 +752,7 @@
         justify-content: center;
         gap: 0.5rem;
         margin-bottom: 1.5rem;
+        flex-wrap: wrap;
     }
 
     .pagination a,
@@ -877,11 +918,48 @@
             padding: 0.6rem 0.75rem;
         }
         
+        /* Скрываем колонку типа питания на телефоне (она будет в развернутой строке) */
+        .schools-table th:nth-child(3),
+        .schools-table td:nth-child(3) {
+            display: none;
+        }
+        
         .notification {
             top: 1rem;
             right: 1rem;
             left: 1rem;
             text-align: center;
+        }
+        
+        /* Увеличиваем размер ссылки для удобства нажатия */
+        .manage-button {
+            padding: 0.5rem 0.9rem;
+            font-size: 0.75rem;
+        }
+        
+        .robot-link {
+            font-size: 0.65rem;
+        }
+        
+        .district-badge {
+            font-size: 0.6rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .schools-table th,
+        .schools-table td {
+            padding: 0.5rem;
+        }
+        
+        .school-name {
+            font-size: 0.7rem;
+        }
+        
+        .pagination a,
+        .pagination span {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.65rem;
         }
     }
 </style>
@@ -1162,7 +1240,7 @@
                 </div>
 
                 <div class="table-wrapper">
-                    <table class="schools-table">
+                    <table class="schools-table" id="schoolsTable">
                         <thead>
                             <tr>
                                 <th>Учреждение</th>
@@ -1174,7 +1252,7 @@
                         </thead>
                         <tbody>
                             {% for school in schools %}
-                            <tr>
+                            <tr class="school-row" data-school-id="{{ school.id }}">
                                 <td>
                                     <div class="school-name">{{ school.unit_name }}</div>
                                 </td>
@@ -1194,6 +1272,14 @@
                                         </svg>
                                         Управление
                                     </a>
+                                </td>
+                            </tr>
+                            <!-- Мобильная дополнительная строка для развернутой информации -->
+                            <tr class="mobile-row-details" data-parent="{{ school.id }}" style="display: none;">
+                                <td colspan="5">
+                                    <div class="mobile-detail-item"><strong>Тип питания:</strong> {{ school.food_type }}</div>
+                                    <div class="mobile-detail-item"><strong>ID:</strong> {{ school.id }}</div>
+                                    <div class="mobile-detail-item"><strong>Email:</strong> {{ school.email }}</div>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -1448,6 +1534,32 @@
         }, 2000);
     }
 
+    // Мобильная адаптация: клик по строке раскрывает дополнительную информацию
+    function initMobileRowClick() {
+        if (window.innerWidth <= 768) {
+            const rows = document.querySelectorAll('.school-row');
+            rows.forEach(row => {
+                row.addEventListener('click', function(e) {
+                    // Не срабатывать при клике на ссылку
+                    if (e.target.closest('.manage-button')) return;
+                    
+                    const schoolId = this.dataset.schoolId;
+                    const detailRow = document.querySelector(`.mobile-row-details[data-parent="${schoolId}"]`);
+                    
+                    if (detailRow) {
+                        const isVisible = detailRow.style.display !== 'none';
+                        // Скрываем все другие развернутые строки
+                        document.querySelectorAll('.mobile-row-details').forEach(row => {
+                            row.style.display = 'none';
+                        });
+                        // Показываем/скрываем текущую
+                        detailRow.style.display = isVisible ? 'none' : 'table-row';
+                    }
+                });
+            });
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const uploadZones = document.querySelectorAll('.file-upload-zone');
         
@@ -1474,11 +1586,23 @@
         updateSelectedCount();
         updateSelectedMonthCount();
         setupDeleteCheckboxes();
+        initMobileRowClick();
         
         const animatedElements = document.querySelectorAll('.fade-in-up');
         animatedElements.forEach(el => {
             el.style.opacity = '1';
             el.style.transform = 'translateY(0)';
+        });
+        
+        // При изменении размера окна обновляем поведение мобильной строки
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                // На больших экранах скрываем все дополнительные строки
+                document.querySelectorAll('.mobile-row-details').forEach(row => {
+                    row.style.display = 'none';
+                });
+            }
+            initMobileRowClick();
         });
     });
 </script>
