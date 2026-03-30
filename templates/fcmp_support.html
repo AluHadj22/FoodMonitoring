@@ -356,7 +356,7 @@
         cursor: pointer;
     }
 
-    /* Таблица заявок (общая) */
+    /* Таблица заявок */
     .requests-table {
         background: var(--bg-card);
         border-radius: 24px;
@@ -429,7 +429,6 @@
         color: #10b981;
     }
 
-    /* Стили для ответов */
     .reply-bubble {
         background: var(--surface);
         border-radius: 12px;
@@ -460,10 +459,6 @@
     }
 
     /* Админская таблица */
-    .admin-table {
-        margin-top: 1rem;
-    }
-
     .action-buttons {
         display: flex;
         gap: 0.5rem;
@@ -608,28 +603,6 @@
         transform: translateX(0);
     }
 
-    .subscription-banner {
-        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-        border-radius: 16px;
-        padding: 1rem;
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-
-    .subscription-banner p {
-        font-size: 0.85rem;
-        color: #92400e;
-        margin: 0;
-    }
-
-    .subscription-banner strong {
-        color: #b45309;
-    }
-
     .admin-badge {
         background: rgba(239, 68, 68, 0.2);
         color: #ef4444;
@@ -711,17 +684,17 @@
                     <li class="step-item">
                         <div class="step-number">1</div>
                         <div class="step-text">
-                            Находите в Яндексе сайт вашего регионального министерства образования
+                            Найдите в Яндексе сайт вашего регионального министерства образования
                         </div>
                     </li>
                     <li class="step-item">
                         <div class="step-number">2</div>
-                        <div class="step-text">Звоните в приёмную</div>
+                        <div class="step-text">Позвоните в приёмную</div>
                     </li>
                     <li class="step-item">
                         <div class="step-number">3</div>
                         <div class="step-text">
-                            Там Вам скажут, кто региональный ответственный по питанию и какой у него телефон
+                            Там вам скажут, кто региональный ответственный по питанию и какой у него телефон
                         </div>
                     </li>
                 </ul>
@@ -737,10 +710,10 @@
                         <line x1="12" y1="17" x2="12.01" y2="17"/>
                     </svg>
                 </div>
-                <h2>Связаться с нами</h2>
+                <h2>Оставить заявку</h2>
             </div>
             <div class="card-body">
-                <p style="margin-bottom: 1rem;">Если у вас все еще нет регионального отвественного - вы можете оставить заявку координатору Чеченской Республики с доступом к базе данных ФЦМПО. Выберите удобный способ связи или оставьте заявку прямо на сайте</p>
+                <p style="margin-bottom: 1rem;">Если у вас возникли вопросы или проблемы, вы можете оставить заявку. Выберите удобный способ связи:</p>
                 <div class="social-links">
                     <a href="https://max.ru/join/0_ENTACbyqPMRPm5MbX11Sjn7aYzaG924ADcVjCLrag" class="social-link" id="maxChatLink" target="_blank">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -766,17 +739,6 @@
         </div>
     </div>
 
-    <!-- Баннер о подписке -->
-    <div class="subscription-banner">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-        </svg>
-        <p>
-            <strong>Для регионов, кроме Чеченской Республики:</strong> доступ к функционалу заявок входит в подписку — 400 руб/мес. После оплаты - администратор будет рассматривать все ваши заявки до окончания срока подписки.
-            Учреждения Чеченской Республики получают поддержку бесплатно!
-        </p>
-    </div>
-
     <!-- Форма заявки -->
     <div class="request-form">
         <div class="form-header">
@@ -787,7 +749,7 @@
             <form id="requestForm">
                 <div class="form-group">
                     <label>Ваш регион *</label>
-                    <input type="text" id="region" placeholder="Например: Московская область, Краснодарский край..." required>
+                    <input type="text" id="region" placeholder="ТОЛЬКО ЧЕЧЕНСКАЯ РЕСПУБЛИКА" required>
                 </div>
                 <div class="form-group">
                     <label>Ваше учреждение *</label>
@@ -804,7 +766,7 @@
                 <div class="checkbox-group">
                     <input type="checkbox" id="consent" required>
                     <label for="consent">
-                        Разрешаю региональному ответственному из Чеченской Республики произвести необходимые действия, 
+                        Разрешаю региональному ответственному произвести необходимые действия, 
                         описанные в заявке, в базе данных ФЦМПО
                     </label>
                 </div>
@@ -828,7 +790,7 @@
                         <th>Учреждение</th>
                         <th>Проблема</th>
                         <th>Статус</th>
-                        <th>Ответ администратора</th>
+                        <th>Ответ</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -981,7 +943,7 @@ let currentRequestId = null;
 function showNotification(message, type = 'success') {
     const notification = document.getElementById('notification');
     notification.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>${message}`;
-    notification.className = `notification notification-${type} show`;
+    notification.className = `notification show`;
     setTimeout(() => notification.classList.remove('show'), 3000);
 }
 
