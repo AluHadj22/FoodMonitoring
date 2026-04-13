@@ -2768,212 +2768,71 @@ async def send_reset_email(email: str, token: str):
         safe_email = email.replace('<', '&lt;').replace('>', '&gt;')
 
         message = MIMEText(f"""
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Сброс пароля</title>
-    <style>
-        body {{
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }}
-        .container {{
-            max-width: 480px;
-            margin: 20px;
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }}
-        .header {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 40px 30px;
-            text-align: center;
-        }}
-        .header h1 {{
-            margin: 0;
-            color: white;
-            font-size: 28px;
-            font-weight: 600;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }}
-        .content {{
-            padding: 40px 30px;
-            background: white;
-        }}
-        .content h2 {{
-            color: #333;
-            font-size: 24px;
-            margin: 0 0 20px 0;
-            font-weight: 600;
-        }}
-        .content p {{
-            color: #666;
-            font-size: 16px;
-            line-height: 1.6;
-            margin: 0 0 20px 0;
-        }}
-        .email-info {{
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 15px;
-            margin: 25px 0;
-            border-left: 4px solid #667eea;
-        }}
-        .email-info p {{
-            margin: 5px 0;
-            color: #555;
-        }}
-        .email-info strong {{
-            color: #333;
-            font-weight: 600;
-        }}
-        .button {{
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white !important;
-            text-decoration: none;
-            padding: 16px 32px;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 16px;
-            margin: 20px 0 10px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            transition: all 0.3s ease;
-        }}
-        .button:hover {{
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-        }}
-        .footer {{
-            text-align: center;
-            padding: 30px;
-            background: #f8f9fa;
-            border-top: 1px solid #eee;
-        }}
-        .footer p {{
-            color: #999;
-            font-size: 14px;
-            margin: 5px 0;
-        }}
-        .footer a {{
-            color: #667eea;
-            text-decoration: none;
-        }}
-        .divider {{
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #667eea, transparent);
-            margin: 30px 0 20px;
-        }}
-        .warning {{
-            color: #e74c3c !important;
-            font-size: 14px !important;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            justify-content: center;
-        }}
-        @media only screen and (max-width: 480px) {{
-            .container {{
-                margin: 10px;
-                border-radius: 16px;
-            }}
-            .header {{
-                padding: 30px 20px;
-            }}
-            .content {{
-                padding: 30px 20px;
-            }}
-            .button {{
-                display: block;
-                text-align: center;
-            }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🔐 Сброс пароля</h1>
-        </div>
-        
-        <div class="content">
-            <h2>Здравствуйте!</h2>
-            
-            <p>Мы получили запрос на сброс пароля для вашей учетной записи. Для создания нового пароля нажмите на кнопку ниже:</p>
-            
-            <div style="text-align: center;">
-                <a href="{reset_url}" class="button">🔑 Сменить пароль</a>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Сброс пароля</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: #4f46e5; color: white; padding: 20px; text-align: center; }}
+                .content {{ padding: 30px; background: #f9fafb; }}
+                .button {{ background: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; }}
+                .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🔐 Сброс пароля</h1>
+                </div>
+                <div class="content">
+                    <p>Здравствуйте!</p>
+                    <p>Мы получили запрос на сброс пароля для вашей учетной записи.</p>
+                    <p>Для создания нового пароля нажмите на кнопку ниже:</p>
+                    <p style="text-align: center;">
+                        <a href="{reset_url}" class="button">Сменить пароль</a>
+                    </p>
+                    <p>Ссылка действительна в течение 1 часа.</p>
+                    <p>Если вы не запрашивали сброс пароля, просто проигнорируйте это письмо.</p>
+                    <hr>
+                    <p style="font-size: 12px; color: #6b7280;">Email: {safe_email}</p>
+                </div>
+                <div class="footer">
+                    <p>© 2026 ЕЦМП Мониторинг питания</p>
+                </div>
             </div>
-            
-            <div class="divider"></div>
-            
-            <div class="email-info">
-                <p><strong>📧 Email:</strong> {safe_email}</p>
-                <p><strong>⏰ Срок действия:</strong> 1 час</p>
-                <p><strong>🆔 Запрос создан:</strong> {datetime.now().strftime('%d.%m.%Y %H:%M')}</p>
-            </div>
-            
-            <p class="warning">
-                ⚠️ Если вы не запрашивали сброс пароля, просто проигнорируйте это письмо.
-            </p>
-            
-            <p style="font-size: 14px; color: #999; text-align: center; margin-top: 30px;">
-                Никогда не пересылайте это письмо и не сообщайте код никому.<br>
-                Служба поддержки никогда не запрашивает пароли.
-            </p>
-        </div>
+        </body>
+        </html>
+        """, "html", "utf-8")
         
-        <div class="footer">
-            <p>© 2026 ЕЦМП Мониторинг питания. Все права защищены.</p>
-            <p>
-                <a href="https://monitoring95.ru/privacy.html">Политика конфиденциальности</a> • 
-                <a href="https://monitoring95.ru/agree.html">Пользовательское соглашение</a>
-            </p>
-            <p style="font-size: 12px; margin-top: 15px;">
-                Это автоматическое письмо, пожалуйста, не отвечайте на него.
-            </p>
-        </div>
-    </div>
-</body>
-</html>
-""", "html", "utf-8")
         message["Subject"] = "Сброс пароля"
         message["From"] = os.getenv("SMTP_USERNAME")
         message["To"] = email
 
-        config = get_smtp_config(email)
+        # Настройки SMTP для любых почтовых сервисов
+        smtp_settings = {
+            'hostname': 'smtp.yandex.ru',  # Используем ваш SMTP сервер
+            'port': 465,
+            'use_tls': True,
+            'start_tls': False
+        }
 
         smtp = aiosmtplib.SMTP(
-            hostname=config['hostname'],
-            port=config['port'],
+            hostname=smtp_settings['hostname'],
+            port=smtp_settings['port'],
             username=os.getenv("SMTP_USERNAME"),
             password=os.getenv("SMTP_PASSWORD"),
-            use_tls=config['use_tls'],
-            start_tls=config['start_tls']
+            use_tls=smtp_settings['use_tls'],
+            start_tls=smtp_settings['start_tls']
         )
 
         await smtp.connect()
         await smtp.send_message(message)
+        await smtp.quit()
 
-    except aiosmtplib.SMTPAuthenticationError as e:
-        raise HTTPException(
-            status_code=500,
-            detail="Неверный логин или пароль SMTP. Проверьте настройки."
-        )
-    except aiosmtplib.SMTPServerDisconnected as e:
-        raise HTTPException(
-            status_code=500,
-            detail="Сервер SMTP недоступен. Попробуйте позже."
-        )
     except Exception as e:
+        print(f"Ошибка отправки письма на {email}: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"Не удалось отправить письмо: {str(e)}"
