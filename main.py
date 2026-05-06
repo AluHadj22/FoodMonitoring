@@ -1790,26 +1790,23 @@ async def federal_index(uid: int):
         media_type="text/html"
     )
 
+# ИСПРАВЛЕННЫЙ эндпоинт для ФЦМПО
 @app.get("/{uid}/food/{filename}")
 async def get_federal_file(uid: int, filename: str):
     BASE_DIR = Path(__file__).resolve().parent
     file_path = BASE_DIR / str(uid) / "food" / filename
 
-    cache_key = str(file_path)
-    async with CACHE_LOCK:
-        if cache_key in FILE_EXISTS_CACHE:
-            file_exists = FILE_EXISTS_CACHE[cache_key]
-        else:
-            file_exists = await run_in_threadpool(file_path.exists)
-            FILE_EXISTS_CACHE[cache_key] = file_exists
-
-    if file_exists:
-        return FileResponse(
-            file_path,
-            filename=filename,
-            headers={"Cache-Control": "public, max-age=3600"}
-        )
-
+    # Просто проверяем существование файла
+    try:
+        if await run_in_threadpool(file_path.exists):
+            return FileResponse(
+                file_path,
+                filename=filename,
+                headers={"Cache-Control": "public, max-age=3600"}
+            )
+    except Exception as e:
+        print(f"Ошибка при доступе к файлу {file_path}: {e}")
+    
     raise HTTPException(status_code=404, detail="Файл не найден")
 
 # --- ОБНОВЛЕННЫЙ ЭНДПОИНТ ДЛЯ АВАТАРА С ОПТИМИЗАЦИЕЙ ---
@@ -2632,14 +2629,7 @@ async def upload_files(
         # Сохраняем файл
         await save_uploaded_file_optimized(file, dest_path)
         
-        # Обновляем содержимое Excel файла (если нужно)
-        await update_excel_content(
-            dest_path,
-            user.unit_name,
-            user.director_name,
-            year,
-            f"{year}-{month}-01"  # Дата в формате YYYY-MM-DD
-        )
+       
 
     await write_manifest_optimized(manifest_path, manifest)
 
