@@ -509,13 +509,13 @@ MUNICIPAL_CODE = "rayonadmin3377%"
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Функция для обновления данных внутри файлов excel
+## ИСПРАВЛЕННАЯ ФУНКЦИЯ update_excel_content (обновляет содержимое в файлах)
 async def update_excel_content(
     file_path: Path,
     school_name: str,
     director_name: str,
     year: str,
-    date_str: str = None
+    date_str: str = None  # Ожидаем дату в формате ДД.ММ.ГГГГ
 ):
     temp_path = None
 
@@ -527,24 +527,29 @@ async def update_excel_content(
         await asyncio.to_thread(shutil.copy2, file_path, temp_path)
 
         wb = load_workbook(temp_path)
+        
         for sheet in wb.worksheets:
             if file_path.name.startswith("tm") and file_path.name.endswith(".xlsx"):
+                # tm файлы: название школы в C1, ФИО директора в H2
                 if sheet["C1"].value is not None:
                     sheet["C1"] = school_name
                 if sheet["H2"].value is not None:
                     sheet["H2"] = director_name
+                    
             elif file_path.name.startswith("kp") and file_path.name.endswith(".xlsx"):
+                # kp файлы: название школы в B1, год в AD1
                 if sheet["B1"].value is not None:
                     sheet["B1"] = school_name
                 if sheet["AD1"].value is not None:
                     sheet["AD1"] = year
+                    
             else:
-                parts = file_path.stem.split("-")
-                if len(parts) >= 3 and date_str:
-                    if sheet["B1"].value is not None:
-                        sheet["B1"] = school_name
-                    if sheet["J1"].value is not None:
-                        sheet["J1"] = date_str
+                # Обычные файлы меню: название школы в B1, дата в J1
+                if sheet["B1"].value is not None:
+                    sheet["B1"] = school_name
+                if sheet["J1"].value is not None and date_str:
+                    # Используем дату из названия файла
+                    sheet["J1"] = date_str
 
         wb.save(temp_path)
         wb.close()
@@ -2059,23 +2064,52 @@ async def bulk_upload(
 
             await asyncio.to_thread(lambda: shutil.copy2(orig_path, dest_path))
 
-            # ========== ИСПРАВЛЕНИЕ: Сохраняем метаданные с правильными годом и месяцем ==========
+            # ========== ИЗВЛЕКАЕМ ДАТУ ИЗ ИМЕНИ ФАЙЛА ==========
+            date_from_filename = None
+            filename = file.filename
+            
+            # Пробуем найти дату в разных форматах в имени файла
+            # Формат: ДД.ММ.ГГГГ или ДД-ММ-ГГГГ или ДД/ММ/ГГГГ
+            date_patterns = [
+                r'(\d{2})[.-](\d{2})[.-](\d{4})',  # 15.01.2025 или 15-01-2025
+                r'(\d{2})[./](\d{2})[./](\d{4})',   # 15/01/2025
+                r'(\d{4})[.-](\d{2})[.-](\d{2})',   # 2025-01-15
+            ]
+            
+            for pattern in date_patterns:
+                match = re.search(pattern, filename)
+                if match:
+                    groups = match.groups()
+                    if len(groups[0]) == 4:  # Год первый
+                        y, m, d = groups[0], groups[1], groups[2]
+                    else:  # День первый
+                        d, m, y = groups[0], groups[1], groups[2]
+                    date_from_filename = f"{d}.{m}.{y}"
+                    break
+            
+            # Если дата не найдена в имени файла, используем первый день месяца
+            if not date_from_filename:
+                date_from_filename = f"{year}-{month}-01"
+                # Конвертируем в формат ДД.ММ.ГГГГ для Excel
+                date_from_filename = f"01.{month}.{year}"
+            
+            # Сохраняем метаданные в манифест
             manifest[file.filename] = {
-                "assigned_year": year,           # Год из формы
-                "assigned_month": month,         # Месяц из формы
+                "assigned_year": year,
+                "assigned_month": month,
                 "uploader_name": uploader_name,
                 "uploader_ip": uploader_ip,
-                "upload_datetime": current_time.strftime("%d.%m.%Y %H:%M")
+                "upload_datetime": current_time.strftime("%d.%m.%Y %H:%M"),
+                "embedded_date": date_from_filename  # Сохраняем какую дату вставили
             }
 
-            # Обновляем содержимое Excel файла
-            date_str = f"{year}-{month}-01"
+            # Обновляем содержимое Excel файла с ДАТОЙ ИЗ НАЗВАНИЯ
             await update_excel_content(
                 dest_path,
                 school.unit_name,
                 school.director_name,
                 year,
-                date_str
+                date_from_filename  # ← Передаем найденную дату
             )
 
         await write_manifest_optimized(manifest_path, manifest)
