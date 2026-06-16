@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
 <style>
-/* Дополнительные стили для дашборда школы - улучшенная тёмная тема */
+/* Дополнительные стили для дашборда школы - улучшенная тёмная тема с прозрачностью */
 .dashboard-layout {
     max-width: 1200px;
     margin: 0 auto;
@@ -11,11 +11,18 @@
 /* Объединённая панель профиля и периода */
 .dashboard-header {
     background: var(--bg-card);
+    backdrop-filter: var(--glass-blur, blur(16px));
+    -webkit-backdrop-filter: var(--glass-blur, blur(16px));
     border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-light);
     overflow: hidden;
     margin-bottom: 2rem;
     transition: all 0.3s ease;
+    box-shadow: var(--shadow-md);
+}
+
+.dashboard-header:hover {
+    box-shadow: var(--shadow-lg);
 }
 
 /* Шапка профиля */
@@ -25,12 +32,12 @@
     gap: 2rem;
     padding: 2rem;
     flex-wrap: wrap;
-    background: linear-gradient(135deg, var(--gray-50) 0%, var(--bg-card) 100%);
-    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(248, 250, 252, 0.6) 0%, var(--bg-card) 100%);
+    border-bottom: 1px solid var(--border-light);
 }
 
 [data-theme='dark'] .profile-header {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, var(--bg-card) 100%);
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, var(--bg-card) 100%);
 }
 
 /* Аватар школы */
@@ -48,7 +55,7 @@
     object-fit: cover;
     border: 3px solid var(--primary);
     background: var(--bg-card);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px var(--primary-glow, rgba(26, 76, 140, 0.2));
 }
 
 .avatar-placeholder {
@@ -60,7 +67,7 @@
     align-items: center;
     justify-content: center;
     border: 3px solid var(--gray-400);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 [data-theme='dark'] .avatar-placeholder {
@@ -126,22 +133,17 @@
 .school-title {
     font-size: 1.8rem;
     font-weight: 800;
-    background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--text-primary);
     margin: 0;
 }
 
 [data-theme='dark'] .school-title {
-    background: linear-gradient(135deg, #e2e8f0 0%, var(--primary-light) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #e2e8f0;
 }
 
 .edit-title-btn {
     background: var(--gray-100);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-light);
     padding: 0.3rem 0.8rem;
     border-radius: 2rem;
     font-size: 0.7rem;
@@ -153,7 +155,7 @@
 
 [data-theme='dark'] .edit-title-btn {
     background: rgba(51, 65, 85, 0.8);
-    border-color: var(--border);
+    border-color: var(--border-light);
 }
 
 .edit-title-btn:hover {
@@ -171,7 +173,9 @@
 }
 
 .school-badge {
-    background: var(--gray-100);
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur, blur(8px));
+    -webkit-backdrop-filter: var(--glass-blur, blur(8px));
     color: var(--text-secondary);
     padding: 0.25rem 0.75rem;
     border-radius: 2rem;
@@ -181,12 +185,12 @@
     align-items: center;
     gap: 0.4rem;
     transition: all 0.2s ease;
+    border: 1px solid var(--border-light);
 }
 
 [data-theme='dark'] .school-badge {
-    background: rgba(51, 65, 85, 0.6);
+    background: rgba(51, 65, 85, 0.4);
     color: var(--text-secondary);
-    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .school-badge svg {
@@ -199,14 +203,14 @@
     display: none;
     margin: 0.75rem 0;
     padding: 1rem;
-    background: var(--gray-50);
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur, blur(8px));
     border-radius: var(--radius-md);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-light);
 }
 
 [data-theme='dark'] .school-title-edit-form {
     background: rgba(30, 41, 59, 0.8);
-    backdrop-filter: blur(8px);
 }
 
 .school-title-edit-form input {
@@ -214,7 +218,7 @@
     padding: 0.6rem;
     margin-bottom: 0.75rem;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-light);
     background: var(--bg-card);
     color: var(--text-primary);
 }
@@ -281,7 +285,7 @@
     flex: 1;
     padding: 0.5rem;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-light);
     background: var(--bg-card);
     color: var(--text-primary);
 }
@@ -292,16 +296,16 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.5rem 0.75rem;
-    background: var(--gray-50);
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur, blur(8px));
     border-radius: var(--radius-md);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-light);
     margin-top: 0.5rem;
     transition: all 0.2s ease;
 }
 
 [data-theme='dark'] .external-path {
     background: rgba(30, 41, 59, 0.6);
-    backdrop-filter: blur(4px);
 }
 
 .external-path-icon {
@@ -399,21 +403,22 @@
     gap: 1rem;
     padding: 0 2rem 1.5rem 2rem;
     flex-wrap: wrap;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-light);
 }
 
 .school-link-card {
     flex: 1;
     min-width: 220px;
-    background: var(--gray-50);
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur, blur(8px));
     border-radius: var(--radius-md);
     padding: 0.75rem 1rem;
     transition: all 0.3s ease;
+    border: 1px solid var(--border-light);
 }
 
 [data-theme='dark'] .school-link-card {
     background: rgba(30, 41, 59, 0.6);
-    backdrop-filter: blur(4px);
 }
 
 .school-link-card:hover {
@@ -479,7 +484,7 @@
     font-size: 0.8rem;
     margin-bottom: 0.5rem;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-light);
     background: var(--bg-card);
     color: var(--text-primary);
 }
@@ -525,11 +530,11 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
-    background: linear-gradient(135deg, var(--gray-50) 0%, transparent 100%);
+    background: linear-gradient(135deg, rgba(248, 250, 252, 0.4) 0%, transparent 100%);
 }
 
 [data-theme='dark'] .period-panel {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, transparent 100%);
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, transparent 100%);
 }
 
 .period-badge {
@@ -574,7 +579,7 @@
 .period-field select {
     padding: 0.5rem 0.75rem;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-light);
     background: var(--bg-card);
     color: var(--text-primary);
     font-size: 0.85rem;
@@ -616,23 +621,30 @@
 /* ========== ДОПОЛНИТЕЛЬНЫЕ СТИЛИ ДЛЯ СПЕЦИАЛЬНЫХ ФАЙЛОВ ========== */
 .special-file-section {
     background: var(--bg-card);
+    backdrop-filter: var(--glass-blur, blur(16px));
+    -webkit-backdrop-filter: var(--glass-blur, blur(16px));
     border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-light);
     overflow: hidden;
     margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+}
+
+.special-file-section:hover {
+    box-shadow: var(--shadow-lg);
 }
 
 .special-file-header {
-    background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-50) 100%);
+    background: linear-gradient(135deg, rgba(248, 250, 252, 0.4) 0%, rgba(248, 250, 252, 0.1) 100%);
     padding: 0.75rem 1.25rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-light);
     display: flex;
     align-items: center;
     gap: 0.75rem;
 }
 
 [data-theme='dark'] .special-file-header {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%);
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(30, 41, 59, 0.1) 100%);
 }
 
 .special-file-header svg {
@@ -711,11 +723,18 @@
 /* Карточка загрузки файлов */
 .file-upload-card {
     background: var(--bg-card);
+    backdrop-filter: var(--glass-blur, blur(16px));
+    -webkit-backdrop-filter: var(--glass-blur, blur(16px));
     border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-light);
     padding: 1.5rem;
     margin-bottom: 2rem;
     transition: all 0.3s ease;
+    box-shadow: var(--shadow-md);
+}
+
+.file-upload-card:hover {
+    box-shadow: var(--shadow-lg);
 }
 
 .file-upload-card h3 {
@@ -726,7 +745,7 @@
 }
 
 .file-upload-area {
-    border: 2px dashed var(--border);
+    border: 2px dashed var(--border-light);
     border-radius: var(--radius-md);
     padding: 1.5rem;
     text-align: center;
@@ -734,6 +753,7 @@
     transition: all 0.3s ease;
     cursor: pointer;
     position: relative;
+    background: var(--bg-card);
 }
 
 .file-upload-area:hover {
@@ -785,7 +805,7 @@
     align-items: center;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border-light);
     flex-wrap: wrap;
     gap: 1rem;
 }
@@ -852,10 +872,17 @@
 /* Карточка файлов */
 .card {
     background: var(--bg-card);
+    backdrop-filter: var(--glass-blur, blur(16px));
+    -webkit-backdrop-filter: var(--glass-blur, blur(16px));
     border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-light);
     padding: 1.5rem;
     transition: all 0.3s ease;
+    box-shadow: var(--shadow-md);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-lg);
 }
 
 /* Статистика файлов */
@@ -865,7 +892,7 @@
     align-items: center;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-light);
     flex-wrap: wrap;
     gap: 1rem;
 }
@@ -876,7 +903,8 @@
 }
 
 .stat-badge {
-    background: var(--gray-100);
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur, blur(8px));
     padding: 0.35rem 0.9rem;
     border-radius: 2rem;
     font-size: 0.75rem;
@@ -886,10 +914,11 @@
     align-items: center;
     gap: 0.4rem;
     transition: all 0.2s ease;
+    border: 1px solid var(--border-light);
 }
 
 [data-theme='dark'] .stat-badge {
-    background: rgba(51, 65, 85, 0.8);
+    background: rgba(51, 65, 85, 0.4);
 }
 
 .stat-badge svg {
@@ -910,7 +939,7 @@
 /* Карточка файла */
 .file-card {
     background: var(--bg-card);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-light);
     border-radius: var(--radius-md);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
@@ -1014,7 +1043,7 @@
     display: flex;
     gap: 0.5rem;
     padding-top: 0.5rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border-light);
 }
 
 .file-action-btn {
@@ -1079,7 +1108,7 @@
     width: 80px;
     height: 80px;
     margin-bottom: 1rem;
-    stroke: var(--border);
+    stroke: var(--border-light);
     animation: float 3s ease-in-out infinite;
 }
 
@@ -1105,7 +1134,7 @@
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px);
     display: none;
     align-items: center;
     justify-content: center;
@@ -1114,11 +1143,12 @@
 
 .modal-window {
     background: var(--bg-card);
+    backdrop-filter: var(--glass-blur, blur(16px));
     border-radius: var(--radius-lg);
     padding: 1.5rem;
     min-width: 320px;
     text-align: center;
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-light);
     box-shadow: var(--shadow-xl);
     animation: fadeIn 0.2s ease-out;
 }
@@ -1196,6 +1226,7 @@
     top: 1.5rem;
     right: 1.5rem;
     background: var(--bg-card);
+    backdrop-filter: var(--glass-blur, blur(16px));
     color: var(--text-primary);
     padding: 0.6rem 1.2rem;
     border-radius: var(--radius-md);
@@ -1205,8 +1236,8 @@
     opacity: 0;
     transform: translateY(-10px);
     transition: all 0.2s ease;
-    box-shadow: var(--shadow-md);
-    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-light);
     pointer-events: none;
 }
 

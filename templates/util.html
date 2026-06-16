@@ -5,41 +5,45 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
 :root {
-  --primary: #4f46e5;
-  --primary-dark: #4338ca;
-  --primary-light: #818cf8;
-  --primary-bg: rgba(79, 70, 229, 0.08);
+  --primary: #1a4c8c;
+  --primary-dark: #0e3a6b;
+  --primary-light: #2c6eb0;
+  --primary-bg: rgba(26, 76, 140, 0.08);
   --success: #10b981;
   --warning: #f59e0b;
   --info: #3b82f6;
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
-  --bg-main: #f9fafb;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  --bg-main: #ffffff;
   --bg-card: #ffffff;
-  --border: #e5e7eb;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --border-light: #e9eef3;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.025);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
 }
 
 [data-theme='dark'] {
-  --primary: #818cf8;
-  --primary-dark: #6366f1;
-  --primary-light: #a5b4fc;
-  --primary-bg: rgba(129, 140, 248, 0.12);
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --primary-light: #60a5fa;
+  --primary-bg: rgba(59, 130, 246, 0.08);
   --success: #34d399;
   --warning: #fbbf24;
   --info: #60a5fa;
-  --gray-50: #111827;
+  --gray-50: #0f172a;
   --gray-100: #1f2937;
   --gray-200: #374151;
   --gray-300: #4b5563;
@@ -51,18 +55,21 @@
   --gray-900: #f9fafb;
   --bg-main: #0f172a;
   --bg-card: #1e293b;
-  --border: #334155;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --border-light: #334155;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   background: var(--bg-main);
-  color: var(--gray-800);
+  color: var(--text-primary);
   line-height: 1.5;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background 0.25s ease, color 0.2s ease;
+  font-weight: 400;
+  font-size: 0.9375rem;
+  -webkit-font-smoothing: antialiased;
 }
 
 .container {
@@ -78,18 +85,16 @@ body {
 }
 
 .page-header h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
   margin-bottom: 0.5rem;
 }
 
 .page-header p {
-  color: var(--gray-500);
-  font-size: 1rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
 }
 
 /* Сетка карточек */
@@ -103,8 +108,8 @@ body {
 /* Карточка утилиты */
 .utility-card {
   background: var(--bg-card);
-  border-radius: 1.25rem;
-  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-light);
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -122,8 +127,8 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+  height: 3px;
+  background: var(--primary);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -141,10 +146,10 @@ body {
 }
 
 .icon-container {
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   background: var(--primary-bg);
-  border-radius: 1.5rem;
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -157,14 +162,14 @@ body {
 }
 
 .icon-container svg {
-  width: 44px;
-  height: 44px;
-  color: var(--primary);
-  transition: color 0.3s ease;
+  width: 38px;
+  height: 38px;
+  stroke: var(--primary);
+  transition: stroke 0.3s ease;
 }
 
 .utility-card:hover .icon-container svg {
-  color: white;
+  stroke: white;
 }
 
 /* Содержимое карточки */
@@ -173,37 +178,31 @@ body {
 }
 
 .utility-title {
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: var(--gray-800);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
-  letter-spacing: -0.3px;
-}
-
-[data-theme='dark'] .utility-title {
-  color: var(--gray-200);
+  letter-spacing: -0.2px;
 }
 
 .utility-badge {
   display: inline-block;
-  padding: 0.25rem 0.75rem;
+  padding: 0.2rem 0.7rem;
   background: var(--primary-bg);
   color: var(--primary);
   border-radius: 2rem;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 600;
   margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .utility-description {
-  color: var(--gray-600);
-  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
   line-height: 1.6;
   margin-bottom: 1.25rem;
-}
-
-[data-theme='dark'] .utility-description {
-  color: var(--gray-400);
 }
 
 /* Список возможностей */
@@ -216,19 +215,15 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--gray-600);
-  margin-bottom: 0.5rem;
-}
-
-[data-theme='dark'] .features-list li {
-  color: var(--gray-400);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
 }
 
 .features-list li svg {
-  width: 16px;
-  height: 16px;
-  color: var(--success);
+  width: 14px;
+  height: 14px;
+  stroke: var(--success);
   flex-shrink: 0;
 }
 
@@ -239,13 +234,13 @@ body {
   justify-content: center;
   gap: 0.625rem;
   width: 100%;
-  padding: 0.875rem;
+  padding: 0.75rem;
   background: var(--primary);
   color: white;
   border: none;
-  border-radius: 0.75rem;
-  font-weight: 600;
-  font-size: 0.9rem;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
@@ -259,8 +254,9 @@ body {
 }
 
 .download-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
 }
 
 /* Секция "Скоро" */
@@ -268,54 +264,55 @@ body {
   margin-top: 3rem;
   padding: 2rem;
   background: var(--bg-card);
-  border-radius: 1.25rem;
-  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-light);
   text-align: center;
 }
 
 .coming-soon-section h3 {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  color: var(--gray-700);
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .coming-soon-section p {
-  color: var(--gray-500);
-  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
 }
 
 .coming-soon-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1rem;
   margin-top: 1.5rem;
 }
 
 .coming-soon-item {
   padding: 1rem;
-  background: var(--gray-50);
-  border-radius: 0.75rem;
-  border: 1px solid var(--border);
-  opacity: 0.6;
+  background: var(--primary-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
 }
 
-[data-theme='dark'] .coming-soon-item {
-  background: var(--gray-800);
+.coming-soon-item:hover {
+  opacity: 1;
 }
 
 .coming-soon-item svg {
-  width: 32px;
-  height: 32px;
-  color: var(--gray-400);
+  width: 28px;
+  height: 28px;
+  stroke: var(--text-muted);
   margin-bottom: 0.5rem;
 }
 
 .coming-soon-item span {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  color: var(--gray-500);
+  color: var(--text-secondary);
 }
 
 /* Анимации */
@@ -336,6 +333,59 @@ body {
   animation-delay: calc(var(--card-index, 0) * 0.1s);
 }
 
+/* Уведомление */
+.notification {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border-left: 3px solid var(--success);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transform: translateX(calc(100% + 1.5rem));
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.notification.show {
+  transform: translateX(0);
+}
+
+.notification svg {
+  width: 16px;
+  height: 16px;
+  stroke: var(--success);
+  flex-shrink: 0;
+}
+
+.notification.error {
+  border-left-color: var(--danger, #dc2626);
+}
+
+.notification.error svg {
+  stroke: var(--danger, #dc2626);
+}
+
+.loading {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Адаптивность */
 @media (max-width: 768px) {
   .container {
@@ -348,50 +398,32 @@ body {
   }
   
   .page-header h1 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
   }
   
   .utility-title {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
   
   .icon-container {
-    width: 64px;
-    height: 64px;
+    width: 60px;
+    height: 60px;
   }
   
   .icon-container svg {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
+  }
+  
+  .coming-soon-grid {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
-/* Уведомление */
-.notification {
-  position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
-  background: var(--bg-card);
-  border-left: 3px solid var(--success);
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  transform: translateX(calc(100% + 1.5rem));
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 1000;
-}
-
-.notification.show {
-  transform: translateX(0);
-}
-
-.notification svg {
-  width: 18px;
-  height: 18px;
-  color: var(--success);
+@media (max-width: 480px) {
+  .coming-soon-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
 
@@ -458,62 +490,6 @@ body {
         </a>
       </div>
     </div>
-
-    <!-- Утилита 2: MenuBuilder Studio -->
-    <div class="utility-card" style="--card-index: 1">
-      <div class="utility-icon">
-        <div class="icon-container">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>
-          </svg>
-        </div>
-      </div>
-      <div class="utility-content">
-        <div class="utility-badge">Генерация меню</div>
-        <h2 class="utility-title">MenuBuilder Studio</h2>
-        <p class="utility-description">
-          Умный конструктор ежедневных меню на основе типового меню и календаря питания. 
-          Автоматически формирует сбалансированные рационы с учетом сезонности и 
-          нормативных требований.
-        </p>
-        <ul class="features-list">
-          <li>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span>Генерация меню на основе типового шаблона</span>
-          </li>
-          <li>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span>Учет календаря питания и сезонности</span>
-          </li>
-          <li>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span>Автоматический расчет пищевой ценности</span>
-          </li>
-          <li>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span>Экспорт в Excel и PDF форматы</span>
-          </li>
-        </ul>
-        <a href="#" class="download-btn" onclick="handleDownload('menubuilder', event)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Скачать MenuBuilder Studio
-        </a>
-      </div>
-    </div>
   </div>
 
   <!-- Секция "Скоро в разработке" -->
@@ -563,8 +539,7 @@ body {
 <script>
 // Ссылки на Яндекс.Диск (замените на реальные ссылки)
 const DOWNLOAD_LINKS = {
-  'datasync': 'https://disk.yandex.ru/d/qdcrolbNbczTDA',
-  'menubuilder': 'https://disk.yandex.ru/d/ВАША_ССЫЛКА_ДЛЯ_MENUBUILDER_STUDIO'
+  'datasync': 'https://disk.yandex.ru/d/qdcrolbNbczTDA'
 };
 
 // Функция показа уведомления
@@ -578,12 +553,10 @@ function showNotification(message, isError = false) {
   
   if (isError) {
     svg.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
-    notification.style.borderLeftColor = 'var(--error)';
-    svg.style.color = 'var(--error)';
+    notification.className = 'notification error';
   } else {
     svg.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
-    notification.style.borderLeftColor = 'var(--success)';
-    svg.style.color = 'var(--success)';
+    notification.className = 'notification';
   }
   
   notification.classList.add('show');
@@ -600,19 +573,17 @@ function handleDownload(utilityId, event) {
   
   const link = DOWNLOAD_LINKS[utilityId];
   
-  if (link && link !== 'https://disk.yandex.ru/d/ВАША_ССЫЛКА_ДЛЯ_DATASYNC_PRO' && link !== 'https://disk.yandex.ru/d/ВАША_ССЫЛКА_ДЛЯ_MENUBUILDER_STUDIO') {
-    // Открываем ссылку на Яндекс.Диск в новой вкладке
+  if (link) {
     window.open(link, '_blank');
-    showNotification(`Скачивание ${utilityId === 'datasync' ? 'DataSync Pro' : 'MenuBuilder Studio'} началось. Перенаправление на Яндекс.Диск...`);
+    showNotification(`Скачивание ${utilityId === 'datasync' ? 'DataSync Pro' : 'Утилиты'} началось. Перенаправление на Яндекс.Диск...`);
   } else {
-    // Если ссылка не настроена
     showNotification('Ссылка для скачивания будет добавлена администратором', true);
   }
   
   // Анимация кнопки
   const btn = event.currentTarget;
   const originalText = btn.innerHTML;
-  btn.innerHTML = '<span class="loading" style="display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite;"></span> Перенаправление...';
+  btn.innerHTML = '<span class="loading"></span> Перенаправление...';
   btn.style.opacity = '0.8';
   btn.disabled = true;
   
@@ -622,24 +593,6 @@ function handleDownload(utilityId, event) {
     btn.disabled = false;
   }, 1500);
 }
-
-// Добавляем анимацию спиннера в стили
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-  .loading {
-    display: inline-block;
-    width: 18px;
-    height: 18px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-  }
-`;
-document.head.appendChild(style);
 
 // Анимация появления карточек
 document.addEventListener('DOMContentLoaded', () => {
