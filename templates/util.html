@@ -1,588 +1,577 @@
 {% extends "layout.html" %}
 {% block content %}
 <style>
-/* ----------  UTILITIES MARKETPLACE ---------- */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+    /* ----------  UTILITIES MARKETPLACE - Единый стиль ---------- */
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
-:root {
-  --primary: #1a4c8c;
-  --primary-dark: #0e3a6b;
-  --primary-light: #2c6eb0;
-  --primary-bg: rgba(26, 76, 140, 0.08);
-  --success: #10b981;
-  --warning: #f59e0b;
-  --info: #3b82f6;
-  --gray-50: #f8fafc;
-  --gray-100: #f1f5f9;
-  --gray-200: #e2e8f0;
-  --gray-300: #cbd5e1;
-  --gray-400: #94a3b8;
-  --gray-500: #64748b;
-  --gray-600: #475569;
-  --gray-700: #334155;
-  --gray-800: #1e293b;
-  --gray-900: #0f172a;
-  --bg-main: #ffffff;
-  --bg-card: #ffffff;
-  --border-light: #e9eef3;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.025);
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-}
+    .utilities-layout {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+        position: relative;
+        min-height: calc(100vh - 200px);
+    }
 
-[data-theme='dark'] {
-  --primary: #3b82f6;
-  --primary-dark: #2563eb;
-  --primary-light: #60a5fa;
-  --primary-bg: rgba(59, 130, 246, 0.08);
-  --success: #34d399;
-  --warning: #fbbf24;
-  --info: #60a5fa;
-  --gray-50: #0f172a;
-  --gray-100: #1f2937;
-  --gray-200: #374151;
-  --gray-300: #4b5563;
-  --gray-400: #6b7280;
-  --gray-500: #9ca3af;
-  --gray-600: #d1d5db;
-  --gray-700: #e5e7eb;
-  --gray-800: #f3f4f6;
-  --gray-900: #f9fafb;
-  --bg-main: #0f172a;
-  --bg-card: #1e293b;
-  --border-light: #334155;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
-}
+    /* Фоновые круги - как на других страницах */
+    .utilities-layout::before,
+    .utilities-layout::after {
+        content: '';
+        position: fixed;
+        pointer-events: none;
+        z-index: 0;
+        border-radius: 50%;
+        opacity: 0.5;
+    }
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  background: var(--bg-main);
-  color: var(--text-primary);
-  line-height: 1.5;
-  transition: background 0.25s ease, color 0.2s ease;
-  font-weight: 400;
-  font-size: 0.9375rem;
-  -webkit-font-smoothing: antialiased;
-}
+    .utilities-layout::before {
+        width: 450px;
+        height: 450px;
+        top: -120px;
+        right: -100px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+    }
 
-.container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-}
+    .utilities-layout::after {
+        width: 300px;
+        height: 300px;
+        bottom: -60px;
+        left: -60px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.035) 0%, transparent 70%);
+    }
 
-/* Header */
-.page-header {
-  margin-bottom: 2.5rem;
-  text-align: center;
-}
+    [data-theme='dark'] .utilities-layout::before {
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
+        opacity: 0.6;
+    }
 
-.page-header h1 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.3px;
-  margin-bottom: 0.5rem;
-}
+    [data-theme='dark'] .utilities-layout::after {
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.04) 0%, transparent 70%);
+        opacity: 0.5;
+    }
 
-.page-header p {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
+    /* Header */
+    .page-header {
+        margin-bottom: 2.5rem;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+    }
 
-/* Сетка карточек */
-.utilities-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: 1.75rem;
-  margin-bottom: 2rem;
-}
+    .page-header h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: -0.5px;
+        margin-bottom: 0.5rem;
+    }
 
-/* Карточка утилиты */
-.utility-card {
-  background: var(--bg-card);
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border-light);
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-}
+    .page-header h1 span {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
 
-.utility-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-xl);
-  border-color: var(--primary-light);
-}
+    .page-header p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
 
-.utility-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--primary);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
+    /* Сетка карточек */
+    .utilities-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 1.75rem;
+        margin-bottom: 2rem;
+        position: relative;
+        z-index: 1;
+    }
 
-.utility-card:hover::before {
-  opacity: 1;
-}
+    /* Карточка утилиты */
+    .utility-card {
+        background: linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(240, 248, 255, 0.92) 100%);
+        border-radius: var(--radius-xl);
+        border: 1px solid var(--border-light);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        position: relative;
+        box-shadow: 0 2px 12px rgba(59, 130, 246, 0.04);
+        backdrop-filter: blur(8px);
+    }
 
-/* Иконка утилиты */
-.utility-icon {
-  padding: 1.75rem 1.75rem 0 1.75rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+    [data-theme='dark'] .utility-card {
+        background: linear-gradient(145deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.92) 100%);
+        border-color: rgba(59, 130, 246, 0.08);
+    }
 
-.icon-container {
-  width: 72px;
-  height: 72px;
-  background: var(--primary-bg);
-  border-radius: var(--radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
+    .utility-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 32px rgba(59, 130, 246, 0.08);
+        border-color: var(--primary);
+    }
 
-.utility-card:hover .icon-container {
-  transform: scale(1.05);
-  background: var(--primary);
-}
+    .utility-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
 
-.icon-container svg {
-  width: 38px;
-  height: 38px;
-  stroke: var(--primary);
-  transition: stroke 0.3s ease;
-}
+    .utility-card:hover::before {
+        opacity: 1;
+    }
 
-.utility-card:hover .icon-container svg {
-  stroke: white;
-}
+    /* Иконка утилиты */
+    .utility-icon {
+        padding: 1.75rem 1.75rem 0 1.75rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
 
-/* Содержимое карточки */
-.utility-content {
-  padding: 1.5rem;
-}
+    .icon-container {
+        width: 72px;
+        height: 72px;
+        background: var(--primary-bg);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
 
-.utility-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.2px;
-}
+    .utility-card:hover .icon-container {
+        transform: scale(1.05);
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
 
-.utility-badge {
-  display: inline-block;
-  padding: 0.2rem 0.7rem;
-  background: var(--primary-bg);
-  color: var(--primary);
-  border-radius: 2rem;
-  font-size: 0.65rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
+    .icon-container svg {
+        width: 38px;
+        height: 38px;
+        stroke: var(--primary);
+        transition: stroke 0.3s ease;
+    }
 
-.utility-description {
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  line-height: 1.6;
-  margin-bottom: 1.25rem;
-}
+    .utility-card:hover .icon-container svg {
+        stroke: white;
+    }
 
-/* Список возможностей */
-.features-list {
-  list-style: none;
-  margin-bottom: 1.5rem;
-}
+    /* Содержимое карточки */
+    .utility-content {
+        padding: 1.5rem 1.75rem 1.75rem 1.75rem;
+    }
 
-.features-list li {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin-bottom: 0.4rem;
-}
+    .utility-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+        letter-spacing: -0.2px;
+    }
 
-.features-list li svg {
-  width: 14px;
-  height: 14px;
-  stroke: var(--success);
-  flex-shrink: 0;
-}
+    .utility-badge {
+        display: inline-block;
+        padding: 0.15rem 0.7rem;
+        background: var(--primary-bg);
+        color: var(--primary);
+        border-radius: 2rem;
+        font-size: 0.6rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
 
-/* Кнопка скачивания */
-.download-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.625rem;
-  width: 100%;
-  padding: 0.75rem;
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-weight: 500;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  margin-top: 0.5rem;
-}
+    .utility-description {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
 
-.download-btn:hover {
-  background: var(--primary-dark);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
+    /* Список возможностей */
+    .features-list {
+        list-style: none;
+        margin-bottom: 1.25rem;
+    }
 
-.download-btn svg {
-  width: 16px;
-  height: 16px;
-  stroke: currentColor;
-}
+    .features-list li {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.35rem;
+    }
 
-/* Секция "Скоро" */
-.coming-soon-section {
-  margin-top: 3rem;
-  padding: 2rem;
-  background: var(--bg-card);
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border-light);
-  text-align: center;
-}
+    .features-list li svg {
+        width: 14px;
+        height: 14px;
+        stroke: var(--success);
+        flex-shrink: 0;
+    }
 
-.coming-soon-section h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-}
+    /* Кнопка скачивания */
+    .download-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.625rem;
+        width: 100%;
+        padding: 0.7rem;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
 
-.coming-soon-section p {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
+    .download-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(59, 130, 246, 0.25);
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+    }
 
-.coming-soon-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
+    .download-btn:active {
+        transform: translateY(0);
+    }
 
-.coming-soon-item {
-  padding: 1rem;
-  background: var(--primary-bg);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-light);
-  opacity: 0.7;
-  transition: opacity 0.3s ease;
-}
+    .download-btn svg {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+    }
 
-.coming-soon-item:hover {
-  opacity: 1;
-}
+    /* Анимации */
+    @keyframes fadeSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 
-.coming-soon-item svg {
-  width: 28px;
-  height: 28px;
-  stroke: var(--text-muted);
-  margin-bottom: 0.5rem;
-}
+    .utility-card {
+        animation: fadeSlideUp 0.4s ease-out forwards;
+        opacity: 0;
+    }
 
-.coming-soon-item span {
-  display: block;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-}
+    .utility-card:nth-child(1) { animation-delay: 0.05s; }
+    .utility-card:nth-child(2) { animation-delay: 0.15s; }
+    .utility-card:nth-child(3) { animation-delay: 0.25s; }
 
-/* Анимации */
-@keyframes fadeSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+    /* Уведомление */
+    .notification {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-md);
+        background: var(--bg-card);
+        border-left: 3px solid var(--success);
+        box-shadow: var(--shadow-lg);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        transform: translateX(calc(100% + 1.5rem));
+        transition: transform 0.3s ease;
+        z-index: 1000;
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        backdrop-filter: blur(8px);
+        border: 1px solid var(--border-light);
+    }
 
-.utility-card {
-  animation: fadeSlideUp 0.4s ease-out forwards;
-  opacity: 0;
-  animation-delay: calc(var(--card-index, 0) * 0.1s);
-}
+    .notification.show {
+        transform: translateX(0);
+    }
 
-/* Уведомление */
-.notification {
-  position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-md);
-  background: var(--bg-card);
-  border-left: 3px solid var(--success);
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  transform: translateX(calc(100% + 1.5rem));
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 1000;
-  font-size: 0.85rem;
-  color: var(--text-primary);
-}
+    .notification svg {
+        width: 16px;
+        height: 16px;
+        stroke: var(--success);
+        flex-shrink: 0;
+    }
 
-.notification.show {
-  transform: translateX(0);
-}
+    .notification.error {
+        border-left-color: #ef4444;
+    }
 
-.notification svg {
-  width: 16px;
-  height: 16px;
-  stroke: var(--success);
-  flex-shrink: 0;
-}
+    .notification.error svg {
+        stroke: #ef4444;
+    }
 
-.notification.error {
-  border-left-color: var(--danger, #dc2626);
-}
+    .loading {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
 
-.notification.error svg {
-  stroke: var(--danger, #dc2626);
-}
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
 
-.loading {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .utilities-layout {
+            padding: 1rem;
+        }
+        
+        .utilities-layout::before {
+            width: 250px;
+            height: 250px;
+            top: -60px;
+            right: -40px;
+        }
+        
+        .utilities-layout::after {
+            width: 180px;
+            height: 180px;
+            bottom: -30px;
+            left: -30px;
+        }
+        
+        .utilities-grid {
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+        }
+        
+        .page-header h1 {
+            font-size: 1.4rem;
+        }
+        
+        .utility-title {
+            font-size: 1.1rem;
+        }
+        
+        .icon-container {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .icon-container svg {
+            width: 32px;
+            height: 32px;
+        }
+        
+        .utility-content {
+            padding: 1.25rem;
+        }
+    }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-  .container {
-    padding: 1.5rem 1rem;
-  }
-  
-  .utilities-grid {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
-  
-  .page-header h1 {
-    font-size: 1.25rem;
-  }
-  
-  .utility-title {
-    font-size: 1.1rem;
-  }
-  
-  .icon-container {
-    width: 60px;
-    height: 60px;
-  }
-  
-  .icon-container svg {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .coming-soon-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .coming-soon-grid {
-    grid-template-columns: 1fr;
-  }
-}
+    @media (max-width: 480px) {
+        .page-header h1 {
+            font-size: 1.2rem;
+        }
+        
+        .utility-card {
+            border-radius: var(--radius-lg);
+        }
+        
+        .notification {
+            bottom: 1rem;
+            right: 1rem;
+            left: 1rem;
+        }
+    }
 </style>
 
-<div class="container">
-  <!-- Header -->
-  <div class="page-header">
-    <h1>Инструменты для работы</h1>
-    <p>Утилиты для автоматизации процессов питания в образовательных учреждениях</p>
-  </div>
+<div class="utilities-layout">
+    <!-- Header -->
+    <div class="page-header">
+        <h1>Инструменты для работы</h1>
+        <p>Утилиты для автоматизации процессов питания в образовательных учреждениях</p>
+    </div>
 
-  <!-- Сетка утилит -->
-  <div class="utilities-grid">
-    <!-- Утилита 1: DataSync Pro -->
-    <div class="utility-card" style="--card-index: 0">
-      <div class="utility-icon">
-        <div class="icon-container">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9h-4m-7 9A9 9 0 0 1 3 12m9 9v-4M3 12a9 9 0 0 1 9-9m-9 9h4m7-9a9 9 0 0 1 9 9"/>
-            <path d="M12 7v5l3 3"/>
-          </svg>
+    <!-- Сетка утилит -->
+    <div class="utilities-grid">
+        <!-- Утилита 1: DataSync Pro -->
+        <div class="utility-card">
+            <div class="utility-icon">
+                <div class="icon-container">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9h-4m-7 9A9 9 0 0 1 3 12m9 9v-4M3 12a9 9 0 0 1 9-9m-9 9h4m7-9a9 9 0 0 1 9 9"/>
+                        <path d="M12 7v5l3 3"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="utility-content">
+                <div class="utility-badge">Автоматизация данных</div>
+                <h2 class="utility-title">DataSync Pro</h2>
+                <p class="utility-description">
+                    Интеллектуальная система автоматического обновления реквизитов в документах. 
+                    Мгновенно синхронизирует даты, наименования учреждений и ФИО директоров 
+                    во всех файлах мониторинга питания.
+                </p>
+                <ul class="features-list">
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Автоматическое обновление дат во всех файлах</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Синхронизация названий школ и ФИО директоров</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Пакетная обработка Excel-файлов</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Совместимость с форматами .xlsx, .xls</span>
+                    </li>
+                </ul>
+                <a href="#" class="download-btn" onclick="handleDownload('datasync', event)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Скачать DataSync Pro
+                </a>
+            </div>
         </div>
-      </div>
-      <div class="utility-content">
-        <div class="utility-badge">Автоматизация данных</div>
-        <h2 class="utility-title">DataSync Pro</h2>
-        <p class="utility-description">
-          Интеллектуальная система автоматического обновления реквизитов в документах. 
-          Мгновенно синхронизирует даты, наименования учреждений и ФИО директоров 
-          во всех файлах мониторинга питания.
-        </p>
-        <ul class="features-list">
-          <li>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span>Автоматическое обновление дат во всех файлах</span>
-          </li>
-          <li>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span>Синхронизация названий школ и ФИО директоров</span>
-          </li>
-          <li>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span>Пакетная обработка Excel-файлов</span>
-          </li>
-          <li>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span>Совместимость с форматами .xlsx, .xls</span>
-          </li>
-        </ul>
-        <a href="#" class="download-btn" onclick="handleDownload('datasync', event)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Скачать DataSync Pro
-        </a>
-      </div>
-    </div>
-  </div>
 
-  <!-- Секция "Скоро в разработке" -->
-  <div class="coming-soon-section">
-    <h3>🚀 Скоро в разработке</h3>
-    <p>Мы постоянно улучшаем наши инструменты. Скоро появятся новые возможности</p>
-    <div class="coming-soon-grid">
-      <div class="coming-soon-item">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-          <circle cx="12" cy="12" r="3"/>
-        </svg>
-        <span>Аналитика питания</span>
-      </div>
+        <!-- Утилита 2: Report Generator (заглушка для будущего) -->
+        <div class="utility-card" style="opacity: 0.7;">
+            <div class="utility-icon">
+                <div class="icon-container" style="background: var(--gray-100);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <line x1="10" y1="9" x2="8" y2="9"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="utility-content">
+                <div class="utility-badge">Скоро</div>
+                <h2 class="utility-title">Report Generator</h2>
+                <p class="utility-description">
+                    Автоматическая генерация отчетов по мониторингу питания. 
+                    Создавайте сводные таблицы и аналитические отчеты в один клик.
+                </p>
+                <ul class="features-list">
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Автоматическая сводка по всем школам</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Экспорт в PDF и Excel</span>
+                    </li>
+                </ul>
+                <button class="download-btn" style="background: var(--gray-300); cursor: not-allowed; box-shadow: none;" disabled>
+                    В разработке
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <!-- Уведомление -->
 <div class="notification" id="notification">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <polyline points="20 6 9 17 4 12"/>
-  </svg>
-  <span>Скачивание началось...</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="20 6 9 17 4 12"/>
+    </svg>
+    <span>Скачивание началось...</span>
 </div>
 
 <script>
-// Ссылки на Яндекс.Диск (замените на реальные ссылки)
-const DOWNLOAD_LINKS = {
-  'datasync': 'https://disk.yandex.ru/d/qdcrolbNbczTDA'
-};
+    // Ссылки на Яндекс.Диск
+    const DOWNLOAD_LINKS = {
+        'datasync': 'https://disk.yandex.ru/d/qdcrolbNbczTDA'
+    };
 
-// Функция показа уведомления
-let notificationTimeout;
-function showNotification(message, isError = false) {
-  const notification = document.getElementById('notification');
-  const span = notification.querySelector('span');
-  const svg = notification.querySelector('svg');
-  
-  span.textContent = message;
-  
-  if (isError) {
-    svg.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
-    notification.className = 'notification error';
-  } else {
-    svg.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
-    notification.className = 'notification';
-  }
-  
-  notification.classList.add('show');
-  
-  if (notificationTimeout) clearTimeout(notificationTimeout);
-  notificationTimeout = setTimeout(() => {
-    notification.classList.remove('show');
-  }, 3000);
-}
+    let notificationTimeout;
 
-// Обработчик скачивания
-function handleDownload(utilityId, event) {
-  event.preventDefault();
-  
-  const link = DOWNLOAD_LINKS[utilityId];
-  
-  if (link) {
-    window.open(link, '_blank');
-    showNotification(`Скачивание ${utilityId === 'datasync' ? 'DataSync Pro' : 'Утилиты'} началось. Перенаправление на Яндекс.Диск...`);
-  } else {
-    showNotification('Ссылка для скачивания будет добавлена администратором', true);
-  }
-  
-  // Анимация кнопки
-  const btn = event.currentTarget;
-  const originalText = btn.innerHTML;
-  btn.innerHTML = '<span class="loading"></span> Перенаправление...';
-  btn.style.opacity = '0.8';
-  btn.disabled = true;
-  
-  setTimeout(() => {
-    btn.innerHTML = originalText;
-    btn.style.opacity = '1';
-    btn.disabled = false;
-  }, 1500);
-}
+    function showNotification(message, isError = false) {
+        const notification = document.getElementById('notification');
+        const span = notification.querySelector('span');
+        const svg = notification.querySelector('svg');
+        
+        span.textContent = message;
+        
+        if (isError) {
+            svg.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
+            notification.className = 'notification error';
+        } else {
+            svg.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+            notification.className = 'notification';
+        }
+        
+        notification.classList.add('show');
+        
+        if (notificationTimeout) clearTimeout(notificationTimeout);
+        notificationTimeout = setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
+    }
 
-// Анимация появления карточек
-document.addEventListener('DOMContentLoaded', () => {
-  const cards = document.querySelectorAll('.utility-card');
-  cards.forEach((card, index) => {
-    card.style.opacity = '0';
-    setTimeout(() => {
-      card.style.opacity = '1';
-    }, index * 100);
-  });
-});
+    function handleDownload(utilityId, event) {
+        event.preventDefault();
+        
+        const link = DOWNLOAD_LINKS[utilityId];
+        
+        if (link) {
+            window.open(link, '_blank');
+            showNotification(`Скачивание ${utilityId === 'datasync' ? 'DataSync Pro' : 'Утилиты'} началось. Перенаправление на Яндекс.Диск...`);
+        } else {
+            showNotification('Ссылка для скачивания будет добавлена администратором', true);
+        }
+        
+        const btn = event.currentTarget;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="loading"></span> Перенаправление...';
+        btn.style.opacity = '0.8';
+        btn.disabled = true;
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.style.opacity = '1';
+            btn.disabled = false;
+        }, 1500);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Убираем анимации для слабых компьютеров
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.querySelectorAll('.utility-card').forEach(el => {
+                el.style.animation = 'none';
+                el.style.opacity = '1';
+            });
+        }
+    });
 </script>
 {% endblock %}

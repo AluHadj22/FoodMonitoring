@@ -1,17 +1,47 @@
 {% extends "layout.html" %}
 {% block content %}
 <style>
-    /* Дополнительные стили для админ-панели - профессиональный минимализм */
+    /* Оптимизированные стили для админ-панели */
     .admin-layout {
         max-width: 1400px;
         margin: 0 auto;
         padding: 2rem;
+        position: relative;
+    }
+
+    /* Фоновые круги - упрощенные для производительности */
+    .admin-layout::before,
+    .admin-layout::after {
+        content: '';
+        position: fixed;
+        pointer-events: none;
+        z-index: 0;
+        border-radius: 50%;
+        opacity: 0.4;
+    }
+
+    .admin-layout::before {
+        width: 400px;
+        height: 400px;
+        top: -100px;
+        right: -80px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
+    }
+
+    .admin-layout::after {
+        width: 280px;
+        height: 280px;
+        bottom: -60px;
+        left: -60px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.04) 0%, transparent 70%);
     }
 
     .admin-grid {
         display: grid;
         gap: 2rem;
         grid-template-columns: 1fr;
+        position: relative;
+        z-index: 1;
     }
 
     @media (min-width: 1024px) {
@@ -20,26 +50,32 @@
         }
     }
 
-    /* Боковая панель */
+    /* Боковая панель - убраны тяжелые эффекты */
     .admin-sidebar {
         background: var(--bg-card);
         border-radius: var(--radius-lg);
-        border: 1px solid var(--border);
+        border: 1px solid var(--border-light);
         padding: 1.5rem;
         height: fit-content;
         position: sticky;
         top: 2rem;
+        box-shadow: 0 2px 12px rgba(59, 130, 246, 0.04);
+    }
+
+    [data-theme='dark'] .admin-sidebar {
+        background: var(--bg-card);
+        border-color: rgba(59, 130, 246, 0.08);
     }
 
     .admin-header {
         margin-bottom: 1.5rem;
         padding-bottom: 1rem;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--border-light);
     }
 
     .admin-header h2 {
         font-size: 1.25rem;
-        font-weight: 600;
+        font-weight: 700;
         color: var(--text-primary);
         margin-bottom: 0.25rem;
     }
@@ -48,6 +84,10 @@
         font-size: 0.75rem;
         color: var(--text-secondary);
         font-weight: 500;
+        background: var(--primary-bg);
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        display: inline-block;
     }
 
     /* Кнопка 1С */
@@ -58,25 +98,25 @@
         gap: 0.75rem;
         background: var(--gray-100);
         color: var(--text-primary);
-        font-weight: 500;
+        font-weight: 600;
         padding: 0.75rem 1.25rem;
         border-radius: var(--radius-md);
         text-decoration: none;
         margin-bottom: 1.5rem;
-        transition: var(--transition);
+        transition: background 0.2s ease, transform 0.2s ease;
         font-size: 0.85rem;
-        border: 1px solid var(--border);
+        border: 1px solid var(--border-light);
     }
 
     [data-theme='dark'] .onec-button {
-        background: var(--gray-800);
+        background: rgba(51, 65, 85, 0.6);
     }
 
     .onec-button:hover {
         background: var(--primary);
         color: white;
         border-color: var(--primary);
-        transform: translateY(-2px);
+        transform: translateY(-1px);
     }
 
     .onec-button svg {
@@ -85,19 +125,20 @@
         stroke: currentColor;
     }
 
-    /* Карточки форм */
+    /* Карточки форм - упрощенные */
     .form-card {
         background: var(--bg-card);
         border-radius: var(--radius-lg);
-        border: 1px solid var(--border);
+        border: 1px solid var(--border-light);
         margin-bottom: 1.5rem;
         overflow: hidden;
+        box-shadow: 0 1px 8px rgba(59, 130, 246, 0.03);
     }
 
     .form-card-header {
-        padding: 0.875rem 1.25rem;
+        padding: 0.75rem 1.25rem;
         background: var(--gray-50);
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--border-light);
         display: flex;
         align-items: center;
         gap: 0.5rem;
@@ -142,13 +183,13 @@
     .form-select,
     .form-input {
         width: 100%;
-        padding: 0.65rem 0.875rem;
+        padding: 0.6rem 0.875rem;
         background: var(--bg-card);
-        border: 1px solid var(--border);
+        border: 1px solid var(--border-light);
         border-radius: var(--radius-md);
         color: var(--text-primary);
         font-size: 0.85rem;
-        transition: var(--transition);
+        transition: border-color 0.2s ease;
         font-family: inherit;
     }
 
@@ -156,7 +197,7 @@
     .form-input:focus {
         outline: none;
         border-color: var(--primary);
-        box-shadow: 0 0 0 3px var(--primary-bg);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
     }
 
     .form-grid {
@@ -167,12 +208,12 @@
 
     /* Область загрузки файлов */
     .file-upload-zone {
-        border: 2px dashed var(--border);
+        border: 2px dashed var(--border-light);
         border-radius: var(--radius-md);
         padding: 1.25rem;
         text-align: center;
         background: var(--gray-50);
-        transition: var(--transition);
+        transition: border-color 0.2s ease;
         cursor: pointer;
         position: relative;
     }
@@ -226,12 +267,12 @@
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
-        padding: 0.65rem 1.25rem;
+        padding: 0.6rem 1.25rem;
         border-radius: var(--radius-md);
-        font-weight: 500;
+        font-weight: 600;
         font-size: 0.8rem;
         cursor: pointer;
-        transition: var(--transition);
+        transition: background 0.2s ease, transform 0.2s ease;
         border: none;
         width: 100%;
         font-family: inherit;
@@ -295,18 +336,19 @@
 
     .select-all-button {
         background: var(--gray-100);
-        border: 1px solid var(--border);
+        border: 1px solid var(--border-light);
         padding: 0.25rem 0.7rem;
         border-radius: var(--radius-sm);
         font-size: 0.65rem;
         font-weight: 500;
         cursor: pointer;
-        transition: var(--transition);
+        transition: background 0.2s ease;
         color: var(--text-secondary);
     }
 
     [data-theme='dark'] .select-all-button {
-        background: var(--gray-800);
+        background: rgba(51, 65, 85, 0.6);
+        border-color: rgba(59, 130, 246, 0.1);
     }
 
     .select-all-button:hover {
@@ -317,14 +359,14 @@
 
     .schools-checkbox-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 0.5rem;
-        max-height: 240px;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 0.4rem;
+        max-height: 200px;
         overflow-y: auto;
-        padding: 0.75rem;
+        padding: 0.6rem;
         background: var(--gray-50);
         border-radius: var(--radius-md);
-        border: 1px solid var(--border);
+        border: 1px solid var(--border-light);
         margin-bottom: 1rem;
     }
 
@@ -336,7 +378,7 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.35rem;
+        padding: 0.25rem 0.35rem;
         border-radius: var(--radius-sm);
         cursor: pointer;
     }
@@ -354,6 +396,7 @@
         height: 14px;
         cursor: pointer;
         accent-color: var(--primary);
+        flex-shrink: 0;
     }
 
     .school-checkbox label {
@@ -361,12 +404,31 @@
         color: var(--text-primary);
         cursor: pointer;
         font-weight: 500;
+        word-break: break-word;
+    }
+
+    /* Скроллбар */
+    .schools-checkbox-grid::-webkit-scrollbar,
+    .months-grid::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .schools-checkbox-grid::-webkit-scrollbar-track,
+    .months-grid::-webkit-scrollbar-track {
+        background: var(--gray-100);
+        border-radius: 4px;
+    }
+
+    .schools-checkbox-grid::-webkit-scrollbar-thumb,
+    .months-grid::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 4px;
     }
 
     /* Опции удаления */
     .delete-options {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 0.5rem;
         margin-bottom: 1rem;
     }
@@ -375,11 +437,11 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.5rem 0.75rem;
+        padding: 0.4rem 0.6rem;
         background: var(--gray-50);
         border-radius: var(--radius-md);
-        border: 1px solid var(--border);
-        transition: var(--transition);
+        border: 1px solid var(--border-light);
+        transition: border-color 0.2s ease;
         cursor: pointer;
     }
 
@@ -389,13 +451,13 @@
 
     .delete-option:hover {
         border-color: #ef4444;
-        background: rgba(239, 68, 68, 0.05);
     }
 
     .delete-option input[type="checkbox"] {
         width: 14px;
         height: 14px;
         accent-color: #ef4444;
+        flex-shrink: 0;
     }
 
     .delete-option label {
@@ -406,28 +468,28 @@
     }
 
     .delete-option.tm-option {
-        border-left: 2px solid #f59e0b;
+        border-left: 3px solid #f59e0b;
     }
 
     .delete-option.findex-option {
-        border-left: 2px solid #10b981;
+        border-left: 3px solid #10b981;
     }
 
     .delete-option.kp-option {
-        border-left: 2px solid #8b5cf6;
+        border-left: 3px solid #8b5cf6;
     }
 
     /* Сетка месяцев */
     .months-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 0.5rem;
-        max-height: 200px;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.4rem;
+        max-height: 180px;
         overflow-y: auto;
-        padding: 0.75rem;
+        padding: 0.6rem;
         background: var(--gray-50);
         border-radius: var(--radius-md);
-        border: 1px solid var(--border);
+        border: 1px solid var(--border-light);
         margin-bottom: 1rem;
     }
 
@@ -450,7 +512,7 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.25rem;
+        padding: 0.2rem 0.3rem;
         border-radius: var(--radius-sm);
         cursor: pointer;
     }
@@ -468,6 +530,7 @@
         height: 14px;
         cursor: pointer;
         accent-color: #f59e0b;
+        flex-shrink: 0;
     }
 
     .month-checkbox label {
@@ -481,27 +544,32 @@
     .search-panel {
         background: var(--bg-card);
         border-radius: var(--radius-lg);
-        border: 1px solid var(--border);
-        padding: 1.25rem;
+        border: 1px solid var(--border-light);
+        padding: 1.25rem 1.5rem;
         margin-bottom: 1.5rem;
+        box-shadow: 0 1px 8px rgba(59, 130, 246, 0.03);
+    }
+
+    [data-theme='dark'] .search-panel {
+        background: var(--bg-card);
     }
 
     .search-form {
         display: flex;
-        gap: 1rem;
+        gap: 0.75rem;
         align-items: center;
         flex-wrap: wrap;
     }
 
     .search-input-wrapper {
-        flex: 1;
-        min-width: 280px;
+        flex: 2;
+        min-width: 240px;
         position: relative;
     }
 
     .search-icon {
         position: absolute;
-        left: 1rem;
+        left: 0.75rem;
         top: 50%;
         transform: translateY(-50%);
         color: var(--text-secondary);
@@ -516,29 +584,62 @@
 
     .search-input {
         width: 100%;
-        padding: 0.65rem 1rem 0.65rem 2.5rem;
+        padding: 0.6rem 0.75rem 0.6rem 2.2rem;
         background: var(--bg-card);
-        border: 1px solid var(--border);
+        border: 1px solid var(--border-light);
         border-radius: var(--radius-md);
         color: var(--text-primary);
         font-size: 0.85rem;
-        transition: var(--transition);
+        transition: border-color 0.2s ease;
     }
 
     .search-input:focus {
         outline: none;
         border-color: var(--primary);
-        box-shadow: 0 0 0 3px var(--primary-bg);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+    }
+
+    .search-filters {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+        flex: 1;
+        min-width: 180px;
+    }
+
+    .filter-select {
+        padding: 0.55rem 0.75rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-size: 0.8rem;
+        transition: border-color 0.2s ease;
+        font-family: inherit;
+        min-width: 140px;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+    }
+
+    .search-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
     }
 
     .search-button,
     .reset-button {
-        padding: 0.65rem 1.25rem;
+        padding: 0.55rem 1.25rem;
         border-radius: var(--radius-md);
-        font-weight: 500;
+        font-weight: 600;
         font-size: 0.8rem;
         cursor: pointer;
-        transition: var(--transition);
+        transition: background 0.2s ease, transform 0.2s ease;
         border: none;
         text-decoration: none;
         display: inline-flex;
@@ -553,28 +654,38 @@
 
     .search-button:hover {
         background: var(--primary-dark);
+        transform: translateY(-1px);
     }
 
     .reset-button {
         background: var(--gray-100);
         color: var(--text-secondary);
+        border: 1px solid var(--border-light);
     }
 
     [data-theme='dark'] .reset-button {
-        background: var(--gray-800);
+        background: rgba(51, 65, 85, 0.6);
+        border-color: rgba(59, 130, 246, 0.1);
     }
 
     .reset-button:hover {
         background: #ef4444;
         color: white;
+        border-color: #ef4444;
+        transform: translateY(-1px);
     }
 
-    /* Таблица */
+    /* Таблица - упрощенная */
     .schools-table-container {
         background: var(--bg-card);
         border-radius: var(--radius-lg);
-        border: 1px solid var(--border);
+        border: 1px solid var(--border-light);
         overflow: hidden;
+        box-shadow: 0 1px 8px rgba(59, 130, 246, 0.03);
+    }
+
+    [data-theme='dark'] .schools-table-container {
+        background: var(--bg-card);
     }
 
     .table-header {
@@ -582,16 +693,25 @@
         justify-content: space-between;
         align-items: center;
         padding: 1rem 1.5rem;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--border-light);
         flex-wrap: wrap;
         gap: 1rem;
     }
 
     .table-header h2 {
         font-size: 1rem;
-        font-weight: 600;
+        font-weight: 700;
         color: var(--text-primary);
         margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .table-header h2 svg {
+        width: 20px;
+        height: 20px;
+        stroke: var(--primary);
     }
 
     .schools-badge {
@@ -600,29 +720,28 @@
         padding: 0.25rem 0.75rem;
         border-radius: 12px;
         font-size: 0.7rem;
-        font-weight: 500;
+        font-weight: 600;
     }
 
     .table-wrapper {
         overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
     }
 
     .schools-table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 600px;
+        min-width: 500px;
     }
 
     .schools-table th {
-        padding: 0.875rem 1.25rem;
+        padding: 0.7rem 1.25rem;
         text-align: left;
         font-size: 0.65rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         color: var(--text-secondary);
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--border-light);
         background: var(--gray-50);
     }
 
@@ -631,15 +750,14 @@
     }
 
     .schools-table td {
-        padding: 0.875rem 1.25rem;
-        border-bottom: 1px solid var(--border);
+        padding: 0.7rem 1.25rem;
+        border-bottom: 1px solid var(--border-light);
         color: var(--text-primary);
         font-size: 0.8rem;
     }
 
     .schools-table tbody tr {
-        transition: background 0.2s ease;
-        cursor: pointer;
+        transition: background 0.15s ease;
     }
 
     .schools-table tbody tr:hover {
@@ -651,8 +769,28 @@
     }
 
     .school-name {
-        font-weight: 500;
+        font-weight: 600;
         color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .school-name .school-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        background: var(--primary-bg);
+        border-radius: 6px;
+        flex-shrink: 0;
+    }
+
+    .school-name .school-icon svg {
+        width: 12px;
+        height: 12px;
+        stroke: var(--primary);
     }
 
     .district-badge {
@@ -666,41 +804,85 @@
     }
 
     .food-type {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        background: var(--gray-100);
         color: var(--text-secondary);
-        font-size: 0.75rem;
+    }
+
+    .food-type.hot {
+        background: rgba(239, 68, 68, 0.08);
+        color: #dc2626;
+    }
+
+    .food-type.cold {
+        background: rgba(59, 130, 246, 0.08);
+        color: #2563eb;
+    }
+
+    .food-type.both {
+        background: rgba(139, 92, 246, 0.08);
+        color: #7c3aed;
+    }
+
+    [data-theme='dark'] .food-type {
+        background: rgba(51, 65, 85, 0.6);
+    }
+
+    [data-theme='dark'] .food-type.hot {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+    }
+
+    [data-theme='dark'] .food-type.cold {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+    }
+
+    [data-theme='dark'] .food-type.both {
+        background: rgba(139, 92, 246, 0.15);
+        color: #a78bfa;
     }
 
     .robot-link {
         background: var(--gray-100);
-        padding: 0.25rem 0.6rem;
+        padding: 0.2rem 0.5rem;
         border-radius: var(--radius-sm);
-        font-family: monospace;
+        font-family: 'Courier New', monospace;
         font-size: 0.7rem;
         font-weight: 500;
         color: var(--primary);
+        border: 1px solid var(--border-light);
+        display: inline-block;
     }
 
     [data-theme='dark'] .robot-link {
         background: rgba(51, 65, 85, 0.6);
+        border-color: rgba(59, 130, 246, 0.1);
     }
 
     .manage-button {
         display: inline-flex;
         align-items: center;
-        gap: 0.4rem;
+        gap: 0.3rem;
         background: var(--primary-bg);
         color: var(--primary);
         text-decoration: none;
-        padding: 0.4rem 0.8rem;
+        padding: 0.35rem 0.7rem;
         border-radius: var(--radius-md);
         font-size: 0.7rem;
-        font-weight: 500;
-        transition: var(--transition);
+        font-weight: 600;
+        transition: background 0.2s ease;
+        border: 1px solid transparent;
     }
 
     .manage-button:hover {
         background: var(--primary);
         color: white;
+        border-color: var(--primary);
     }
 
     .manage-button svg {
@@ -708,14 +890,14 @@
         height: 12px;
     }
 
-    /* Дополнительная информация для мобильных (скрыта по умолчанию) */
+    /* Дополнительная информация для мобильных */
     .mobile-row-details {
         display: none;
         background: var(--gray-50);
-        padding: 0.75rem 1rem;
+        padding: 0.5rem 1rem;
         font-size: 0.7rem;
         color: var(--text-secondary);
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--border-light);
     }
 
     [data-theme='dark'] .mobile-row-details {
@@ -727,12 +909,12 @@
     }
 
     .mobile-row-details td {
-        padding: 0.75rem 1rem;
+        padding: 0.5rem 1rem;
     }
 
     .mobile-detail-item {
         display: inline-block;
-        margin-right: 1rem;
+        margin-right: 0.75rem;
         margin-bottom: 0.25rem;
     }
 
@@ -759,22 +941,23 @@
 
     .pagination a,
     .pagination span {
-        padding: 0.4rem 0.875rem;
+        padding: 0.35rem 0.75rem;
         border-radius: var(--radius-md);
         font-size: 0.75rem;
         font-weight: 500;
         text-decoration: none;
-        transition: var(--transition);
+        transition: background 0.2s ease;
     }
 
     .pagination a {
         background: var(--gray-100);
         color: var(--primary);
-        border: 1px solid var(--border);
+        border: 1px solid var(--border-light);
     }
 
     [data-theme='dark'] .pagination a {
-        background: var(--gray-800);
+        background: rgba(51, 65, 85, 0.6);
+        border-color: rgba(59, 130, 246, 0.1);
     }
 
     .pagination a:hover {
@@ -786,24 +969,24 @@
     .pagination span {
         background: var(--primary-bg);
         color: var(--primary);
-        border: 1px solid var(--border);
+        border: 1px solid var(--border-light);
     }
 
     /* Пустое состояние */
     .empty-state {
         text-align: center;
-        padding: 3rem 1.5rem;
+        padding: 2rem 1.5rem;
     }
 
     .empty-state-icon {
-        width: 48px;
-        height: 48px;
-        margin: 0 auto 1rem;
+        width: 40px;
+        height: 40px;
+        margin: 0 auto 0.75rem;
         stroke: var(--text-secondary);
     }
 
     .empty-state-text {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         font-weight: 500;
         color: var(--text-primary);
         margin-bottom: 0.25rem;
@@ -825,10 +1008,11 @@
         color: white;
         font-weight: 500;
         font-size: 0.8rem;
-        box-shadow: var(--shadow-lg);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
         z-index: 2000;
-        transform: translateX(100%);
+        transform: translateX(120%);
         transition: transform 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .notification.show {
@@ -847,7 +1031,7 @@
     @keyframes fadeInUp {
         from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(15px);
         }
         to {
             opacity: 1;
@@ -856,7 +1040,7 @@
     }
 
     .fade-in-up {
-        animation: fadeInUp 0.4s ease-out forwards;
+        animation: fadeInUp 0.3s ease-out forwards;
     }
 
     .loading {
@@ -879,6 +1063,20 @@
             padding: 1rem;
         }
         
+        .admin-layout::before {
+            width: 200px;
+            height: 200px;
+            top: -60px;
+            right: -40px;
+        }
+        
+        .admin-layout::after {
+            width: 150px;
+            height: 150px;
+            bottom: -30px;
+            left: -30px;
+        }
+        
         .admin-grid {
             grid-template-columns: 1fr;
         }
@@ -895,9 +1093,24 @@
             min-width: 100%;
         }
         
+        .search-filters {
+            width: 100%;
+            flex-direction: column;
+        }
+        
+        .filter-select {
+            width: 100%;
+            min-width: unset;
+        }
+        
+        .search-actions {
+            width: 100%;
+            flex-direction: row;
+        }
+        
         .search-button,
         .reset-button {
-            width: 100%;
+            flex: 1;
             justify-content: center;
         }
         
@@ -917,10 +1130,10 @@
         
         .schools-table th,
         .schools-table td {
-            padding: 0.6rem 0.75rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
         }
         
-        /* Скрываем колонку типа питания на телефоне (она будет в развернутой строке) */
         .schools-table th:nth-child(3),
         .schools-table td:nth-child(3) {
             display: none;
@@ -933,25 +1146,26 @@
             text-align: center;
         }
         
-        /* Увеличиваем размер ссылки для удобства нажатия */
         .manage-button {
-            padding: 0.5rem 0.9rem;
-            font-size: 0.75rem;
+            padding: 0.4rem 0.7rem;
+            font-size: 0.65rem;
         }
         
         .robot-link {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
+            padding: 0.15rem 0.4rem;
         }
         
         .district-badge {
             font-size: 0.6rem;
+            padding: 0.15rem 0.5rem;
         }
     }
 
     @media (max-width: 480px) {
         .schools-table th,
         .schools-table td {
-            padding: 0.5rem;
+            padding: 0.4rem 0.5rem;
         }
         
         .school-name {
@@ -960,8 +1174,12 @@
         
         .pagination a,
         .pagination span {
-            padding: 0.3rem 0.6rem;
+            padding: 0.25rem 0.5rem;
             font-size: 0.65rem;
+        }
+        
+        .search-actions {
+            flex-direction: column;
         }
     }
 </style>
@@ -1186,9 +1404,9 @@
 
         <!-- Основной контент -->
         <main>
-            <!-- Поисковая панель -->
+            <!-- Поисковая панель с фильтрами -->
             <div class="search-panel">
-                <form class="search-form" action="/admin" method="get">
+                <form class="search-form" action="/admin" method="get" id="searchForm">
                     <input type="hidden" name="admin_id" value="{{ admin.id }}">
                     
                     <div class="search-input-wrapper">
@@ -1198,19 +1416,37 @@
                                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                             </svg>
                         </span>
-                        <input type="text" name="q" value="{{ search_query }}" placeholder="Поиск учреждения по названию..." class="search-input">
+                        <input type="text" name="q" value="{{ search_query or '' }}" placeholder="Поиск учреждения по названию..." class="search-input" id="searchInput">
                     </div>
                     
-                    <button type="submit" class="search-button">Найти</button>
+                    <div class="search-filters">
+                        <select name="food_type" class="filter-select" id="foodTypeFilter">
+                            <option value="">Все типы питания</option>
+                            {% for ft in food_types %}
+                            <option value="{{ ft }}" {% if food_type_filter == ft %}selected{% endif %}>{{ ft }}</option>
+                            {% endfor %}
+                        </select>
+                        
+                        <select name="district" class="filter-select" id="districtFilter">
+                            <option value="">Все районы</option>
+                            {% for d in districts %}
+                            <option value="{{ d }}" {% if district_filter == d %}selected{% endif %}>{{ d }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                     
-                    {% if search_query %}
-                    <a href="/admin?admin_id={{ admin.id }}" class="reset-button">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14">
-                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                        Сброс
-                    </a>
-                    {% endif %}
+                    <div class="search-actions">
+                        <button type="submit" class="search-button" id="searchButton">Найти</button>
+                        
+                        {% if search_query or food_type_filter or district_filter %}
+                        <a href="/admin?admin_id={{ admin.id }}" class="reset-button" id="resetButton">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14">
+                                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Сброс
+                        </a>
+                        {% endif %}
+                    </div>
                 </form>
             </div>
 
@@ -1222,13 +1458,13 @@
 
             <div class="pagination">
                 {% if current_page > 1 %}
-                <a href="?admin_id={{ admin.id }}&q={{ search_query }}&page={{ current_page - 1 }}&per_page={{ per_page }}">← Предыдущая</a>
+                <a href="?admin_id={{ admin.id }}&q={{ search_query or '' }}&food_type={{ food_type_filter or '' }}&district={{ district_filter or '' }}&page={{ current_page - 1 }}&per_page={{ per_page }}">← Предыдущая</a>
                 {% else %}
                 <span>← Предыдущая</span>
                 {% endif %}
 
                 {% if current_page * per_page < total_count %}
-                <a href="?admin_id={{ admin.id }}&q={{ search_query }}&page={{ current_page + 1 }}&per_page={{ per_page }}">Следующая →</a>
+                <a href="?admin_id={{ admin.id }}&q={{ search_query or '' }}&food_type={{ food_type_filter or '' }}&district={{ district_filter or '' }}&page={{ current_page + 1 }}&per_page={{ per_page }}">Следующая →</a>
                 {% else %}
                 <span>Следующая →</span>
                 {% endif %}
@@ -1237,7 +1473,13 @@
             <!-- Таблица учреждений -->
             <div class="schools-table-container">
                 <div class="table-header">
-                    <h2>Учреждения питания</h2>
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        Учреждения питания
+                    </h2>
                     <span class="schools-badge">Найдено: {{ schools|length }}</span>
                 </div>
 
@@ -1256,13 +1498,28 @@
                             {% for school in schools %}
                             <tr class="school-row" data-school-id="{{ school.id }}">
                                 <td>
-                                    <div class="school-name">{{ school.unit_name }}</div>
+                                    <div class="school-name">
+                                        <span class="school-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M12 3L2 9l10 6 10-6-10-6z"></path>
+                                                <path d="M2 15l10 6 10-6"></path>
+                                                <path d="M2 12l10 6 10-6"></path>
+                                            </svg>
+                                        </span>
+                                        {{ school.unit_name }}
+                                    </div>
                                 </td>
                                 <td>
                                     <span class="district-badge">{{ school.district }}</span>
                                 </td>
                                 <td>
-                                    <span class="food-type">{{ school.food_type }}</span>
+                                    <span class="food-type 
+                                        {% if school.food_type|lower == 'горячее' %}hot
+                                        {% elif school.food_type|lower == 'холодное' %}cold
+                                        {% elif school.food_type|lower == 'оба вида' %}both
+                                        {% endif %}">
+                                        {{ school.food_type }}
+                                    </span>
                                 </td>
                                 <td>
                                     <code class="robot-link">/{{ school.id }}/food/</code>
@@ -1276,7 +1533,7 @@
                                     </a>
                                 </td>
                             </tr>
-                            <!-- Мобильная дополнительная строка для развернутой информации -->
+                            <!-- Мобильная дополнительная строка -->
                             <tr class="mobile-row-details" data-parent="{{ school.id }}" style="display: none;">
                                 <td colspan="5">
                                     <div class="mobile-detail-item"><strong>Тип питания:</strong> {{ school.food_type }}</div>
@@ -1295,7 +1552,7 @@
                         </svg>
                         <div class="empty-state-text">Учреждения не найдены</div>
                         <div class="empty-state-subtext">
-                            {% if search_query %}
+                            {% if search_query or food_type_filter or district_filter %}
                             Попробуйте изменить условия поиска
                             {% else %}
                             Нет учреждений для отображения
@@ -1536,13 +1793,12 @@
         }, 2000);
     }
 
-    // Мобильная адаптация: клик по строке раскрывает дополнительную информацию
+    // Мобильная адаптация
     function initMobileRowClick() {
         if (window.innerWidth <= 768) {
             const rows = document.querySelectorAll('.school-row');
             rows.forEach(row => {
                 row.addEventListener('click', function(e) {
-                    // Не срабатывать при клике на ссылку
                     if (e.target.closest('.manage-button')) return;
                     
                     const schoolId = this.dataset.schoolId;
@@ -1550,11 +1806,9 @@
                     
                     if (detailRow) {
                         const isVisible = detailRow.style.display !== 'none';
-                        // Скрываем все другие развернутые строки
                         document.querySelectorAll('.mobile-row-details').forEach(row => {
                             row.style.display = 'none';
                         });
-                        // Показываем/скрываем текущую
                         detailRow.style.display = isVisible ? 'none' : 'table-row';
                     }
                 });
@@ -1562,9 +1816,18 @@
         }
     }
 
+    // Обработка отправки формы с фильтрами
     document.addEventListener('DOMContentLoaded', function() {
+        // Убираем анимации для слабых компьютеров
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.querySelectorAll('.fade-in-up').forEach(el => {
+                el.style.animation = 'none';
+                el.style.opacity = '1';
+            });
+        }
+
+        // Инициализация загрузки файлов
         const uploadZones = document.querySelectorAll('.file-upload-zone');
-        
         uploadZones.forEach(zone => {
             zone.addEventListener('dragover', function(e) {
                 e.preventDefault();
@@ -1580,8 +1843,10 @@
                 e.preventDefault();
                 this.classList.remove('drag-over');
                 const input = this.querySelector('input[type="file"]');
-                input.files = e.dataTransfer.files;
-                handleFileSelect(input);
+                if (input) {
+                    input.files = e.dataTransfer.files;
+                    handleFileSelect(input);
+                }
             }, { passive: false });
         });
         
@@ -1590,16 +1855,8 @@
         setupDeleteCheckboxes();
         initMobileRowClick();
         
-        const animatedElements = document.querySelectorAll('.fade-in-up');
-        animatedElements.forEach(el => {
-            el.style.opacity = '1';
-            el.style.transform = 'translateY(0)';
-        });
-        
-        // При изменении размера окна обновляем поведение мобильной строки
         window.addEventListener('resize', function() {
             if (window.innerWidth > 768) {
-                // На больших экранах скрываем все дополнительные строки
                 document.querySelectorAll('.mobile-row-details').forEach(row => {
                     row.style.display = 'none';
                 });

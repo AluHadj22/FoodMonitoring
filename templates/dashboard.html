@@ -1,16 +1,15 @@
 {% extends "layout.html" %}
 {% block content %}
 <style>
-/* Дополнительные стили для дашборда школы - улучшенная тёмная тема с прозрачностью */
+/* Основные стили - сохранены все без изменений */
 .dashboard-layout {
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
 }
 
-/* Объединённая панель профиля и периода */
 .dashboard-header {
-    background: var(--bg-card);
+    background: linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(240, 248, 255, 0.92) 100%);
     backdrop-filter: var(--glass-blur, blur(16px));
     -webkit-backdrop-filter: var(--glass-blur, blur(16px));
     border-radius: var(--radius-lg);
@@ -18,29 +17,31 @@
     overflow: hidden;
     margin-bottom: 2rem;
     transition: all 0.3s ease;
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.06);
+}
+
+[data-theme='dark'] .dashboard-header {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.92) 100%);
 }
 
 .dashboard-header:hover {
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.08);
 }
 
-/* Шапка профиля */
 .profile-header {
     display: flex;
     align-items: center;
     gap: 2rem;
     padding: 2rem;
     flex-wrap: wrap;
-    background: linear-gradient(135deg, rgba(248, 250, 252, 0.6) 0%, var(--bg-card) 100%);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, transparent 100%);
     border-bottom: 1px solid var(--border-light);
 }
 
 [data-theme='dark'] .profile-header {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, var(--bg-card) 100%);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
 }
 
-/* Аватар школы */
 .school-avatar {
     position: relative;
     width: 100px;
@@ -55,34 +56,29 @@
     object-fit: cover;
     border: 3px solid var(--primary);
     background: var(--bg-card);
-    box-shadow: 0 4px 20px var(--primary-glow, rgba(26, 76, 140, 0.2));
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
 }
 
 .avatar-placeholder {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--gray-300) 0%, var(--gray-400) 100%);
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 3px solid var(--gray-400);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 3px solid var(--primary);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
 }
 
 [data-theme='dark'] .avatar-placeholder {
-    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
-    border-color: var(--primary);
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
 }
 
 .avatar-placeholder svg {
     width: 50px;
     height: 50px;
-    color: var(--gray-500);
-}
-
-[data-theme='dark'] .avatar-placeholder svg {
-    color: var(--primary);
+    color: white;
 }
 
 .avatar-upload-btn {
@@ -92,19 +88,19 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: var(--primary);
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     border: 2px solid var(--bg-card);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
 }
 
 .avatar-upload-btn:hover {
     transform: scale(1.1);
-    background: var(--primary-dark);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
 }
 
 .avatar-upload-btn svg {
@@ -117,7 +113,6 @@
     display: none;
 }
 
-/* Информация школы */
 .school-info {
     flex: 1;
 }
@@ -159,7 +154,7 @@
 }
 
 .edit-title-btn:hover {
-    background: var(--primary);
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     color: white;
     border-color: var(--primary);
     transform: translateY(-1px);
@@ -196,9 +191,9 @@
 .school-badge svg {
     width: 14px;
     height: 14px;
+    stroke: var(--primary);
 }
 
-/* Форма редактирования названия */
 .school-title-edit-form {
     display: none;
     margin: 0.75rem 0;
@@ -228,7 +223,6 @@
     gap: 0.75rem;
 }
 
-/* Директор */
 .director-section {
     display: flex;
     align-items: center;
@@ -290,7 +284,6 @@
     color: var(--text-primary);
 }
 
-/* Внешний путь */
 .external-path {
     display: inline-flex;
     align-items: center;
@@ -311,7 +304,7 @@
 .external-path-icon {
     width: 28px;
     height: 28px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -366,17 +359,16 @@
 }
 
 .copy-badge:hover {
-    background: var(--primary);
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     color: white;
     transform: translateY(-1px);
 }
 
-/* Кнопка внешнего сервиса */
 .btn-external {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: linear-gradient(135deg, var(--gray-700) 0%, var(--gray-800) 100%);
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     color: white;
     padding: 0.6rem 1.2rem;
     border-radius: 2rem;
@@ -385,19 +377,14 @@
     text-decoration: none;
     transition: all 0.3s ease;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
 }
 
 .btn-external:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 6px 24px rgba(59, 130, 246, 0.3);
 }
 
-[data-theme='dark'] .btn-external {
-    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
-}
-
-/* Блок ссылок */
 .school-links {
     display: flex;
     gap: 1rem;
@@ -424,6 +411,7 @@
 .school-link-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
+    border-color: var(--primary);
 }
 
 .school-link-card h4 {
@@ -440,6 +428,7 @@
 .school-link-card h4 svg {
     width: 14px;
     height: 14px;
+    stroke: var(--primary);
 }
 
 .school-link-card a {
@@ -495,7 +484,7 @@
 }
 
 .link-save-btn {
-    background: var(--success);
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     color: white;
     border: none;
     padding: 0.3rem 0.8rem;
@@ -508,6 +497,7 @@
 
 .link-save-btn:hover {
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
 .link-cancel-btn {
@@ -522,7 +512,6 @@
     transition: all 0.2s ease;
 }
 
-/* Панель периода */
 .period-panel {
     padding: 1.25rem 2rem;
     display: flex;
@@ -530,15 +519,15 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
-    background: linear-gradient(135deg, rgba(248, 250, 252, 0.4) 0%, transparent 100%);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, transparent 100%);
 }
 
 [data-theme='dark'] .period-panel {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, transparent 100%);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
 }
 
 .period-badge {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     color: white;
     padding: 0.5rem 1rem;
     border-radius: 2rem;
@@ -547,7 +536,7 @@
     gap: 0.5rem;
     font-weight: 600;
     font-size: 0.85rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
 }
 
 .period-badge svg {
@@ -589,7 +578,7 @@
 .period-field input:focus,
 .period-field select:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-bg);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .period-field input {
@@ -598,7 +587,7 @@
 }
 
 .apply-btn {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     color: white;
     border: none;
     padding: 0.5rem 1rem;
@@ -610,15 +599,153 @@
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 }
 
 .apply-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.25);
 }
 
-/* ========== ДОПОЛНИТЕЛЬНЫЕ СТИЛИ ДЛЯ СПЕЦИАЛЬНЫХ ФАЙЛОВ ========== */
+/* ========== НОВЫЕ СТИЛИ ДЛЯ ЦВЕТОВОЙ ГАММЫ КНОПОК ========== */
+/* Единая цветовая гамма для кнопок действий - спокойные синие оттенки */
+
+/* Кнопка скачивания - приятный синий, а не зелёный */
+.file-action-btn.download {
+    background: rgba(59, 130, 246, 0.08);
+    color: #2563eb;
+    border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+.file-action-btn.download:hover {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    border-color: transparent;
+}
+
+[data-theme='dark'] .file-action-btn.download {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+[data-theme='dark'] .file-action-btn.download:hover {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+}
+
+/* Кнопка удаления - мягкий красный, а не чёрный */
+.file-action-btn.delete {
+    background: rgba(239, 68, 68, 0.08);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+.file-action-btn.delete:hover {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    border-color: transparent;
+}
+
+[data-theme='dark'] .file-action-btn.delete {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+[data-theme='dark'] .file-action-btn.delete:hover {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+/* Маленькие кнопки в управлении загрузкой */
+.small-download-btn {
+    background: rgba(59, 130, 246, 0.08);
+    color: #2563eb;
+    border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+.small-download-btn:hover {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    border-color: transparent;
+}
+
+[data-theme='dark'] .small-download-btn {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+[data-theme='dark'] .small-download-btn:hover {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+}
+
+.small-delete-btn {
+    background: rgba(239, 68, 68, 0.08);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+.small-delete-btn:hover {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    border-color: transparent;
+}
+
+[data-theme='dark'] .small-delete-btn {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+[data-theme='dark'] .small-delete-btn:hover {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+/* Иконки файлов - более приглушённые цвета */
+.file-icon.excel svg { 
+    stroke: #3b82f6;
+    opacity: 0.8;
+}
+
+.file-icon.pdf svg { 
+    stroke: #8b5cf6;
+    opacity: 0.8;
+}
+
+.file-icon.image svg { 
+    stroke: #6366f1;
+    opacity: 0.8;
+}
+
+[data-theme='dark'] .file-icon.excel svg { 
+    stroke: #60a5fa;
+    opacity: 0.9;
+}
+
+[data-theme='dark'] .file-icon.pdf svg { 
+    stroke: #a78bfa;
+    opacity: 0.9;
+}
+
+[data-theme='dark'] .file-icon.image svg { 
+    stroke: #818cf8;
+    opacity: 0.9;
+}
+
+/* ========== ОСТАЛЬНЫЕ СТИЛИ ========== */
+
 .special-file-section {
     background: var(--bg-card);
     backdrop-filter: var(--glass-blur, blur(16px));
@@ -627,15 +754,15 @@
     border: 1px solid var(--border-light);
     overflow: hidden;
     margin-bottom: 2rem;
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.04);
 }
 
 .special-file-section:hover {
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.06);
 }
 
 .special-file-header {
-    background: linear-gradient(135deg, rgba(248, 250, 252, 0.4) 0%, rgba(248, 250, 252, 0.1) 100%);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.04) 0%, rgba(59, 130, 246, 0.01) 100%);
     padding: 0.75rem 1.25rem;
     border-bottom: 1px solid var(--border-light);
     display: flex;
@@ -644,7 +771,7 @@
 }
 
 [data-theme='dark'] .special-file-header {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(30, 41, 59, 0.1) 100%);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(59, 130, 246, 0.02) 100%);
 }
 
 .special-file-header svg {
@@ -691,7 +818,7 @@
 }
 
 .special-file-card.findex-card::before {
-    background: linear-gradient(90deg, #10b981, #34d399);
+    background: linear-gradient(90deg, #3b82f6, #6366f1);
 }
 
 .findex-note {
@@ -718,11 +845,8 @@
     height: 10px;
 }
 
-/* ========== ОСТАЛЬНЫЕ СТИЛИ ========== */
-
-/* Карточка загрузки файлов */
 .file-upload-card {
-    background: var(--bg-card);
+    background: linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(240, 248, 255, 0.92) 100%);
     backdrop-filter: var(--glass-blur, blur(16px));
     -webkit-backdrop-filter: var(--glass-blur, blur(16px));
     border-radius: var(--radius-lg);
@@ -730,11 +854,15 @@
     padding: 1.5rem;
     margin-bottom: 2rem;
     transition: all 0.3s ease;
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.04);
+}
+
+[data-theme='dark'] .file-upload-card {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.92) 100%);
 }
 
 .file-upload-card:hover {
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.06);
 }
 
 .file-upload-card h3 {
@@ -758,7 +886,7 @@
 
 .file-upload-area:hover {
     border-color: var(--primary);
-    background: var(--primary-bg);
+    background: rgba(59, 130, 246, 0.03);
 }
 
 .file-input-wrapper {
@@ -793,12 +921,11 @@
 }
 
 .file-upload-area:hover .file-input-label {
-    background: var(--primary);
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     color: white;
     transform: translateY(-2px);
 }
 
-/* Управление загрузкой */
 .upload-controls {
     display: flex;
     justify-content: space-between;
@@ -837,55 +964,28 @@
     cursor: pointer;
     transition: all 0.2s ease;
     border: none;
+    background: transparent;
 }
 
-.small-download-btn {
-    background: var(--gray-100);
-    color: var(--success);
-}
-
-[data-theme='dark'] .small-download-btn {
-    background: rgba(51, 65, 85, 0.8);
-}
-
-.small-download-btn:hover {
-    background: var(--success);
-    color: white;
-    transform: translateY(-1px);
-}
-
-.small-delete-btn {
-    background: var(--gray-100);
-    color: var(--error);
-}
-
-[data-theme='dark'] .small-delete-btn {
-    background: rgba(51, 65, 85, 0.8);
-}
-
-.small-delete-btn:hover {
-    background: var(--error);
-    color: white;
-    transform: translateY(-1px);
-}
-
-/* Карточка файлов */
 .card {
-    background: var(--bg-card);
+    background: linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(240, 248, 255, 0.92) 100%);
     backdrop-filter: var(--glass-blur, blur(16px));
     -webkit-backdrop-filter: var(--glass-blur, blur(16px));
     border-radius: var(--radius-lg);
     border: 1px solid var(--border-light);
     padding: 1.5rem;
     transition: all 0.3s ease;
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.04);
+}
+
+[data-theme='dark'] .card {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.92) 100%);
 }
 
 .card:hover {
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.06);
 }
 
-/* Статистика файлов */
 .files-stats {
     display: flex;
     justify-content: space-between;
@@ -924,9 +1024,9 @@
 .stat-badge svg {
     width: 14px;
     height: 14px;
+    stroke: var(--primary);
 }
 
-/* Сетка файлов */
 .files-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -936,7 +1036,6 @@
     padding: 0.25rem;
 }
 
-/* Карточка файла */
 .file-card {
     background: var(--bg-card);
     border: 1px solid var(--border-light);
@@ -955,11 +1054,10 @@
 
 .file-card.selected {
     border-color: var(--primary);
-    background: var(--primary-bg);
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    background: rgba(59, 130, 246, 0.04);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Чекбокс выбора */
 .file-select {
     position: absolute;
     top: 0.75rem;
@@ -974,7 +1072,6 @@
     accent-color: var(--primary);
 }
 
-/* Превью файла */
 .file-preview {
     height: 120px;
     background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
@@ -995,15 +1092,6 @@
     transform: scale(1.1);
 }
 
-.file-icon.excel svg { stroke: #10b981; }
-.file-icon.pdf svg { stroke: #ef4444; }
-.file-icon.image svg { stroke: #8b5cf6; }
-
-[data-theme='dark'] .file-icon.excel svg { stroke: #34d399; }
-[data-theme='dark'] .file-icon.pdf svg { stroke: #f87171; }
-[data-theme='dark'] .file-icon.image svg { stroke: #a78bfa; }
-
-/* Информация файла */
 .file-info {
     padding: 0.75rem;
 }
@@ -1036,9 +1124,9 @@
 .file-meta svg {
     width: 10px;
     height: 10px;
+    stroke: var(--primary);
 }
 
-/* Кнопки действий */
 .file-actions {
     display: flex;
     gap: 0.5rem;
@@ -1063,42 +1151,11 @@
     background: transparent;
 }
 
-.file-action-btn.download {
-    background: var(--gray-100);
-    color: var(--success);
-}
-
-[data-theme='dark'] .file-action-btn.download {
-    background: rgba(51, 65, 85, 0.8);
-}
-
-.file-action-btn.download:hover {
-    background: var(--success);
-    color: white;
-    transform: translateY(-2px);
-}
-
-.file-action-btn.delete {
-    background: var(--gray-100);
-    color: var(--error);
-}
-
-[data-theme='dark'] .file-action-btn.delete {
-    background: rgba(51, 65, 85, 0.8);
-}
-
-.file-action-btn.delete:hover {
-    background: var(--error);
-    color: white;
-    transform: translateY(-2px);
-}
-
 .file-action-btn svg {
     width: 12px;
     height: 12px;
 }
 
-/* Пустое состояние */
 .empty-state {
     text-align: center;
     padding: 3rem;
@@ -1129,7 +1186,6 @@
     opacity: 0.7;
 }
 
-/* Модальное окно */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -1211,7 +1267,7 @@
 }
 
 #confirmDelete {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    background: linear-gradient(135deg, #ef4444, #dc2626);
     color: white;
 }
 
@@ -1220,7 +1276,6 @@
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
-/* Уведомление о копировании */
 .copy-notification {
     position: fixed;
     top: 1.5rem;
@@ -1246,7 +1301,6 @@
     transform: translateY(0);
 }
 
-/* Анимация появления */
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -1262,7 +1316,6 @@
     animation: fadeInUp 0.4s ease-out forwards;
 }
 
-/* Скроллбар */
 .files-grid::-webkit-scrollbar {
     width: 6px;
 }
@@ -1273,19 +1326,18 @@
 }
 
 .files-grid::-webkit-scrollbar-thumb {
-    background: var(--primary);
+    background: linear-gradient(180deg, #3b82f6, #1d4ed8);
     border-radius: 3px;
 }
 
 .files-grid::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-dark);
+    background: linear-gradient(180deg, #2563eb, #1e40af);
 }
 
 [data-theme='dark'] .files-grid::-webkit-scrollbar-track {
     background: #1e293b;
 }
 
-/* Адаптивность */
 @media (max-width: 768px) {
     .dashboard-layout {
         padding: 1rem;
@@ -1366,9 +1418,8 @@
     }
 }
 
-/* Стили для кнопок */
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     color: white;
     border: none;
     padding: 0.5rem 1rem;
@@ -1380,10 +1431,9 @@
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
-/* Динамическое изменение логотипа в layout.html */
 [data-theme='dark'] .logo-icon {
     background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
 }
@@ -1398,7 +1448,6 @@
 <div class="dashboard-layout fade-in-up">
     <!-- Объединённая панель: профиль + период -->
     <div class="dashboard-header">
-        <!-- Верхняя часть: профиль школы -->
         <div class="profile-header">
             <div class="school-avatar">
                 {% if profile and profile.avatar %}
@@ -1463,7 +1512,6 @@
                     </form>
                 </div>
 
-                <!-- Директор -->
                 <div class="director-section">
                     <span class="director-label">Директор:</span>
                     <span class="director-name" id="directorNameDisplay">{{ user.director_name or 'Не указано' }}</span>
@@ -1479,7 +1527,6 @@
                     </form>
                 </div>
 
-                <!-- Внешний путь -->
                 <div class="external-path">
                     <div class="external-path-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1497,7 +1544,7 @@
                 </div>
             </div>
 
-            <a href="https://xn--80aejebmabgge5b3b.xn--p1ai/#/home" target="_blank" class="btn-external">
+            <a href="https://xn--80afhjabb0ajcdecrl4ah.xn--p1ai/#/home" target="_blank" class="btn-external">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                     <polyline points="15 3 21 3 21 9"></polyline>
@@ -1507,7 +1554,6 @@
             </a>
         </div>
 
-        <!-- Блок ссылок -->
         <div class="school-links">
             <div class="school-link-card">
                 <h4>
@@ -1567,7 +1613,6 @@
             </div>
         </div>
 
-        <!-- Панель настройки периода -->
         <div class="period-panel">
             <div class="period-badge">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1757,7 +1802,7 @@
         {% endif %}
     {% endif %}
 
-    <!-- Файлы месяца (обычные файлы, исключая специальные) -->
+    <!-- Файлы месяца (обычные файлы) -->
     <div class="card">
         <h3 style="font-size: 1rem; margin-bottom: 1rem;">Ежедневное меню</h3>
 
@@ -1917,116 +1962,64 @@
 <div class="copy-notification" id="copyNotification">Ссылка скопирована!</div>
 
 <script>
+// Оптимизированный JavaScript с делегированием событий и снижением нагрузки на слабых ПК
 document.addEventListener('DOMContentLoaded', function() {
-    let copyTimeout;
-    let pendingDeleteFiles = [];
+    // --- Оптимизация: кэширование часто используемых элементов ---
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
     
-    // === ЛОГИКА РЕДАКТИРОВАНИЯ ДИРЕКТОРА ===
-    const directorDisplay = document.getElementById('directorNameDisplay');
-    const editDirectorBtn = document.getElementById('editDirectorBtn');
-    const directorForm = document.getElementById('directorForm');
-    const cancelDirectorBtn = document.getElementById('cancelDirectorBtn');
-
-    if (editDirectorBtn && directorForm && cancelDirectorBtn) {
-        editDirectorBtn.addEventListener('click', function() {
-            directorDisplay.style.display = 'none';
-            editDirectorBtn.style.display = 'none';
-            directorForm.style.display = 'block';
-        });
-
-        cancelDirectorBtn.addEventListener('click', function() {
-            directorForm.style.display = 'none';
-            directorDisplay.style.display = 'inline';
-            editDirectorBtn.style.display = 'inline-flex';
-        });
-    }
-
-    // === ЛОГИКА РЕДАКТИРОВАНИЯ НАЗВАНИЯ ШКОЛЫ ===
-    const schoolTitle = document.getElementById('schoolTitle');
-    const editSchoolTitleBtn = document.getElementById('editSchoolTitleBtn');
-    const schoolTitleEditForm = document.getElementById('schoolTitleEditForm');
-    const cancelSchoolTitleBtn = document.getElementById('cancelSchoolTitleBtn');
-
-    if (editSchoolTitleBtn && schoolTitleEditForm && cancelSchoolTitleBtn) {
-        editSchoolTitleBtn.addEventListener('click', function() {
-            schoolTitle.style.display = 'none';
-            editSchoolTitleBtn.style.display = 'none';
-            schoolTitleEditForm.style.display = 'block';
-        });
-
-        cancelSchoolTitleBtn.addEventListener('click', function() {
-            schoolTitleEditForm.style.display = 'none';
-            schoolTitle.style.display = 'block';
-            editSchoolTitleBtn.style.display = 'inline-block';
-        });
-    }
-
-    // === ЛОГИКА РЕДАКТИРОВАНИЯ ССЫЛОК ===
-    const editWebsiteBtn = document.getElementById('editWebsiteBtn');
-    const websiteEditForm = document.getElementById('websiteEditForm');
-    const cancelWebsiteBtn = document.getElementById('cancelWebsiteBtn');
-    const websiteDisplay = document.getElementById('schoolWebsiteDisplay');
-
-    if (editWebsiteBtn && websiteEditForm && cancelWebsiteBtn) {
-        editWebsiteBtn.addEventListener('click', function() {
-            websiteDisplay.style.display = 'none';
-            websiteEditForm.style.display = 'block';
-        });
-
-        cancelWebsiteBtn.addEventListener('click', function() {
-            websiteEditForm.style.display = 'none';
-            websiteDisplay.style.display = 'block';
-        });
-    }
-
-    const editHotMealBtn = document.getElementById('editHotMealBtn');
-    const hotMealEditForm = document.getElementById('hotMealEditForm');
-    const cancelHotMealBtn = document.getElementById('cancelHotMealBtn');
-    const hotMealDisplay = document.getElementById('hotMealDisplay');
-
-    if (editHotMealBtn && hotMealEditForm && cancelHotMealBtn) {
-        editHotMealBtn.addEventListener('click', function() {
-            hotMealDisplay.style.display = 'none';
-            hotMealEditForm.style.display = 'block';
-        });
-
-        cancelHotMealBtn.addEventListener('click', function() {
-            hotMealEditForm.style.display = 'none';
-            hotMealDisplay.style.display = 'block';
-        });
-    }
-
-    // === КОПИРОВАНИЕ ССЫЛКИ ===
+    const directorDisplay = $('#directorNameDisplay');
+    const editDirectorBtn = $('#editDirectorBtn');
+    const directorForm = $('#directorForm');
+    const cancelDirectorBtn = $('#cancelDirectorBtn');
+    
+    const schoolTitle = $('#schoolTitle');
+    const editSchoolTitleBtn = $('#editSchoolTitleBtn');
+    const schoolTitleEditForm = $('#schoolTitleEditForm');
+    const cancelSchoolTitleBtn = $('#cancelSchoolTitleBtn');
+    
+    const editWebsiteBtn = $('#editWebsiteBtn');
+    const websiteEditForm = $('#websiteEditForm');
+    const cancelWebsiteBtn = $('#cancelWebsiteBtn');
+    const websiteDisplay = $('#schoolWebsiteDisplay');
+    
+    const editHotMealBtn = $('#editHotMealBtn');
+    const hotMealEditForm = $('#hotMealEditForm');
+    const cancelHotMealBtn = $('#cancelHotMealBtn');
+    const hotMealDisplay = $('#hotMealDisplay');
+    
+    const monitoringUrl = $('#monitoringUrl');
+    const copyUrlBtn = $('#copyUrlBtn');
+    const copyNotification = $('#copyNotification');
+    
+    const checkAll = $('#checkAll');
+    const selectedCountSpan = $('#selectedCount');
+    const selectedCountText = $('#selectedCountText');
+    
+    const deleteModal = $('#deleteModal');
+    const confirmDeleteBtn = $('#confirmDelete');
+    const cancelDeleteBtn = $('#cancelDelete');
+    const deleteMessage = $('#deleteMessage');
+    const openConfirmBtn = $('#openConfirm');
+    const downloadSelected = $('#downloadSelected');
+    
+    const filesGrid = $('#filesGrid');
+    let pendingDeleteFiles = [];
+    let currentDeleteCallback = null;
+    let selectedFiles = new Set();
+    
+    // --- Функция уведомления ---
     function showCopyNotification() {
-        const notification = document.getElementById('copyNotification');
-        if (notification) {
-            notification.classList.add('show');
-            setTimeout(() => notification.classList.remove('show'), 1500);
+        if (copyNotification) {
+            copyNotification.classList.add('show');
+            clearTimeout(copyNotification._timeout);
+            copyNotification._timeout = setTimeout(() => copyNotification.classList.remove('show'), 1500);
         }
     }
-
-    const monitoringUrl = document.getElementById('monitoringUrl');
-    const copyUrlBtn = document.getElementById('copyUrlBtn');
     
-    if (monitoringUrl && copyUrlBtn) {
-        const copyUrl = () => {
-            const text = monitoringUrl.textContent;
-            navigator.clipboard.writeText(text).then(() => showCopyNotification());
-        };
-        monitoringUrl.addEventListener('click', copyUrl);
-        copyUrlBtn.addEventListener('click', copyUrl);
-    }
-
-    // === ЛОГИКА ВЫБОРА ФАЙЛОВ ===
-    const fileCheckboxes = document.querySelectorAll('.file-checkbox');
-    const checkAll = document.getElementById('checkAll');
-    const selectedCountSpan = document.getElementById('selectedCount');
-    const selectedCountText = document.getElementById('selectedCountText');
-    let selectedFiles = new Set();
-
+    // --- Функция обновления счётчика выбранных (оптимизирована) ---
     function updateSelectedCount() {
         const count = selectedFiles.size;
-        
         if (selectedCountSpan && selectedCountText) {
             if (count > 0) {
                 selectedCountSpan.style.display = 'flex';
@@ -2035,69 +2028,166 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectedCountSpan.style.display = 'none';
             }
         }
-        
-        document.querySelectorAll('.file-card').forEach(card => {
+        // Используем классы вместо перебора всех карточек при каждом изменении
+        const cards = document.querySelectorAll('.file-card');
+        for (const card of cards) {
             const filename = card.dataset.filename;
-            if (selectedFiles.has(filename)) {
-                card.classList.add('selected');
-            } else {
-                card.classList.remove('selected');
-            }
+            card.classList.toggle('selected', selectedFiles.has(filename));
+        }
+    }
+    
+    // --- Редактирование директора ---
+    if (editDirectorBtn && directorForm && cancelDirectorBtn) {
+        editDirectorBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            directorDisplay.style.display = 'none';
+            editDirectorBtn.style.display = 'none';
+            directorForm.style.display = 'block';
+            const input = directorForm.querySelector('input');
+            if (input) setTimeout(() => input.focus(), 50);
+        });
+        cancelDirectorBtn.addEventListener('click', function() {
+            directorForm.style.display = 'none';
+            directorDisplay.style.display = 'inline';
+            editDirectorBtn.style.display = 'inline-flex';
         });
     }
-
-    if (fileCheckboxes.length) {
-        fileCheckboxes.forEach(checkbox => {
-            if (checkbox.checked) {
-                const filename = checkbox.dataset.filename;
-                selectedFiles.add(filename);
-            }
+    
+    // --- Редактирование названия школы ---
+    if (editSchoolTitleBtn && schoolTitleEditForm && cancelSchoolTitleBtn) {
+        editSchoolTitleBtn.addEventListener('click', function() {
+            schoolTitle.style.display = 'none';
+            editSchoolTitleBtn.style.display = 'none';
+            schoolTitleEditForm.style.display = 'block';
+            const input = schoolTitleEditForm.querySelector('input');
+            if (input) setTimeout(() => input.focus(), 50);
         });
+        cancelSchoolTitleBtn.addEventListener('click', function() {
+            schoolTitleEditForm.style.display = 'none';
+            schoolTitle.style.display = 'block';
+            editSchoolTitleBtn.style.display = 'inline-block';
+        });
+    }
+    
+    // --- Редактирование ссылок ---
+    if (editWebsiteBtn && websiteEditForm && cancelWebsiteBtn) {
+        editWebsiteBtn.addEventListener('click', function() {
+            websiteDisplay.style.display = 'none';
+            websiteEditForm.style.display = 'block';
+            const input = websiteEditForm.querySelector('input');
+            if (input) setTimeout(() => input.focus(), 50);
+        });
+        cancelWebsiteBtn.addEventListener('click', function() {
+            websiteEditForm.style.display = 'none';
+            websiteDisplay.style.display = 'block';
+        });
+    }
+    
+    if (editHotMealBtn && hotMealEditForm && cancelHotMealBtn) {
+        editHotMealBtn.addEventListener('click', function() {
+            hotMealDisplay.style.display = 'none';
+            hotMealEditForm.style.display = 'block';
+            const input = hotMealEditForm.querySelector('input');
+            if (input) setTimeout(() => input.focus(), 50);
+        });
+        cancelHotMealBtn.addEventListener('click', function() {
+            hotMealEditForm.style.display = 'none';
+            hotMealDisplay.style.display = 'block';
+        });
+    }
+    
+    // --- Копирование ссылки ---
+    if (monitoringUrl && copyUrlBtn) {
+        const copyUrl = () => {
+            const text = monitoringUrl.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(showCopyNotification).catch(() => {
+                    // fallback
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    ta.remove();
+                    showCopyNotification();
+                });
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+                showCopyNotification();
+            }
+        };
+        monitoringUrl.addEventListener('click', copyUrl);
+        copyUrlBtn.addEventListener('click', copyUrl);
+    }
+    
+    // --- Инициализация выбранных файлов ---
+    const initialCheckboxes = document.querySelectorAll('.file-checkbox');
+    for (const cb of initialCheckboxes) {
+        if (cb.checked) {
+            selectedFiles.add(cb.dataset.filename);
+        }
+    }
+    updateSelectedCount();
+    
+    // --- Делегирование событий для чекбоксов (оптимизация) ---
+    // Используем делегирование вместо отдельных обработчиков
+    document.addEventListener('change', function(e) {
+        const cb = e.target.closest('.file-checkbox');
+        if (!cb) return;
+        
+        const filename = cb.dataset.filename;
+        if (cb.checked) {
+            selectedFiles.add(filename);
+        } else {
+            selectedFiles.delete(filename);
+        }
         updateSelectedCount();
         
-        fileCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const filename = this.dataset.filename;
-                if (this.checked) {
-                    selectedFiles.add(filename);
-                } else {
-                    selectedFiles.delete(filename);
-                }
-                updateSelectedCount();
-                
-                if (checkAll) {
-                    const allChecked = Array.from(fileCheckboxes).every(cb => cb.checked);
-                    checkAll.checked = allChecked;
-                }
-            });
-        });
-    }
-
+        if (checkAll) {
+            const allCbs = document.querySelectorAll('.file-checkbox');
+            let allChecked = true;
+            for (const c of allCbs) {
+                if (!c.checked) { allChecked = false; break; }
+            }
+            checkAll.checked = allChecked;
+        }
+    });
+    
+    // --- Выделение всех ---
     if (checkAll) {
         checkAll.addEventListener('change', function() {
             const isChecked = this.checked;
-            fileCheckboxes.forEach(checkbox => {
-                checkbox.checked = isChecked;
-                const filename = checkbox.dataset.filename;
+            const allCbs = document.querySelectorAll('.file-checkbox');
+            for (const cb of allCbs) {
+                cb.checked = isChecked;
+                const filename = cb.dataset.filename;
                 if (isChecked) {
                     selectedFiles.add(filename);
                 } else {
                     selectedFiles.delete(filename);
                 }
-            });
+            }
             updateSelectedCount();
         });
     }
-
-    document.querySelectorAll('.file-card').forEach(card => {
-        card.addEventListener('click', function(e) {
+    
+    // --- Клик по карточке файла (делегирование) ---
+    if (filesGrid) {
+        filesGrid.addEventListener('click', function(e) {
+            const card = e.target.closest('.file-card');
+            if (!card) return;
             if (e.target.closest('.file-action-btn') || e.target.closest('a')) return;
             
-            const checkbox = this.querySelector('.file-checkbox');
-            if (checkbox) {
-                checkbox.checked = !checkbox.checked;
-                const filename = checkbox.dataset.filename;
-                if (checkbox.checked) {
+            const cb = card.querySelector('.file-checkbox');
+            if (cb) {
+                cb.checked = !cb.checked;
+                const filename = cb.dataset.filename;
+                if (cb.checked) {
                     selectedFiles.add(filename);
                 } else {
                     selectedFiles.delete(filename);
@@ -2105,80 +2195,79 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateSelectedCount();
                 
                 if (checkAll) {
-                    const allChecked = Array.from(fileCheckboxes).every(cb => cb.checked);
+                    const allCbs = document.querySelectorAll('.file-checkbox');
+                    let allChecked = true;
+                    for (const c of allCbs) {
+                        if (!c.checked) { allChecked = false; break; }
+                    }
                     checkAll.checked = allChecked;
                 }
             }
         });
-    });
-
-    // === УДАЛЕНИЕ ФАЙЛОВ ===
-    const deleteModal = document.getElementById('deleteModal');
-    const confirmDeleteBtn = document.getElementById('confirmDelete');
-    const cancelDeleteBtn = document.getElementById('cancelDelete');
-    let currentDeleteCallback = null;
-
-    // Удаление отдельного файла
-    document.querySelectorAll('.file-action-btn.delete').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const filename = this.dataset.filename;
-            const year = this.dataset.year;
-            const month = this.dataset.month;
+    }
+    
+    // --- Удаление отдельного файла (делегирование) ---
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.file-action-btn.delete');
+        if (!btn) return;
+        e.stopPropagation();
+        
+        const filename = btn.dataset.filename;
+        const year = btn.dataset.year;
+        const month = btn.dataset.month;
+        
+        if (filename) {
+            pendingDeleteFiles = [filename];
+            if (deleteMessage) deleteMessage.textContent = `Вы действительно хотите удалить файл "${filename}"?`;
+            if (deleteModal) deleteModal.style.display = 'flex';
             
-            if (filename) {
-                pendingDeleteFiles = [filename];
-                const deleteMessage = document.getElementById('deleteMessage');
-                if (deleteMessage) deleteMessage.textContent = `Вы действительно хотите удалить файл "${filename}"?`;
-                deleteModal.style.display = 'flex';
-                
-                currentDeleteCallback = () => {
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '/delete-files';
-                    const uidInput = document.createElement('input');
-                    uidInput.type = 'hidden';
-                    uidInput.name = 'uid';
-                    uidInput.value = '{{ user.id }}';
-                    form.appendChild(uidInput);
-                    const yearInput = document.createElement('input');
-                    yearInput.type = 'hidden';
-                    yearInput.name = 'year';
-                    yearInput.value = year;
-                    form.appendChild(yearInput);
-                    const monthInput = document.createElement('input');
-                    monthInput.type = 'hidden';
-                    monthInput.name = 'month';
-                    monthInput.value = month;
-                    form.appendChild(monthInput);
-                    const fileInput = document.createElement('input');
-                    fileInput.type = 'hidden';
-                    fileInput.name = 'files';
-                    fileInput.value = filename;
-                    form.appendChild(fileInput);
-                    document.body.appendChild(form);
-                    form.submit();
-                };
-            }
-        });
+            currentDeleteCallback = function() {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/delete-files';
+                const uidInput = document.createElement('input');
+                uidInput.type = 'hidden';
+                uidInput.name = 'uid';
+                uidInput.value = '{{ user.id }}';
+                form.appendChild(uidInput);
+                const yearInput = document.createElement('input');
+                yearInput.type = 'hidden';
+                yearInput.name = 'year';
+                yearInput.value = year || '{{ year }}';
+                form.appendChild(yearInput);
+                const monthInput = document.createElement('input');
+                monthInput.type = 'hidden';
+                monthInput.name = 'month';
+                monthInput.value = month || '{{ month }}';
+                form.appendChild(monthInput);
+                const fileInput = document.createElement('input');
+                fileInput.type = 'hidden';
+                fileInput.name = 'files';
+                fileInput.value = filename;
+                form.appendChild(fileInput);
+                document.body.appendChild(form);
+                form.submit();
+            };
+        }
     });
-
-    // Удаление выделенных файлов
-    const openConfirmBtn = document.getElementById('openConfirm');
+    
+    // --- Удаление выделенных ---
     if (openConfirmBtn) {
         openConfirmBtn.addEventListener('click', function() {
-            const selected = Array.from(document.querySelectorAll('.file-checkbox:checked'))
-                .map(cb => cb.dataset.filename);
+            const selected = [];
+            const allCbs = document.querySelectorAll('.file-checkbox:checked');
+            for (const cb of allCbs) {
+                selected.push(cb.dataset.filename);
+            }
             if (selected.length === 0) {
                 alert('Выберите файлы для удаления');
                 return;
             }
             pendingDeleteFiles = selected;
-            const deleteMessage = document.getElementById('deleteMessage');
             if (deleteMessage) deleteMessage.textContent = `Вы действительно хотите удалить выбранные файлы (${selected.length})?`;
-            deleteModal.style.display = 'flex';
+            if (deleteModal) deleteModal.style.display = 'flex';
             
-            currentDeleteCallback = () => {
+            currentDeleteCallback = function() {
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = '/delete-files';
@@ -2197,34 +2286,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 monthInput.name = 'month';
                 monthInput.value = '{{ month }}';
                 form.appendChild(monthInput);
-                pendingDeleteFiles.forEach(filename => {
+                for (const filename of pendingDeleteFiles) {
                     const fileInput = document.createElement('input');
                     fileInput.type = 'hidden';
                     fileInput.name = 'files';
                     fileInput.value = filename;
                     form.appendChild(fileInput);
-                });
+                }
                 document.body.appendChild(form);
                 form.submit();
             };
         });
     }
-
+    
+    // --- Модальное окно ---
     if (deleteModal) {
         if (cancelDeleteBtn) {
-            cancelDeleteBtn.addEventListener('click', () => {
+            cancelDeleteBtn.addEventListener('click', function() {
                 deleteModal.style.display = 'none';
                 pendingDeleteFiles = [];
                 currentDeleteCallback = null;
             });
         }
         if (confirmDeleteBtn) {
-            confirmDeleteBtn.addEventListener('click', () => {
+            confirmDeleteBtn.addEventListener('click', function() {
                 if (currentDeleteCallback) currentDeleteCallback();
                 deleteModal.style.display = 'none';
             });
         }
-        deleteModal.addEventListener('click', e => {
+        deleteModal.addEventListener('click', function(e) {
             if (e.target === deleteModal) {
                 deleteModal.style.display = 'none';
                 pendingDeleteFiles = [];
@@ -2232,26 +2322,48 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
-    // === СКАЧИВАНИЕ ВЫДЕЛЕННЫХ ===
-    const downloadSelected = document.getElementById('downloadSelected');
+    
+    // --- Скачивание выделенных ---
     if (downloadSelected) {
-        downloadSelected.addEventListener('click', () => {
-            const selected = Array.from(document.querySelectorAll('.file-checkbox:checked'))
-                .map(cb => cb.dataset.filename);
+        downloadSelected.addEventListener('click', function() {
+            const selected = [];
+            const allCbs = document.querySelectorAll('.file-checkbox:checked');
+            for (const cb of allCbs) {
+                selected.push(cb.dataset.filename);
+            }
             if (selected.length === 0) {
                 alert('Выберите файлы для скачивания');
                 return;
             }
-            selected.forEach(filename => window.open(`/{{ user.id }}/food/${filename}`, '_blank'));
+            // Открываем каждый файл в новой вкладке - используем setTimeout для снижения нагрузки
+            for (let i = 0; i < selected.length; i++) {
+                setTimeout(() => {
+                    window.open(`/{{ user.id }}/food/${selected[i]}`, '_blank');
+                }, i * 100);
+            }
         });
     }
-
-    // Анимация появления карточек
-    document.querySelectorAll('.file-card').forEach((card, i) => {
-        card.style.opacity = '0';
-        setTimeout(() => card.style.opacity = '1', i * 50);
-    });
+    
+    // --- Анимация появления карточек с Intersection Observer (оптимизация) ---
+    if ('IntersectionObserver' in window) {
+        const cards = document.querySelectorAll('.file-card');
+        const observer = new IntersectionObserver((entries) => {
+            for (const entry of entries) {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    observer.unobserve(entry.target);
+                }
+            }
+        }, { threshold: 0.05, rootMargin: '50px' });
+        
+        for (const card of cards) {
+            card.style.opacity = '0';
+            observer.observe(card);
+        }
+    } else {
+        // Fallback для старых браузеров
+        document.querySelectorAll('.file-card').forEach(card => card.style.opacity = '1');
+    }
 });
 </script>
 {% endblock %}

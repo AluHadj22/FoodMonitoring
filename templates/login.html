@@ -9,165 +9,160 @@
         align-items: center;
         min-height: calc(100vh - 73px);
         padding: 2rem;
-        animation: fadeInUp 0.3s ease-out;
-        will-change: transform, opacity;
         position: relative;
         overflow: hidden;
         background: var(--bg-main);
     }
 
-    /* Фоновые стихи - максимальная видимость */
-    .auth-container .bg-poem {
+    /* Фоновые круглые фигуры - статичные для производительности */
+    .auth-container .bg-circles {
         position: absolute;
         pointer-events: none;
         user-select: none;
         z-index: 0;
-        font-family: 'Georgia', 'Times New Roman', 'Inter', serif;
-        color: var(--primary);
-        line-height: 2;
-        font-weight: 400;
-        letter-spacing: 0.5px;
-        white-space: pre-line;
-        text-align: left;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        overflow: hidden;
     }
 
-    .auth-container .bg-poem-1 {
-        top: 5%;
-        left: 3%;
-        transform: rotate(-2deg);
-        animation: floatPoem1 20s ease-in-out infinite;
-        font-size: 1.1rem;
-        opacity: 0.2;
-        width: 320px;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    .auth-container .bg-circle {
+        position: absolute;
+        border-radius: 50%;
+        opacity: 0.06;
+        background: var(--primary);
     }
 
-    .auth-container .bg-poem-2 {
-        bottom: 5%;
-        right: 3%;
-        transform: rotate(2deg);
-        animation: floatPoem2 22s ease-in-out infinite;
-        font-size: 1.15rem;
-        opacity: 0.2;
-        width: 340px;
-        text-align: right;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    .auth-container .bg-circle-1 {
+        width: 400px;
+        height: 400px;
+        top: -150px;
+        right: -120px;
+        opacity: 0.05;
     }
 
-    .auth-container .bg-poem-3 {
+    .auth-container .bg-circle-2 {
+        width: 280px;
+        height: 280px;
+        bottom: -80px;
+        left: -80px;
+        opacity: 0.04;
+    }
+
+    .auth-container .bg-circle-3 {
+        width: 160px;
+        height: 160px;
         top: 50%;
         left: 50%;
-        transform: translate(-50%, -50%) rotate(0deg);
-        animation: pulsePoem 25s ease-in-out infinite;
-        font-size: 1rem;
-        opacity: 0.1;
-        width: 550px;
-        text-align: center;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        transform: translate(-50%, -50%);
+        opacity: 0.03;
     }
 
-    /* Стилизация текста стихов */
-    .auth-container .bg-poem .poem-author {
-        display: block;
-        margin-top: 12px;
-        font-size: 0.85rem;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        opacity: 0.8;
-        font-weight: 400;
-        font-style: italic;
+    .auth-container .bg-circle-4 {
+        width: 100px;
+        height: 100px;
+        top: 20%;
+        right: 10%;
+        opacity: 0.05;
     }
 
-    .auth-container .bg-poem .poem-lines {
-        display: block;
+    .auth-container .bg-circle-5 {
+        width: 140px;
+        height: 140px;
+        bottom: 25%;
+        left: 5%;
+        opacity: 0.04;
     }
 
-    .auth-container .bg-poem .poem-line {
-        display: block;
-        margin-bottom: 3px;
-    }
-
+    /* Стиль карточки - упрощенный */
     .auth-card {
-        background: var(--bg-card);
+        background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(240, 248, 255, 0.95) 100%);
         border-radius: 32px;
-        padding: 2.5rem;
+        padding: 3.5rem 3rem;
         width: 100%;
-        max-width: 440px;
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow-lg);
+        max-width: 480px;
+        border: 1px solid rgba(59, 130, 246, 0.1);
+        box-shadow: 0 20px 60px rgba(59, 130, 246, 0.08);
         transition: box-shadow 0.2s ease, transform 0.2s ease;
         position: relative;
-        overflow: hidden;
-        will-change: transform;
         z-index: 1;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        background: rgba(255, 255, 255, 0.88);
     }
 
     [data-theme='dark'] .auth-card {
-        background: rgba(30, 41, 59, 0.88);
+        background: linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+        border-color: rgba(59, 130, 246, 0.12);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     }
 
-    /* Иконка в центре - стильный глаз */
+    .auth-card:hover {
+        box-shadow: 0 25px 70px rgba(59, 130, 246, 0.12);
+        transform: translateY(-2px);
+    }
+
+    /* Логотип - синий градиент */
     .auth-icon {
-        width: 76px;
-        height: 76px;
+        width: 64px;
+        height: 64px;
         margin: 0 auto 1.5rem;
-        background: var(--primary-bg);
-        border-radius: 50%;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        border-radius: 18px;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.3s ease;
-        will-change: transform;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
         position: relative;
         z-index: 2;
-        border: 2px solid var(--primary-bg);
+        box-shadow: 0 8px 30px rgba(59, 130, 246, 0.2);
     }
 
     .auth-icon svg {
-        width: 36px;
-        height: 36px;
+        width: 30px;
+        height: 30px;
         fill: none;
-        stroke: var(--primary);
-        stroke-width: 1.8;
+        stroke: white;
+        stroke-width: 2;
         stroke-linecap: round;
         stroke-linejoin: round;
-        transition: stroke 0.3s ease;
     }
 
     .auth-icon:hover {
-        transform: scale(1.06);
-        background: var(--primary);
-        border-color: var(--primary);
-        box-shadow: 0 0 30px rgba(26, 76, 140, 0.15);
+        transform: scale(1.05) rotate(-2deg);
+        box-shadow: 0 12px 40px rgba(59, 130, 246, 0.25);
     }
 
-    .auth-icon:hover svg {
-        stroke: white;
-    }
-
+    /* Заголовки */
     .auth-title {
         text-align: center;
         font-size: 1.75rem;
         font-weight: 700;
         color: var(--text-primary);
         margin-bottom: 0.5rem;
-        letter-spacing: -0.3px;
+        letter-spacing: -0.5px;
         position: relative;
         z-index: 2;
+    }
+
+    .auth-title span {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
     .auth-subtitle {
         text-align: center;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         color: var(--text-secondary);
         margin-bottom: 2rem;
         position: relative;
         z-index: 2;
+        font-weight: 400;
+        line-height: 1.6;
+        opacity: 0.8;
     }
 
+    /* Форма */
     .auth-form {
         display: flex;
         flex-direction: column;
@@ -182,111 +177,153 @@
 
     .form-group input {
         width: 100%;
-        padding: 0.875rem 1rem 0.875rem 2.75rem;
-        background: var(--surface);
-        border: 1.5px solid var(--border);
+        padding: 1rem 1.25rem;
+        background: rgba(255, 255, 255, 0.7);
+        border: 2px solid rgba(59, 130, 246, 0.1);
         border-radius: 16px;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         color: var(--text-primary);
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
         font-family: inherit;
-        will-change: border-color;
-        background: rgba(255, 255, 255, 0.6);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
     }
 
     [data-theme='dark'] .form-group input {
         background: rgba(30, 41, 59, 0.6);
+        border-color: rgba(59, 130, 246, 0.08);
+        color: #e2e8f0;
     }
 
     .form-group input:focus {
         outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px var(--primary-bg);
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        background: rgba(255, 255, 255, 0.85);
     }
 
     .form-group input::placeholder {
         color: var(--text-secondary);
         font-weight: 400;
+        font-size: 0.9rem;
+        opacity: 0.7;
     }
 
-    .form-icon {
-        position: absolute;
-        left: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
+    /* Чекбокс и кнопка "Показать пароль" */
+    .form-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 0.25rem 0 0.5rem;
+        font-size: 0.9rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .remember-me {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-weight: 400;
+        transition: color 0.2s ease;
+    }
+
+    .remember-me:hover {
+        color: var(--text-primary);
+    }
+
+    .remember-me input[type="checkbox"] {
         width: 18px;
         height: 18px;
-        color: var(--text-secondary);
-        pointer-events: none;
-        transition: color 0.2s ease;
-        will-change: color;
+        accent-color: #3b82f6;
+        cursor: pointer;
+        border-radius: 4px;
+        border: 2px solid rgba(59, 130, 246, 0.2);
+        transition: border-color 0.2s ease;
     }
 
-    .form-group input:focus + .form-icon {
-        color: var(--primary);
+    .remember-me input[type="checkbox"]:checked {
+        border-color: #3b82f6;
     }
 
     .password-toggle {
-        position: absolute;
-        right: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
         background: none;
         border: none;
         cursor: pointer;
-        padding: 0.25rem;
+        padding: 0.25rem 0.5rem;
         display: flex;
         align-items: center;
         justify-content: center;
         color: var(--text-secondary);
         transition: color 0.2s ease, background 0.2s ease;
         border-radius: 8px;
-        will-change: color, background;
+        font-size: 0.9rem;
+        font-weight: 500;
+        gap: 0.5rem;
+        background: rgba(59, 130, 246, 0.04);
+        border: 1px solid rgba(59, 130, 246, 0.04);
     }
 
     .password-toggle:hover {
-        color: var(--primary);
-        background: var(--primary-bg);
+        color: #3b82f6;
+        background: rgba(59, 130, 246, 0.08);
+        border-color: rgba(59, 130, 246, 0.1);
     }
 
+    .password-toggle svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+    }
+
+    /* Кнопка входа - синий градиент */
     .submit-btn {
         width: 100%;
-        padding: 0.875rem;
-        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        padding: 1rem;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
         color: white;
         border: none;
-        border-radius: 60px;
-        font-size: 0.95rem;
+        border-radius: 16px;
+        font-size: 1rem;
         font-weight: 600;
         cursor: pointer;
-        transition: transform 0.15s ease, box-shadow 0.2s ease;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
         margin-top: 0.5rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.5rem;
-        will-change: transform;
+        gap: 0.75rem;
         position: relative;
         z-index: 2;
+        box-shadow: 0 6px 24px rgba(59, 130, 246, 0.2);
+        letter-spacing: 0.3px;
     }
 
     .submit-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(26, 76, 140, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 32px rgba(59, 130, 246, 0.25);
     }
 
     .submit-btn:active {
         transform: translateY(0);
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
     }
 
+    .submit-btn svg {
+        stroke-width: 2.5;
+        transition: transform 0.2s ease;
+    }
+
+    .submit-btn:hover svg {
+        transform: translateX(3px);
+    }
+
+    /* Ссылки */
     .auth-links {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 1rem;
-        font-size: 0.8rem;
+        justify-content: center;
+        margin-top: 1.25rem;
+        font-size: 0.9rem;
         position: relative;
         z-index: 2;
     }
@@ -294,27 +331,34 @@
     .auth-link {
         color: var(--text-secondary);
         text-decoration: none;
-        transition: color 0.2s ease;
+        transition: color 0.2s ease, background 0.2s ease;
         display: inline-flex;
         align-items: center;
-        gap: 0.25rem;
-        will-change: color;
+        gap: 0.5rem;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        background: rgba(59, 130, 246, 0.02);
+        border: 1px solid transparent;
     }
 
     .auth-link:hover {
-        color: var(--primary);
+        color: #3b82f6;
+        background: rgba(59, 130, 246, 0.06);
+        border-color: rgba(59, 130, 246, 0.08);
     }
 
     .auth-link svg {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         stroke: currentColor;
     }
 
+    /* Разделитель */
     .auth-divider {
         position: relative;
         text-align: center;
-        margin: 1.5rem 0;
+        margin: 1.75rem 0 1.25rem;
         z-index: 2;
     }
 
@@ -325,165 +369,115 @@
         left: 0;
         right: 0;
         height: 1px;
-        background: var(--border);
+        background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
     }
 
     .auth-divider span {
         position: relative;
         background: var(--bg-card);
-        padding: 0 1rem;
-        font-size: 0.75rem;
+        padding: 0 1.25rem;
+        font-size: 0.85rem;
         color: var(--text-secondary);
-        font-weight: 500;
-        background: rgba(255, 255, 255, 0.6);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
+        font-weight: 400;
+        background: rgba(255, 255, 255, 0.8);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     [data-theme='dark'] .auth-divider span {
-        background: rgba(30, 41, 59, 0.6);
+        background: rgba(30, 41, 59, 0.8);
     }
 
+    /* Кнопка регистрации */
     .register-btn {
         width: 100%;
-        padding: 0.875rem;
+        padding: 1rem;
         background: transparent;
-        border: 1.5px solid var(--border);
-        border-radius: 60px;
-        font-size: 0.9rem;
+        border: 2px solid rgba(59, 130, 246, 0.12);
+        border-radius: 16px;
+        font-size: 0.95rem;
         font-weight: 500;
         color: var(--text-primary);
         cursor: pointer;
-        transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+        transition: all 0.2s ease;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.5rem;
+        gap: 0.75rem;
         text-decoration: none;
-        will-change: border-color, background, color;
         position: relative;
         z-index: 2;
+        background: rgba(59, 130, 246, 0.02);
+    }
+
+    [data-theme='dark'] .register-btn {
+        border-color: rgba(59, 130, 246, 0.08);
+        background: rgba(59, 130, 246, 0.02);
     }
 
     .register-btn:hover {
-        border-color: var(--primary);
-        background: var(--primary-bg);
-        color: var(--primary);
+        border-color: #3b82f6;
+        background: rgba(59, 130, 246, 0.05);
+        color: #3b82f6;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.04);
     }
 
+    .register-btn svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        transition: transform 0.2s ease;
+    }
+
+    .register-btn:hover svg {
+        transform: scale(1.05);
+    }
+
+    /* Алерты */
     .alert {
-        padding: 0.875rem 1rem;
-        border-radius: 16px;
+        padding: 0.875rem 1.25rem;
+        border-radius: 14px;
         margin-bottom: 1.5rem;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         font-weight: 500;
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        animation: slideIn 0.25s ease-out;
-        will-change: transform, opacity;
         position: relative;
         z-index: 2;
+        border-left: 4px solid;
     }
 
     .alert-error {
-        background: rgba(239, 68, 68, 0.1);
-        border: 1px solid rgba(239, 68, 68, 0.2);
+        background: rgba(239, 68, 68, 0.06);
+        border-color: #ef4444;
         color: #ef4444;
     }
 
     .alert-success {
-        background: rgba(16, 185, 129, 0.1);
-        border: 1px solid rgba(16, 185, 129, 0.2);
+        background: rgba(16, 185, 129, 0.06);
+        border-color: #10b981;
         color: #10b981;
     }
 
     .alert svg {
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
         flex-shrink: 0;
         stroke: currentColor;
     }
 
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(15px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateX(-15px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    @keyframes floatPoem1 {
-        0%, 100% { transform: rotate(-2deg) translateY(0); }
-        50% { transform: rotate(-2deg) translateY(-15px); }
-    }
-
-    @keyframes floatPoem2 {
-        0%, 100% { transform: rotate(2deg) translateY(0); }
-        50% { transform: rotate(2deg) translateY(15px); }
-    }
-
-    @keyframes pulsePoem {
-        0%, 100% { transform: translate(-50%, -50%) rotate(0deg) scale(1); opacity: 0.1; }
-        50% { transform: translate(-50%, -50%) rotate(0.5deg) scale(1.02); opacity: 0.14; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .auth-container,
-        .alert,
-        .auth-container .bg-poem {
-            animation: none !important;
-        }
-    }
-
-    @media (max-width: 1024px) {
-        .auth-container .bg-poem-1 {
-            font-size: 0.95rem;
-            width: 260px;
-        }
-        .auth-container .bg-poem-2 {
-            font-size: 1rem;
-            width: 280px;
-        }
-        .auth-container .bg-poem-3 {
-            font-size: 0.9rem;
-            width: 450px;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .auth-container .bg-poem-1,
-        .auth-container .bg-poem-2 {
-            display: none;
-        }
-        .auth-container .bg-poem-3 {
-            width: 85%;
-            font-size: 0.85rem;
-            opacity: 0.12;
-        }
-    }
-
-    @media (max-width: 480px) {
+    /* Адаптивность */
+    @media (max-width: 640px) {
         .auth-container {
             padding: 1rem;
         }
         
         .auth-card {
-            padding: 1.75rem;
+            padding: 2.5rem 1.75rem;
+            border-radius: 24px;
+            max-width: 100%;
         }
         
         .auth-title {
@@ -491,100 +485,107 @@
         }
         
         .auth-icon {
-            width: 64px;
-            height: 64px;
+            width: 56px;
+            height: 56px;
         }
         
         .auth-icon svg {
-            width: 30px;
-            height: 30px;
+            width: 26px;
+            height: 26px;
         }
         
         .form-group input {
-            padding: 0.75rem 0.75rem 0.75rem 2.5rem;
-            font-size: 0.85rem;
-        }
-        
-        .auth-links {
-            flex-direction: column;
-            gap: 0.75rem;
-            align-items: center;
+            padding: 0.875rem 1rem;
+            font-size: 0.9rem;
         }
 
-        .auth-container .bg-poem-3 {
-            width: 92%;
-            font-size: 0.75rem;
-            opacity: 0.1;
+        .form-options {
+            flex-direction: column;
+            gap: 0.75rem;
+            align-items: flex-start;
         }
+
+        .auth-links {
+            justify-content: center;
+        }
+
+        .auth-container .bg-circle-1 {
+            width: 250px;
+            height: 250px;
+            top: -80px;
+            right: -60px;
+        }
+
+        .auth-container .bg-circle-2 {
+            width: 180px;
+            height: 180px;
+            bottom: -40px;
+            left: -40px;
+        }
+
+        .auth-container .bg-circle-3 {
+            width: 120px;
+            height: 120px;
+        }
+
+        .auth-container .bg-circle-4 {
+            width: 70px;
+            height: 70px;
+        }
+
+        .auth-container .bg-circle-5 {
+            width: 80px;
+            height: 80px;
+        }
+    }
+
+    /* Тёмная тема */
+    [data-theme='dark'] .auth-card {
+        background: linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
     }
 
     [data-theme='dark'] .auth-icon {
-        background: rgba(59, 130, 246, 0.15);
-        border-color: rgba(59, 130, 246, 0.1);
+        box-shadow: 0 8px 30px rgba(59, 130, 246, 0.15);
     }
 
-    [data-theme='dark'] .auth-icon:hover {
-        background: var(--primary);
-        border-color: var(--primary);
+    [data-theme='dark'] .submit-btn {
+        box-shadow: 0 6px 24px rgba(59, 130, 246, 0.12);
     }
 
-    [data-theme='dark'] .auth-container .bg-poem {
-        color: #3b82f6;
-        opacity: 0.25;
+    [data-theme='dark'] .submit-btn:hover {
+        box-shadow: 0 10px 32px rgba(59, 130, 246, 0.2);
     }
 
-    [data-theme='dark'] .auth-container .bg-poem-3 {
-        opacity: 0.14;
+    [data-theme='dark'] .form-group input:focus {
+        background: rgba(30, 41, 59, 0.8);
+    }
+
+    [data-theme='dark'] .auth-container .bg-circle {
+        opacity: 0.04;
+    }
+
+    [data-theme='dark'] .auth-divider span {
+        background: rgba(30, 41, 59, 0.8);
     }
 </style>
 
 <div class="auth-container">
-    <!-- Фоновые стихи - теперь четко видны -->
-    <div class="bg-poem bg-poem-1">
-        <span class="poem-lines">
-            <span class="poem-line">Пока не требует поэта</span>
-            <span class="poem-line">К священной жертве Аполлон,</span>
-            <span class="poem-line">В заботах суетного света</span>
-            <span class="poem-line">Он малодушно погружен;</span>
-            <span class="poem-line">Молчит его святая лира;</span>
-            <span class="poem-line">Душа вкушает хладный сон,</span>
-            <span class="poem-line">И меж детей ничтожных мира,</span>
-            <span class="poem-line">Быть может, всех ничтожней он.</span>
-        </span>
-        <span class="poem-author">— А.С. Пушкин</span>
-    </div>
-
-    <div class="bg-poem bg-poem-2">
-        <span class="poem-lines">
-            <span class="poem-line">Знаю, что правду пишу</span>
-            <span class="poem-line">и имен не значу,</span>
-            <span class="poem-line">Смеюсь в стихах,</span>
-            <span class="poem-line">а в сердце о злонравных плачу;</span>
-            <span class="poem-line">Да правда редко люба</span>
-            <span class="poem-line">и часто некстати —</span>
-            <span class="poem-line">Кто же от тебя когда</span>
-            <span class="poem-line">хотел правду знати?</span>
-        </span>
-        <span class="poem-author">— А.Д. Кантемир</span>
-    </div>
-
-    <div class="bg-poem bg-poem-3">
-        <span class="poem-lines">
-            <span class="poem-line">Я памятник себе воздвиг нерукотворный,</span>
-            <span class="poem-line">К нему не зарастет народная тропа,</span>
-            <span class="poem-line">Вознесся выше он главою непокорной</span>
-            <span class="poem-line">Александрийского столпа.</span>
-        </span>
-        <span class="poem-author">— А.С. Пушкин</span>
+    <!-- Фоновые круглые фигуры -->
+    <div class="bg-circles">
+        <div class="bg-circle bg-circle-1"></div>
+        <div class="bg-circle bg-circle-2"></div>
+        <div class="bg-circle bg-circle-3"></div>
+        <div class="bg-circle bg-circle-4"></div>
+        <div class="bg-circle bg-circle-5"></div>
     </div>
 
     <div class="auth-card">
+        <!-- Иконка с синим градиентом -->
         <div class="auth-icon">
-            <!-- Стильный глаз -->
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M12 4C7 4 3 8 3 12s4 8 9 8 9-4 9-8-4-8-9-8z"/>
-                <circle cx="12" cy="12" r="3"/>
-                <circle cx="11" cy="11" r="1" fill="currentColor" opacity="0.8"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
             </svg>
         </div>
         
@@ -613,32 +614,32 @@
         
         <form action="/login" method="post" class="auth-form">
             <div class="form-group">
-                <input type="email" name="email" placeholder="Электронная почта" required>
-                <svg class="form-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                    <polyline points="22,6 12,13 2,6"/>
-                </svg>
+                <input type="email" name="email" placeholder="Электронная почта" required autocomplete="email">
             </div>
             
             <div class="form-group">
-                <input type="password" name="password" id="password" placeholder="Пароль" required>
-                <svg class="form-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
+                <input type="password" name="password" id="password" placeholder="Пароль" required autocomplete="current-password">
+            </div>
+
+            <div class="form-options">
+                <label class="remember-me">
+                    <input type="checkbox" name="remember">
+                    Запомнить меня
+                </label>
                 <button type="button" class="password-toggle" onclick="togglePassword()" aria-label="Показать/скрыть пароль">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                         <circle cx="12" cy="12" r="3"/>
                     </svg>
+                    Показать
                 </button>
             </div>
             
             <button type="submit" class="submit-btn">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.5 12H3"/>
+                Войти
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>
-                Войти в систему
             </button>
         </form>
         
@@ -656,7 +657,7 @@
         </div>
         
         <a href="/register" class="register-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                 <circle cx="8.5" cy="7" r="4"/>
                 <line x1="20" y1="8" x2="20" y2="14"/>
@@ -682,11 +683,13 @@ function togglePassword() {
             <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
             <line x1="1" y1="1" x2="23" y2="23"/>
         </svg>
+        Скрыть
     ` : `
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
             <circle cx="12" cy="12" r="3"/>
         </svg>
+        Показать
     `;
 }
 
@@ -702,6 +705,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Отключаем анимации для слабых ПК
 if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     document.querySelectorAll('.auth-card, .auth-container, .alert').forEach(el => {
         el.style.animation = 'none';
