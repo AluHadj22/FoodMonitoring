@@ -75,18 +75,19 @@
         opacity: 0.04;
     }
 
-    /* Стиль карточки - упрощенный */
+    /* Широкая прямоугольная карточка */
     .auth-card {
         background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(240, 248, 255, 0.95) 100%);
-        border-radius: 32px;
-        padding: 3.5rem 3rem;
+        border-radius: 28px;
+        padding: 3.5rem 4rem;
         width: 100%;
-        max-width: 480px;
+        max-width: 640px;
         border: 1px solid rgba(59, 130, 246, 0.1);
         box-shadow: 0 20px 60px rgba(59, 130, 246, 0.08);
         transition: box-shadow 0.2s ease, transform 0.2s ease;
         position: relative;
         z-index: 1;
+        overflow: hidden;
     }
 
     [data-theme='dark'] .auth-card {
@@ -100,35 +101,58 @@
         transform: translateY(-2px);
     }
 
-    /* Логотип - синий градиент */
-    .auth-icon {
-        width: 64px;
-        height: 64px;
-        margin: 0 auto 1.5rem;
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-        border-radius: 18px;
+    /* Контейнер для картинки кота */
+    .cat-image-wrapper {
         display: flex;
-        align-items: center;
         justify-content: center;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        align-items: center;
+        margin: -0.5rem auto 1.5rem;
         position: relative;
         z-index: 2;
-        box-shadow: 0 8px 30px rgba(59, 130, 246, 0.2);
     }
 
-    .auth-icon svg {
-        width: 30px;
-        height: 30px;
-        fill: none;
-        stroke: white;
-        stroke-width: 2;
-        stroke-linecap: round;
-        stroke-linejoin: round;
+    .cat-image-wrapper img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid rgba(59, 130, 246, 0.15);
+        box-shadow: 0 8px 32px rgba(59, 130, 246, 0.12);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: block;
+        background: #f8fafc;
     }
 
-    .auth-icon:hover {
-        transform: scale(1.05) rotate(-2deg);
-        box-shadow: 0 12px 40px rgba(59, 130, 246, 0.25);
+    [data-theme='dark'] .cat-image-wrapper img {
+        border-color: rgba(59, 130, 246, 0.2);
+        box-shadow: 0 8px 32px rgba(59, 130, 246, 0.08);
+        background: #1e293b;
+    }
+
+    .cat-image-wrapper img:hover {
+        transform: scale(1.04) rotate(-2deg);
+        box-shadow: 0 12px 40px rgba(59, 130, 246, 0.18);
+    }
+
+    /* Круговой фон за котом */
+    .cat-image-wrapper::before {
+        content: '';
+        position: absolute;
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
+        z-index: -1;
+        animation: pulse-glow 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+        0%, 100% { transform: scale(1); opacity: 0.6; }
+        50% { transform: scale(1.08); opacity: 1; }
+    }
+
+    [data-theme='dark'] .cat-image-wrapper::before {
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.04) 0%, transparent 70%);
     }
 
     /* Заголовки */
@@ -484,14 +508,14 @@
             font-size: 1.5rem;
         }
         
-        .auth-icon {
-            width: 56px;
-            height: 56px;
+        .cat-image-wrapper img {
+            width: 90px;
+            height: 90px;
         }
-        
-        .auth-icon svg {
-            width: 26px;
-            height: 26px;
+
+        .cat-image-wrapper::before {
+            width: 110px;
+            height: 110px;
         }
         
         .form-group input {
@@ -544,10 +568,6 @@
         background: linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
     }
 
-    [data-theme='dark'] .auth-icon {
-        box-shadow: 0 8px 30px rgba(59, 130, 246, 0.15);
-    }
-
     [data-theme='dark'] .submit-btn {
         box-shadow: 0 6px 24px rgba(59, 130, 246, 0.12);
     }
@@ -580,13 +600,15 @@
     </div>
 
     <div class="auth-card">
-        <!-- Иконка с синим градиентом -->
-        <div class="auth-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                <path d="M2 17l10 5 10-5"/>
-                <path d="M2 12l10 5 10-5"/>
-            </svg>
+        <!-- Картинка кота из папки static -->
+        <div class="cat-image-wrapper">
+            <img 
+                src="static/angry.png"}"
+                alt="Кот"
+                loading="lazy"
+                width="120"
+                height="120"
+            >
         </div>
         
         <h1 class="auth-title">Добро пожаловать</h1>
