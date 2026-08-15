@@ -997,10 +997,10 @@
         color: var(--text-secondary);
     }
 
-    /* Уведомления */
+    /* Уведомления — исправлено: выше z-index и отступ сверху */
     .notification {
         position: fixed;
-        top: 2rem;
+        top: 4rem; /* смещаем ниже верхнего бара */
         right: 2rem;
         padding: 0.75rem 1.25rem;
         border-radius: var(--radius-md);
@@ -1009,7 +1009,7 @@
         font-weight: 500;
         font-size: 0.8rem;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-        z-index: 2000;
+        z-index: 9999 !important; /* выше любого бара */
         transform: translateX(120%);
         transition: transform 0.3s ease;
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1054,7 +1054,9 @@
     }
 
     @keyframes spin {
-        to { transform: rotate(360deg); }
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     /* Адаптивность */
@@ -1062,100 +1064,100 @@
         .admin-layout {
             padding: 1rem;
         }
-        
+
         .admin-layout::before {
             width: 200px;
             height: 200px;
             top: -60px;
             right: -40px;
         }
-        
+
         .admin-layout::after {
             width: 150px;
             height: 150px;
             bottom: -30px;
             left: -30px;
         }
-        
+
         .admin-grid {
             grid-template-columns: 1fr;
         }
-        
+
         .admin-sidebar {
             position: static;
         }
-        
+
         .search-form {
             flex-direction: column;
         }
-        
+
         .search-input-wrapper {
             min-width: 100%;
         }
-        
+
         .search-filters {
             width: 100%;
             flex-direction: column;
         }
-        
+
         .filter-select {
             width: 100%;
             min-width: unset;
         }
-        
+
         .search-actions {
             width: 100%;
             flex-direction: row;
         }
-        
+
         .search-button,
         .reset-button {
             flex: 1;
             justify-content: center;
         }
-        
+
         .schools-checkbox-grid,
         .months-grid {
             grid-template-columns: 1fr;
         }
-        
+
         .delete-options {
             grid-template-columns: 1fr;
         }
-        
+
         .table-header {
             flex-direction: column;
             align-items: flex-start;
         }
-        
+
         .schools-table th,
         .schools-table td {
             padding: 0.5rem 0.75rem;
             font-size: 0.75rem;
         }
-        
+
         .schools-table th:nth-child(3),
         .schools-table td:nth-child(3) {
             display: none;
         }
-        
+
         .notification {
             top: 1rem;
             right: 1rem;
             left: 1rem;
             text-align: center;
         }
-        
+
         .manage-button {
             padding: 0.4rem 0.7rem;
             font-size: 0.65rem;
         }
-        
+
         .robot-link {
             font-size: 0.6rem;
             padding: 0.15rem 0.4rem;
         }
-        
+
         .district-badge {
             font-size: 0.6rem;
             padding: 0.15rem 0.5rem;
@@ -1167,17 +1169,17 @@
         .schools-table td {
             padding: 0.4rem 0.5rem;
         }
-        
+
         .school-name {
             font-size: 0.7rem;
         }
-        
+
         .pagination a,
         .pagination span {
             padding: 0.25rem 0.5rem;
             font-size: 0.65rem;
         }
-        
+
         .search-actions {
             flex-direction: column;
         }
@@ -1191,10 +1193,13 @@
             <div class="admin-header">
                 <h2>Панель администратора</h2>
                 <div class="admin-role">
-                    {{ 'Региональный уровень' if admin.role == 'regional_admin' else 'Районный уровень (' + admin.district + ')' }}
+                    {{ 'Региональный уровень' if admin.role == 'regional_admin' else 'Районный уровень (' +
+                    admin.district + ')' }}
                 </div>
             </div>
 
+            <!-- Кнопка 1С: показываем только региональному администратору -->
+            {% if admin.role == 'regional_admin' %}
             <a href="{{ admin.url_1c }}" target="_blank" class="onec-button">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -1204,6 +1209,7 @@
                 </svg>
                 1С: Питание
             </a>
+            {% endif %}
 
             <!-- Форма массовой рассылки -->
             <div class="form-card">
@@ -1216,17 +1222,8 @@
                     <h3>Массовая рассылка</h3>
                 </div>
                 <div class="form-card-body">
-                    <form action="/bulk-upload" method="post" enctype="multipart/form-data" onsubmit="handleUploadSubmit(this)">
+                    <form action="/bulk-upload" method="post" enctype="multipart/form-data" id="bulkUploadForm">
                         <input type="hidden" name="admin_id" value="{{ admin.id }}">
-
-                        <div class="form-group">
-                            <label class="form-label">Тип питания</label>
-                            <select name="target_type" class="form-select">
-                                {% for ft in food_types %}
-                                <option value="{{ ft }}">{{ ft }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
 
                         <div class="form-group">
                             <label class="form-label">Период</label>
@@ -1245,7 +1242,8 @@
                             <div class="file-upload-zone" onclick="this.querySelector('input').click()">
                                 <input type="file" name="files" multiple required onchange="handleFileSelect(this)">
                                 <div class="file-upload-content">
-                                    <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="1.8">
                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                         <polyline points="14 2 14 8 20 8"></polyline>
                                         <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -1267,31 +1265,35 @@
             <!-- Форма массового удаления -->
             <div class="form-card">
                 <div class="form-card-header">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        <line x1="9" y1="14" x2="15" y2="14"></line>
-                    </svg>
-                    <h3>Массовое удаление</h3>
+                    <h3>Массовые операции</h3>
                 </div>
                 <div class="form-card-body">
-                    <form action="/admin/bulk-delete-files" method="post" enctype="multipart/form-data" onsubmit="handleDeleteSubmit(this)">
+                    <form action="/admin/bulk-delete-files" method="post" enctype="multipart/form-data"
+                          onsubmit="handleDeleteSubmit(this)">
                         <input type="hidden" name="admin_id" value="{{ admin.id }}">
 
                         <div class="form-group">
                             <div class="schools-selection-header">
                                 <span class="form-label">Выберите школы</span>
                                 <div class="select-all-buttons">
-                                    <button type="button" class="select-all-button" onclick="selectAllSchools(true)">Все</button>
-                                    <button type="button" class="select-all-button" onclick="selectAllSchools(false)">Снять</button>
+                                    <button type="button" class="select-all-button" onclick="selectAllSchools(true)">
+                                        Все
+                                    </button>
+                                    <button type="button" class="select-all-button" onclick="selectAllSchools(false)">
+                                        Снять
+                                    </button>
                                 </div>
                             </div>
-                            <div class="schools-count" id="selected-schools-count">Выбрано: 0 из {{ schools|length }}</div>
-                            
+                            <div class="schools-count" id="selected-schools-count">Выбрано: 0 из {{ schools|length }}
+                            </div>
+
                             <div class="schools-checkbox-grid">
                                 {% for school in schools %}
                                 <div class="school-checkbox">
-                                    <input type="checkbox" name="school_ids" value="{{ school.id }}" id="school-{{ school.id }}" onchange="updateSelectedCount()">
-                                    <label for="school-{{ school.id }}">{{ school.unit_name }} ({{ school.district }})</label>
+                                    <input type="checkbox" name="school_ids" value="{{ school.id }}"
+                                           id="school-{{ school.id }}" onchange="updateSelectedCount()">
+                                    <label for="school-{{ school.id }}">{{ school.unit_name }} ({{ school.district
+                                        }})</label>
                                 </div>
                                 {% endfor %}
                             </div>
@@ -1339,24 +1341,34 @@
                     <h3>Удаление по месяцам</h3>
                 </div>
                 <div class="form-card-body">
-                    <form action="/admin/bulk-delete-files-by-month" method="post" enctype="multipart/form-data" onsubmit="handleMonthDeleteSubmit(this)">
+                    <form action="/admin/bulk-delete-files-by-month" method="post" enctype="multipart/form-data"
+                          onsubmit="handleMonthDeleteSubmit(this)">
                         <input type="hidden" name="admin_id" value="{{ admin.id }}">
 
                         <div class="form-group">
                             <div class="schools-selection-header">
                                 <span class="form-label">Выберите школы</span>
                                 <div class="select-all-buttons">
-                                    <button type="button" class="select-all-button" onclick="selectAllSchoolsMonth(true)">Все</button>
-                                    <button type="button" class="select-all-button" onclick="selectAllSchoolsMonth(false)">Снять</button>
+                                    <button type="button" class="select-all-button"
+                                            onclick="selectAllSchoolsMonth(true)">Все
+                                    </button>
+                                    <button type="button" class="select-all-button"
+                                            onclick="selectAllSchoolsMonth(false)">Снять
+                                    </button>
                                 </div>
                             </div>
-                            <div class="schools-count" id="selected-schools-month-count">Выбрано: 0 из {{ schools|length }}</div>
-                            
+                            <div class="schools-count" id="selected-schools-month-count">Выбрано: 0 из {{ schools|length
+                                }}
+                            </div>
+
                             <div class="schools-checkbox-grid">
                                 {% for school in schools %}
                                 <div class="school-checkbox">
-                                    <input type="checkbox" name="school_ids" value="{{ school.id }}" id="school-month-{{ school.id }}" class="school-month-checkbox" onchange="updateSelectedMonthCount()">
-                                    <label for="school-month-{{ school.id }}">{{ school.unit_name }} ({{ school.district }})</label>
+                                    <input type="checkbox" name="school_ids" value="{{ school.id }}"
+                                           id="school-month-{{ school.id }}" class="school-month-checkbox"
+                                           onchange="updateSelectedMonthCount()">
+                                    <label for="school-month-{{ school.id }}">{{ school.unit_name }} ({{ school.district
+                                        }})</label>
                                 </div>
                                 {% endfor %}
                             </div>
@@ -1364,23 +1376,29 @@
 
                         <div class="form-group">
                             <label class="form-label">Год</label>
-                            <input type="number" name="year" value="2025" class="form-input" min="2020" max="2030" id="delete-year">
+                            <input type="number" name="year" value="2025" class="form-input" min="2020" max="2030"
+                                   id="delete-year">
                         </div>
 
                         <div class="form-group">
                             <div class="schools-selection-header">
                                 <span class="form-label">Выберите месяцы</span>
                                 <div class="select-all-buttons">
-                                    <button type="button" class="select-all-button" onclick="selectAllMonths(true)">Все</button>
-                                    <button type="button" class="select-all-button" onclick="selectAllMonths(false)">Снять</button>
+                                    <button type="button" class="select-all-button" onclick="selectAllMonths(true)">
+                                        Все
+                                    </button>
+                                    <button type="button" class="select-all-button" onclick="selectAllMonths(false)">
+                                        Снять
+                                    </button>
                                 </div>
                             </div>
                             <div class="months-count" id="selected-months-count">Выбрано: 0 из 12</div>
-                            
+
                             <div class="months-grid">
                                 {% for m_id, m_name in months.items() %}
                                 <div class="month-checkbox">
-                                    <input type="checkbox" name="months" value="{{ m_id }}" id="month-{{ m_id }}" class="month-checkbox-input" onchange="updateSelectedMonthCount()">
+                                    <input type="checkbox" name="months" value="{{ m_id }}" id="month-{{ m_id }}"
+                                           class="month-checkbox-input" onchange="updateSelectedMonthCount()">
                                     <label for="month-{{ m_id }}">{{ m_name }}</label>
                                 </div>
                                 {% endfor %}
@@ -1389,7 +1407,8 @@
 
                         <div class="delete-options">
                             <div class="delete-option" style="border-left-color: #f59e0b;">
-                                <input type="checkbox" id="delete_all_months" name="delete_all_months" value="true" onchange="toggleAllMonths(this)">
+                                <input type="checkbox" id="delete_all_months" name="delete_all_months" value="true"
+                                       onchange="toggleAllMonths(this)">
                                 <label for="delete_all_months">Все месяцы</label>
                             </div>
                         </div>
@@ -1408,7 +1427,7 @@
             <div class="search-panel">
                 <form class="search-form" action="/admin" method="get" id="searchForm">
                     <input type="hidden" name="admin_id" value="{{ admin.id }}">
-                    
+
                     <div class="search-input-wrapper">
                         <span class="search-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -1416,31 +1435,33 @@
                                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                             </svg>
                         </span>
-                        <input type="text" name="q" value="{{ search_query or '' }}" placeholder="Поиск учреждения по названию..." class="search-input" id="searchInput">
+                        <input type="text" name="q" value="{{ search_query or '' }}"
+                               placeholder="Поиск учреждения по названию..." class="search-input" id="searchInput">
                     </div>
-                    
+
                     <div class="search-filters">
                         <select name="food_type" class="filter-select" id="foodTypeFilter">
                             <option value="">Все типы питания</option>
                             {% for ft in food_types %}
-                            <option value="{{ ft }}" {% if food_type_filter == ft %}selected{% endif %}>{{ ft }}</option>
+                            <option value="{{ ft }}" {% if food_type_filter== ft %}selected{% endif %}>{{ ft }}</option>
                             {% endfor %}
                         </select>
-                        
+
                         <select name="district" class="filter-select" id="districtFilter">
                             <option value="">Все районы</option>
                             {% for d in districts %}
-                            <option value="{{ d }}" {% if district_filter == d %}selected{% endif %}>{{ d }}</option>
+                            <option value="{{ d }}" {% if district_filter== d %}selected{% endif %}>{{ d }}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    
+
                     <div class="search-actions">
                         <button type="submit" class="search-button" id="searchButton">Найти</button>
-                        
+
                         {% if search_query or food_type_filter or district_filter %}
                         <a href="/admin?admin_id={{ admin.id }}" class="reset-button" id="resetButton">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="14"
+                                 height="14">
                                 <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                             </svg>
                             Сброс
@@ -1453,18 +1474,21 @@
             <!-- Пагинация -->
             <div class="pagination-info">
                 Показано <strong>{{ per_page }}</strong> из <strong>{{ total_count }}</strong> записей.
-                Страница <strong>{{ current_page }}</strong> из <strong>{{ (total_count + per_page - 1) // per_page }}</strong>
+                Страница <strong>{{ current_page }}</strong> из <strong>{{ (total_count + per_page - 1) // per_page
+                }}</strong>
             </div>
 
             <div class="pagination">
                 {% if current_page > 1 %}
-                <a href="?admin_id={{ admin.id }}&q={{ search_query or '' }}&food_type={{ food_type_filter or '' }}&district={{ district_filter or '' }}&page={{ current_page - 1 }}&per_page={{ per_page }}">← Предыдущая</a>
+                <a href="?admin_id={{ admin.id }}&q={{ search_query or '' }}&food_type={{ food_type_filter or '' }}&district={{ district_filter or '' }}&page={{ current_page - 1 }}&per_page={{ per_page }}">←
+                    Предыдущая</a>
                 {% else %}
                 <span>← Предыдущая</span>
                 {% endif %}
 
                 {% if current_page * per_page < total_count %}
-                <a href="?admin_id={{ admin.id }}&q={{ search_query or '' }}&food_type={{ food_type_filter or '' }}&district={{ district_filter or '' }}&page={{ current_page + 1 }}&per_page={{ per_page }}">Следующая →</a>
+                <a href="?admin_id={{ admin.id }}&q={{ search_query or '' }}&food_type={{ food_type_filter or '' }}&district={{ district_filter or '' }}&page={{ current_page + 1 }}&per_page={{ per_page }}">Следующая
+                    →</a>
                 {% else %}
                 <span>Следующая →</span>
                 {% endif %}
@@ -1486,19 +1510,19 @@
                 <div class="table-wrapper">
                     <table class="schools-table" id="schoolsTable">
                         <thead>
-                            <tr>
-                                <th>Учреждение</th>
-                                <th>Район</th>
-                                <th>Тип питания</th>
-                                <th>Ссылка</th>
-                                <th style="text-align: center;">Действия</th>
-                            </tr>
+                        <tr>
+                            <th>Учреждение</th>
+                            <th>Район</th>
+                            <th>Тип питания</th>
+                            <th>Ссылка</th>
+                            <th style="text-align: center;">Действия</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            {% for school in schools %}
-                            <tr class="school-row" data-school-id="{{ school.id }}">
-                                <td>
-                                    <div class="school-name">
+                        {% for school in schools %}
+                        <tr class="school-row" data-school-id="{{ school.id }}">
+                            <td>
+                                <div class="school-name">
                                         <span class="school-icon">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <path d="M12 3L2 9l10 6 10-6-10-6z"></path>
@@ -1506,48 +1530,51 @@
                                                 <path d="M2 12l10 6 10-6"></path>
                                             </svg>
                                         </span>
-                                        {{ school.unit_name }}
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="district-badge">{{ school.district }}</span>
-                                </td>
-                                <td>
-                                    <span class="food-type 
+                                    {{ school.unit_name }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="district-badge">{{ school.district }}</span>
+                            </td>
+                            <td>
+                                    <span class="food-type
                                         {% if school.food_type|lower == 'горячее' %}hot
                                         {% elif school.food_type|lower == 'холодное' %}cold
                                         {% elif school.food_type|lower == 'оба вида' %}both
                                         {% endif %}">
                                         {{ school.food_type }}
                                     </span>
-                                </td>
-                                <td>
-                                    <code class="robot-link">/{{ school.id }}/food/</code>
-                                </td>
-                                <td style="text-align: center;">
-                                    <a href="/dashboard?uid={{ school.id }}" class="manage-button">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="12" height="12">
-                                            <path d="M12 5v14M5 12h14"></path>
-                                        </svg>
-                                        Управление
-                                    </a>
-                                </td>
-                            </tr>
-                            <!-- Мобильная дополнительная строка -->
-                            <tr class="mobile-row-details" data-parent="{{ school.id }}" style="display: none;">
-                                <td colspan="5">
-                                    <div class="mobile-detail-item"><strong>Тип питания:</strong> {{ school.food_type }}</div>
-                                    <div class="mobile-detail-item"><strong>ID:</strong> {{ school.id }}</div>
-                                    <div class="mobile-detail-item"><strong>Email:</strong> {{ school.email }}</div>
-                                </td>
-                            </tr>
-                            {% endfor %}
+                            </td>
+                            <td>
+                                <code class="robot-link">/{{ school.id }}/food/</code>
+                            </td>
+                            <td style="text-align: center;">
+                                <a href="/dashboard?uid={{ school.id }}" class="manage-button">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                         width="12" height="12">
+                                        <path d="M12 5v14M5 12h14"></path>
+                                    </svg>
+                                    Управление
+                                </a>
+                            </td>
+                        </tr>
+                        <!-- Мобильная дополнительная строка -->
+                        <tr class="mobile-row-details" data-parent="{{ school.id }}" style="display: none;">
+                            <td colspan="5">
+                                <div class="mobile-detail-item"><strong>Тип питания:</strong> {{ school.food_type }}
+                                </div>
+                                <div class="mobile-detail-item"><strong>ID:</strong> {{ school.id }}</div>
+                                <div class="mobile-detail-item"><strong>Email:</strong> {{ school.email }}</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
                         </tbody>
                     </table>
 
                     {% if not schools %}
                     <div class="empty-state">
-                        <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.5">
                             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"></path>
                         </svg>
                         <div class="empty-state-text">Учреждения не найдены</div>
@@ -1572,98 +1599,32 @@
 <script>
     let uploadTimeout, deleteTimeout, monthDeleteTimeout;
 
-    function handleUploadSubmit(form) {
-        const button = form.querySelector('.btn-primary');
-        button.classList.add('loading');
-        button.disabled = true;
-        
-        if (uploadTimeout) clearTimeout(uploadTimeout);
-        
-        uploadTimeout = setTimeout(() => {
-            showNotification('Рассылка успешно запущена!', 'success');
-            button.classList.remove('loading');
-            button.disabled = false;
-        }, 1000);
-        
-        return true;
+    // Показ уведомления
+    let notificationTimeout;
+
+    function showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `notification ${type} show`;
+
+        if (notificationTimeout) clearTimeout(notificationTimeout);
+
+        notificationTimeout = setTimeout(() => {
+            notification.classList.remove('show');
+        }, 2000);
     }
 
-    function handleDeleteSubmit(form) {
-        const button = form.querySelector('.btn-danger');
-        const selectedSchools = form.querySelectorAll('input[name="school_ids"]:checked').length;
-        
-        if (selectedSchools === 0) {
-            showNotification('Выберите хотя бы одну школу для удаления!', 'warning');
-            return false;
-        }
-        
-        const deleteAll = document.getElementById('delete_all')?.checked;
-        const keepExceptions = document.getElementById('keep_exceptions')?.checked;
-        const onlyTmSm = document.getElementById('only_tm_sm')?.checked;
-        const onlyFindex = document.getElementById('only_findex')?.checked;
-        const onlyKp = document.getElementById('only_kp')?.checked;
-        
-        if (!deleteAll && !keepExceptions && !onlyTmSm && !onlyFindex && !onlyKp) {
-            showNotification('Выберите опцию удаления!', 'warning');
-            return false;
-        }
-        
-        button.classList.add('loading');
-        button.disabled = true;
-        
-        if (deleteTimeout) clearTimeout(deleteTimeout);
-        
-        deleteTimeout = setTimeout(() => {
-            showNotification(`Удаление файлов для ${selectedSchools} школ запущено!`, 'success');
-            button.classList.remove('loading');
-            button.disabled = false;
-        }, 1000);
-        
-        return true;
-    }
-
-    function handleMonthDeleteSubmit(form) {
-        const button = form.querySelector('.btn-warning');
-        const selectedSchools = form.querySelectorAll('.school-month-checkbox:checked').length;
-        const selectedMonths = form.querySelectorAll('.month-checkbox-input:checked').length;
-        const deleteAllMonths = document.getElementById('delete_all_months')?.checked;
-        
-        if (selectedSchools === 0) {
-            showNotification('Выберите хотя бы одну школу для удаления!', 'warning');
-            return false;
-        }
-        
-        if (!deleteAllMonths && selectedMonths === 0) {
-            showNotification('Выберите хотя бы один месяц или отметьте "Все месяцы"!', 'warning');
-            return false;
-        }
-        
-        button.classList.add('loading');
-        button.disabled = true;
-        
-        if (monthDeleteTimeout) clearTimeout(monthDeleteTimeout);
-        
-        monthDeleteTimeout = setTimeout(() => {
-            const year = document.getElementById('delete-year').value;
-            const period = deleteAllMonths ? `все месяцы ${year} года` : `выбранные месяцы ${year} года`;
-            showNotification(`Удаление файлов за ${period} для ${selectedSchools} школ запущено!`, 'success');
-            button.classList.remove('loading');
-            button.disabled = false;
-        }, 1000);
-        
-        return true;
-    }
-
+    // Обработка выбора файлов
     function handleFileSelect(input) {
         const zone = input.closest('.file-upload-zone');
         const text = zone.querySelector('.file-upload-text');
         const hint = zone.querySelector('.file-upload-hint');
-        
+
         if (input.files.length > 0) {
             const fileCount = input.files.length;
             const totalSize = Array.from(input.files).reduce((sum, file) => sum + file.size, 0);
             const sizeMB = (totalSize / (1024 * 1024)).toFixed(1);
-            
+
             text.textContent = `Выбрано файлов: ${fileCount}`;
             hint.textContent = `Общий размер: ${sizeMB} МБ`;
             zone.classList.add('has-files');
@@ -1674,6 +1635,7 @@
         }
     }
 
+    // Функции для выбора школ
     function selectAllSchools(select) {
         const schoolCheckboxes = document.querySelectorAll('input[name="school_ids"]');
         schoolCheckboxes.forEach(checkbox => {
@@ -1713,7 +1675,7 @@
         const selectedCount = document.querySelectorAll('input[name="school_ids"]:checked').length;
         const totalCount = document.querySelectorAll('input[name="school_ids"]').length;
         const counterElement = document.getElementById('selected-schools-count');
-        
+
         if (counterElement) {
             counterElement.textContent = `Выбрано: ${selectedCount} из ${totalCount}`;
         }
@@ -1723,11 +1685,11 @@
         const selectedSchools = document.querySelectorAll('.school-month-checkbox:checked').length;
         const totalSchools = document.querySelectorAll('.school-month-checkbox').length;
         const schoolsCounter = document.getElementById('selected-schools-month-count');
-        
+
         if (schoolsCounter) {
             schoolsCounter.textContent = `Выбрано: ${selectedSchools} из ${totalSchools}`;
         }
-        
+
         const selectedMonths = document.querySelectorAll('.month-checkbox-input:checked').length;
         const monthsCounter = document.getElementById('selected-months-count');
         if (monthsCounter) {
@@ -1741,9 +1703,9 @@
         const onlyTmSmCheckbox = document.getElementById('only_tm_sm');
         const onlyFindexCheckbox = document.getElementById('only_findex');
         const onlyKpCheckbox = document.getElementById('only_kp');
-        
+
         const checkboxes = [deleteAllCheckbox, keepExceptionsCheckbox, onlyTmSmCheckbox, onlyFindexCheckbox, onlyKpCheckbox];
-        
+
         function handleCheckboxChange(changedBox) {
             if (changedBox.checked) {
                 if (changedBox === onlyTmSmCheckbox || changedBox === onlyFindexCheckbox || changedBox === onlyKpCheckbox) {
@@ -1770,27 +1732,118 @@
                 }
             }
         }
-        
+
         checkboxes.forEach(checkbox => {
             if (checkbox) {
-                checkbox.addEventListener('change', function() {
+                checkbox.addEventListener('change', function () {
                     handleCheckboxChange(this);
                 });
             }
         });
     }
 
-    let notificationTimeout;
-    function showNotification(message, type = 'success') {
-        const notification = document.getElementById('notification');
-        notification.textContent = message;
-        notification.className = `notification ${type} show`;
-        
-        if (notificationTimeout) clearTimeout(notificationTimeout);
-        
-        notificationTimeout = setTimeout(() => {
-            notification.classList.remove('show');
-        }, 2000);
+    function handleDeleteSubmit(form) {
+        const button = form.querySelector('.btn-danger');
+        const selectedSchools = form.querySelectorAll('input[name="school_ids"]:checked').length;
+
+        if (selectedSchools === 0) {
+            showNotification('Выберите хотя бы одну школу для удаления!', 'warning');
+            return false;
+        }
+
+        const deleteAll = document.getElementById('delete_all')?.checked;
+        const keepExceptions = document.getElementById('keep_exceptions')?.checked;
+        const onlyTmSm = document.getElementById('only_tm_sm')?.checked;
+        const onlyFindex = document.getElementById('only_findex')?.checked;
+        const onlyKp = document.getElementById('only_kp')?.checked;
+
+        if (!deleteAll && !keepExceptions && !onlyTmSm && !onlyFindex && !onlyKp) {
+            showNotification('Выберите опцию удаления!', 'warning');
+            return false;
+        }
+
+        button.classList.add('loading');
+        button.disabled = true;
+
+        if (deleteTimeout) clearTimeout(deleteTimeout);
+
+        deleteTimeout = setTimeout(() => {
+            showNotification(`Удаление файлов для ${selectedSchools} школ запущено!`, 'success');
+            button.classList.remove('loading');
+            button.disabled = false;
+        }, 1000);
+
+        return true;
+    }
+
+    function handleMonthDeleteSubmit(form) {
+        const button = form.querySelector('.btn-warning');
+        const selectedSchools = form.querySelectorAll('.school-month-checkbox:checked').length;
+        const selectedMonths = form.querySelectorAll('.month-checkbox-input:checked').length;
+        const deleteAllMonths = document.getElementById('delete_all_months')?.checked;
+
+        if (selectedSchools === 0) {
+            showNotification('Выберите хотя бы одну школу для удаления!', 'warning');
+            return false;
+        }
+
+        if (!deleteAllMonths && selectedMonths === 0) {
+            showNotification('Выберите хотя бы один месяц или отметьте "Все месяцы"!', 'warning');
+            return false;
+        }
+
+        button.classList.add('loading');
+        button.disabled = true;
+
+        if (monthDeleteTimeout) clearTimeout(monthDeleteTimeout);
+
+        monthDeleteTimeout = setTimeout(() => {
+            const year = document.getElementById('delete-year').value;
+            const period = deleteAllMonths ? `все месяцы ${year} года` : `выбранные месяцы ${year} года`;
+            showNotification(`Удаление файлов за ${period} для ${selectedSchools} школ запущено!`, 'success');
+            button.classList.remove('loading');
+            button.disabled = false;
+        }, 1000);
+
+        return true;
+    }
+
+    // Обработчик отправки формы рассылки
+    function setupBulkUploadForm() {
+        const form = document.getElementById('bulkUploadForm');
+        if (!form) return;
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Получаем выбранные чекбоксы с именем "school_ids" (они есть в таблице)
+            const checked = document.querySelectorAll('input[name="school_ids"]:checked');
+
+            if (checked.length === 0) {
+                showNotification('Выберите хотя бы одну школу для рассылки!', 'warning');
+                return;
+            }
+
+            // Удаляем старые скрытые поля school_ids (если они уже были добавлены ранее)
+            form.querySelectorAll('input[name="school_ids"]').forEach(el => el.remove());
+
+            // Добавляем скрытые поля для каждой выбранной школы
+            checked.forEach(cb => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'school_ids';
+                input.value = cb.value;
+                form.appendChild(input);
+            });
+
+            // Отключаем кнопку на время отправки (имитация загрузки)
+            const button = form.querySelector('.btn-primary');
+            button.classList.add('loading');
+            button.disabled = true;
+
+            // Отправляем форму
+            form.submit();
+        });
     }
 
     // Мобильная адаптация
@@ -1798,12 +1851,12 @@
         if (window.innerWidth <= 768) {
             const rows = document.querySelectorAll('.school-row');
             rows.forEach(row => {
-                row.addEventListener('click', function(e) {
+                row.addEventListener('click', function (e) {
                     if (e.target.closest('.manage-button')) return;
-                    
+
                     const schoolId = this.dataset.schoolId;
                     const detailRow = document.querySelector(`.mobile-row-details[data-parent="${schoolId}"]`);
-                    
+
                     if (detailRow) {
                         const isVisible = detailRow.style.display !== 'none';
                         document.querySelectorAll('.mobile-row-details').forEach(row => {
@@ -1816,8 +1869,20 @@
         }
     }
 
-    // Обработка отправки формы с фильтрами
-    document.addEventListener('DOMContentLoaded', function() {
+    // Обработка сообщения из URL
+    function showMessageFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const msg = urlParams.get('message');
+        if (msg) {
+            // Определяем тип сообщения (если содержит "ошибка" или "не найдено" - показываем как ошибку)
+            const lowerMsg = msg.toLowerCase();
+            const type = (lowerMsg.includes('ошибка') || lowerMsg.includes('не найдено') || lowerMsg.includes('не выбрано')) ? 'error' : 'success';
+            showNotification(decodeURIComponent(msg), type);
+        }
+    }
+
+    // Инициализация
+    document.addEventListener('DOMContentLoaded', function () {
         // Убираем анимации для слабых компьютеров
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
             document.querySelectorAll('.fade-in-up').forEach(el => {
@@ -1826,20 +1891,20 @@
             });
         }
 
-        // Инициализация загрузки файлов
+        // Инициализация загрузки файлов (drag and drop)
         const uploadZones = document.querySelectorAll('.file-upload-zone');
         uploadZones.forEach(zone => {
-            zone.addEventListener('dragover', function(e) {
+            zone.addEventListener('dragover', function (e) {
                 e.preventDefault();
                 this.classList.add('drag-over');
-            }, { passive: false });
-            
-            zone.addEventListener('dragleave', function(e) {
+            }, {passive: false});
+
+            zone.addEventListener('dragleave', function (e) {
                 e.preventDefault();
                 this.classList.remove('drag-over');
-            }, { passive: false });
-            
-            zone.addEventListener('drop', function(e) {
+            }, {passive: false});
+
+            zone.addEventListener('drop', function (e) {
                 e.preventDefault();
                 this.classList.remove('drag-over');
                 const input = this.querySelector('input[type="file"]');
@@ -1847,15 +1912,18 @@
                     input.files = e.dataTransfer.files;
                     handleFileSelect(input);
                 }
-            }, { passive: false });
+            }, {passive: false});
         });
-        
+
+        // Инициализация счётчиков
         updateSelectedCount();
         updateSelectedMonthCount();
         setupDeleteCheckboxes();
         initMobileRowClick();
-        
-        window.addEventListener('resize', function() {
+        setupBulkUploadForm();
+        showMessageFromUrl();
+
+        window.addEventListener('resize', function () {
             if (window.innerWidth > 768) {
                 document.querySelectorAll('.mobile-row-details').forEach(row => {
                     row.style.display = 'none';

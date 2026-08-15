@@ -90,7 +90,7 @@
 
     /* Карточка утилиты */
     .utility-card {
-        background: linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(240, 248, 255, 0.92) 100%);
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.92) 0%, rgba(240, 248, 255, 0.92) 100%);
         border-radius: var(--radius-xl);
         border: 1px solid var(--border-light);
         overflow: hidden;
@@ -270,9 +270,13 @@
         opacity: 0;
     }
 
-    .utility-card:nth-child(1) { animation-delay: 0.05s; }
-    .utility-card:nth-child(2) { animation-delay: 0.15s; }
-    .utility-card:nth-child(3) { animation-delay: 0.25s; }
+    .utility-card:nth-child(1) {
+        animation-delay: 0.05s;
+    }
+
+    .utility-card:nth-child(2) {
+        animation-delay: 0.15s;
+    }
 
     /* Уведомление */
     .notification {
@@ -319,14 +323,48 @@
         display: inline-block;
         width: 18px;
         height: 18px;
-        border: 2px solid rgba(255,255,255,0.3);
+        border: 2px solid rgba(255, 255, 255, 0.3);
         border-top-color: white;
         border-radius: 50%;
         animation: spin 0.6s linear infinite;
     }
 
     @keyframes spin {
-        to { transform: rotate(360deg); }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Ссылка на программу проверки СанПин */
+    .sanpin-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.625rem;
+        width: 100%;
+        padding: 0.7rem;
+        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+    }
+
+    .sanpin-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(139, 92, 246, 0.25);
+        background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    }
+
+    .sanpin-link svg {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
     }
 
     /* Адаптивность */
@@ -334,44 +372,44 @@
         .utilities-layout {
             padding: 1rem;
         }
-        
+
         .utilities-layout::before {
             width: 250px;
             height: 250px;
             top: -60px;
             right: -40px;
         }
-        
+
         .utilities-layout::after {
             width: 180px;
             height: 180px;
             bottom: -30px;
             left: -30px;
         }
-        
+
         .utilities-grid {
             grid-template-columns: 1fr;
             gap: 1.25rem;
         }
-        
+
         .page-header h1 {
             font-size: 1.4rem;
         }
-        
+
         .utility-title {
             font-size: 1.1rem;
         }
-        
+
         .icon-container {
             width: 60px;
             height: 60px;
         }
-        
+
         .icon-container svg {
             width: 32px;
             height: 32px;
         }
-        
+
         .utility-content {
             padding: 1.25rem;
         }
@@ -381,11 +419,11 @@
         .page-header h1 {
             font-size: 1.2rem;
         }
-        
+
         .utility-card {
             border-radius: var(--radius-lg);
         }
-        
+
         .notification {
             bottom: 1rem;
             right: 1rem;
@@ -417,8 +455,8 @@
                 <div class="utility-badge">Автоматизация данных</div>
                 <h2 class="utility-title">DataSync Pro</h2>
                 <p class="utility-description">
-                    Интеллектуальная система автоматического обновления реквизитов в документах. 
-                    Мгновенно синхронизирует даты, наименования учреждений и ФИО директоров 
+                    Интеллектуальная система автоматического обновления реквизитов в документах.
+                    Мгновенно синхронизирует даты, наименования учреждений и ФИО директоров
                     во всех файлах мониторинга питания.
                 </p>
                 <ul class="features-list">
@@ -458,43 +496,58 @@
             </div>
         </div>
 
-        <!-- Утилита 2: Report Generator (заглушка для будущего) -->
-        <div class="utility-card" style="opacity: 0.7;">
+        <!-- Утилита 2: Проверка меню по СанПин -->
+        <div class="utility-card">
             <div class="utility-icon">
-                <div class="icon-container" style="background: var(--gray-100);">
+                <div class="icon-container">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="16" y1="13" x2="8" y2="13"/>
-                        <line x1="16" y1="17" x2="8" y2="17"/>
-                        <line x1="10" y1="9" x2="8" y2="9"/>
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
                     </svg>
                 </div>
             </div>
             <div class="utility-content">
-                <div class="utility-badge">Скоро</div>
-                <h2 class="utility-title">Report Generator</h2>
+                <div class="utility-badge">Проверка СанПин</div>
+                <h2 class="utility-title">Проверка меню по СанПин</h2>
                 <p class="utility-description">
-                    Автоматическая генерация отчетов по мониторингу питания. 
-                    Создавайте сводные таблицы и аналитические отчеты в один клик.
+                    Программа для проверки типового и ежедневного меню на соответствие требованиям
+                    СанПин. Автоматически выявляет нарушения и ошибки в составлении рационов
+                    питания для образовательных учреждений.
                 </p>
                 <ul class="features-list">
                     <li>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="20 6 9 17 4 12"/>
                         </svg>
-                        <span>Автоматическая сводка по всем школам</span>
+                        <span>Проверка типового меню на соответствие СанПин</span>
                     </li>
                     <li>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="20 6 9 17 4 12"/>
                         </svg>
-                        <span>Экспорт в PDF и Excel</span>
+                        <span>Анализ ежедневного меню на ошибки</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Детальный отчет о нарушениях</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Поддержка форматов .xlsx, .xls</span>
                     </li>
                 </ul>
-                <button class="download-btn" style="background: var(--gray-300); cursor: not-allowed; box-shadow: none;" disabled>
-                    В разработке
-                </button>
+                <a href="https://disk.yandex.ru/d/YUGB_XAIkT0H4Q" target="_blank" class="sanpin-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Перейти к программе проверки СанПин
+                </a>
             </div>
         </div>
     </div>
@@ -520,9 +573,9 @@
         const notification = document.getElementById('notification');
         const span = notification.querySelector('span');
         const svg = notification.querySelector('svg');
-        
+
         span.textContent = message;
-        
+
         if (isError) {
             svg.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
             notification.className = 'notification error';
@@ -530,9 +583,9 @@
             svg.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
             notification.className = 'notification';
         }
-        
+
         notification.classList.add('show');
-        
+
         if (notificationTimeout) clearTimeout(notificationTimeout);
         notificationTimeout = setTimeout(() => {
             notification.classList.remove('show');
@@ -541,22 +594,22 @@
 
     function handleDownload(utilityId, event) {
         event.preventDefault();
-        
+
         const link = DOWNLOAD_LINKS[utilityId];
-        
+
         if (link) {
             window.open(link, '_blank');
             showNotification(`Скачивание ${utilityId === 'datasync' ? 'DataSync Pro' : 'Утилиты'} началось. Перенаправление на Яндекс.Диск...`);
         } else {
             showNotification('Ссылка для скачивания будет добавлена администратором', true);
         }
-        
+
         const btn = event.currentTarget;
         const originalText = btn.innerHTML;
         btn.innerHTML = '<span class="loading"></span> Перенаправление...';
         btn.style.opacity = '0.8';
         btn.disabled = true;
-        
+
         setTimeout(() => {
             btn.innerHTML = originalText;
             btn.style.opacity = '1';
@@ -564,7 +617,7 @@
         }, 1500);
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Убираем анимации для слабых компьютеров
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
             document.querySelectorAll('.utility-card').forEach(el => {

@@ -1,1467 +1,1181 @@
 {% extends "layout.html" %}
 {% block content %}
 <style>
-/* Основные стили - сохранены все без изменений */
-.dashboard-layout {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-}
-
-.dashboard-header {
-    background: linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(240, 248, 255, 0.92) 100%);
-    backdrop-filter: var(--glass-blur, blur(16px));
-    -webkit-backdrop-filter: var(--glass-blur, blur(16px));
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-light);
-    overflow: hidden;
-    margin-bottom: 2rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.06);
-}
-
-[data-theme='dark'] .dashboard-header {
-    background: linear-gradient(145deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.92) 100%);
-}
-
-.dashboard-header:hover {
-    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.08);
-}
-
-.profile-header {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    padding: 2rem;
-    flex-wrap: wrap;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, transparent 100%);
-    border-bottom: 1px solid var(--border-light);
-}
-
-[data-theme='dark'] .profile-header {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
-}
-
-.school-avatar {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    flex-shrink: 0;
-}
-
-.avatar-image {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid var(--primary);
-    background: var(--bg-card);
-    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
-}
-
-.avatar-placeholder {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 3px solid var(--primary);
-    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
-}
-
-[data-theme='dark'] .avatar-placeholder {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-}
-
-.avatar-placeholder svg {
-    width: 50px;
-    height: 50px;
-    color: white;
-}
-
-.avatar-upload-btn {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    border: 2px solid var(--bg-card);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
-}
-
-.avatar-upload-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
-}
-
-.avatar-upload-btn svg {
-    width: 16px;
-    height: 16px;
-    color: white;
-}
-
-.avatar-upload-input {
-    display: none;
-}
-
-.school-info {
-    flex: 1;
-}
-
-.school-title-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-bottom: 0.5rem;
-}
-
-.school-title {
-    font-size: 1.8rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-[data-theme='dark'] .school-title {
-    color: #e2e8f0;
-}
-
-.edit-title-btn {
-    background: var(--gray-100);
-    border: 1px solid var(--border-light);
-    padding: 0.3rem 0.8rem;
-    border-radius: 2rem;
-    font-size: 0.7rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: var(--text-secondary);
-}
-
-[data-theme='dark'] .edit-title-btn {
-    background: rgba(51, 65, 85, 0.8);
-    border-color: var(--border-light);
-}
-
-.edit-title-btn:hover {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    color: white;
-    border-color: var(--primary);
-    transform: translateY(-1px);
-}
-
-.school-badges {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    margin-bottom: 0.75rem;
-}
-
-.school-badge {
-    background: var(--bg-card);
-    backdrop-filter: var(--glass-blur, blur(8px));
-    -webkit-backdrop-filter: var(--glass-blur, blur(8px));
-    color: var(--text-secondary);
-    padding: 0.25rem 0.75rem;
-    border-radius: 2rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    transition: all 0.2s ease;
-    border: 1px solid var(--border-light);
-}
-
-[data-theme='dark'] .school-badge {
-    background: rgba(51, 65, 85, 0.4);
-    color: var(--text-secondary);
-}
-
-.school-badge svg {
-    width: 14px;
-    height: 14px;
-    stroke: var(--primary);
-}
-
-.school-title-edit-form {
-    display: none;
-    margin: 0.75rem 0;
-    padding: 1rem;
-    background: var(--bg-card);
-    backdrop-filter: var(--glass-blur, blur(8px));
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-light);
-}
-
-[data-theme='dark'] .school-title-edit-form {
-    background: rgba(30, 41, 59, 0.8);
-}
-
-.school-title-edit-form input {
-    width: 100%;
-    padding: 0.6rem;
-    margin-bottom: 0.75rem;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-light);
-    background: var(--bg-card);
-    color: var(--text-primary);
-}
-
-.form-actions {
-    display: flex;
-    gap: 0.75rem;
-}
-
-.director-section {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    margin-bottom: 0.75rem;
-}
-
-.director-label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-}
-
-.director-name {
-    font-size: 0.9rem;
-    color: var(--text-primary);
-    font-weight: 500;
-}
-
-.edit-director-btn {
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    font-size: 0.7rem;
-    padding: 0.2rem 0.5rem;
-    border-radius: var(--radius-sm);
-    transition: all 0.2s ease;
-}
-
-.edit-director-btn:hover {
-    background: var(--gray-100);
-    color: var(--primary);
-}
-
-[data-theme='dark'] .edit-director-btn:hover {
-    background: rgba(51, 65, 85, 0.6);
-}
-
-.director-form {
-    display: none;
-    width: 100%;
-    margin-top: 0.5rem;
-}
-
-.director-form .form-row {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-.director-form input {
-    flex: 1;
-    padding: 0.5rem;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-light);
-    background: var(--bg-card);
-    color: var(--text-primary);
-}
-
-.external-path {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0.75rem;
-    background: var(--bg-card);
-    backdrop-filter: var(--glass-blur, blur(8px));
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-light);
-    margin-top: 0.5rem;
-    transition: all 0.2s ease;
-}
-
-[data-theme='dark'] .external-path {
-    background: rgba(30, 41, 59, 0.6);
-}
-
-.external-path-icon {
-    width: 28px;
-    height: 28px;
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.external-path-icon svg {
-    width: 14px;
-    height: 14px;
-    color: white;
-}
-
-.external-path-label {
-    font-size: 0.6rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-}
-
-.external-path-link {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.external-path-link span {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--primary);
-    cursor: pointer;
-}
-
-.external-path-link span:hover {
-    text-decoration: underline;
-}
-
-.copy-badge {
-    background: var(--gray-200);
-    padding: 0.2rem 0.5rem;
-    border-radius: 1rem;
-    font-size: 0.65rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: var(--text-secondary);
-}
-
-[data-theme='dark'] .copy-badge {
-    background: rgba(51, 65, 85, 0.8);
-}
-
-.copy-badge:hover {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    color: white;
-    transform: translateY(-1px);
-}
-
-.btn-external {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    color: white;
-    padding: 0.6rem 1.2rem;
-    border-radius: 2rem;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    flex-shrink: 0;
-    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
-}
-
-.btn-external:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 24px rgba(59, 130, 246, 0.3);
-}
-
-.school-links {
-    display: flex;
-    gap: 1rem;
-    padding: 0 2rem 1.5rem 2rem;
-    flex-wrap: wrap;
-    border-bottom: 1px solid var(--border-light);
-}
-
-.school-link-card {
-    flex: 1;
-    min-width: 220px;
-    background: var(--bg-card);
-    backdrop-filter: var(--glass-blur, blur(8px));
-    border-radius: var(--radius-md);
-    padding: 0.75rem 1rem;
-    transition: all 0.3s ease;
-    border: 1px solid var(--border-light);
-}
-
-[data-theme='dark'] .school-link-card {
-    background: rgba(30, 41, 59, 0.6);
-}
-
-.school-link-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--primary);
-}
-
-.school-link-card h4 {
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-}
-
-.school-link-card h4 svg {
-    width: 14px;
-    height: 14px;
-    stroke: var(--primary);
-}
-
-.school-link-card a {
-    color: var(--primary);
-    text-decoration: none;
-    font-size: 0.8rem;
-    font-weight: 500;
-    word-break: break-all;
-}
-
-.school-link-card a:hover {
-    text-decoration: underline;
-}
-
-.edit-link-icon {
-    margin-left: 0.5rem;
-    cursor: pointer;
-    font-size: 0.7rem;
-    color: var(--text-secondary);
-    transition: all 0.2s ease;
-    padding: 0.2rem 0.4rem;
-    border-radius: var(--radius-sm);
-}
-
-.edit-link-icon:hover {
-    background: var(--gray-200);
-    color: var(--primary);
-}
-
-[data-theme='dark'] .edit-link-icon:hover {
-    background: rgba(51, 65, 85, 0.8);
-}
-
-.link-edit-form {
-    display: none;
-    margin-top: 0.5rem;
-}
-
-.link-edit-form input {
-    width: 100%;
-    padding: 0.5rem;
-    font-size: 0.8rem;
-    margin-bottom: 0.5rem;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-light);
-    background: var(--bg-card);
-    color: var(--text-primary);
-}
-
-.link-edit-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.link-save-btn {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    color: white;
-    border: none;
-    padding: 0.3rem 0.8rem;
-    border-radius: var(--radius-sm);
-    font-size: 0.7rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.link-save-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-}
-
-.link-cancel-btn {
-    background: var(--gray-200);
-    color: var(--text-secondary);
-    border: none;
-    padding: 0.3rem 0.8rem;
-    border-radius: var(--radius-sm);
-    font-size: 0.7rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.period-panel {
-    padding: 1.25rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, transparent 100%);
-}
-
-[data-theme='dark'] .period-panel {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
-}
-
-.period-badge {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 2rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 600;
-    font-size: 0.85rem;
-    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
-}
-
-.period-badge svg {
-    width: 16px;
-    height: 16px;
-}
-
-.period-controls {
-    display: flex;
-    gap: 0.75rem;
-    align-items: flex-end;
-    flex-wrap: wrap;
-}
-
-.period-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.period-field label {
-    font-size: 0.65rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-}
-
-.period-field input,
-.period-field select {
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-light);
-    background: var(--bg-card);
-    color: var(--text-primary);
-    font-size: 0.85rem;
-    transition: all 0.2s ease;
-}
-
-.period-field input:focus,
-.period-field select:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.period-field input {
-    width: 80px;
-    text-align: center;
-}
-
-.apply-btn {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-sm);
-    font-weight: 600;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-}
-
-.apply-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.25);
-}
-
-/* ========== НОВЫЕ СТИЛИ ДЛЯ ЦВЕТОВОЙ ГАММЫ КНОПОК ========== */
-/* Единая цветовая гамма для кнопок действий - спокойные синие оттенки */
-
-/* Кнопка скачивания - приятный синий, а не зелёный */
-.file-action-btn.download {
-    background: rgba(59, 130, 246, 0.08);
-    color: #2563eb;
-    border: 1px solid rgba(59, 130, 246, 0.15);
-}
-
-.file-action-btn.download:hover {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
-    border-color: transparent;
-}
-
-[data-theme='dark'] .file-action-btn.download {
-    background: rgba(59, 130, 246, 0.15);
-    color: #60a5fa;
-    border-color: rgba(59, 130, 246, 0.2);
-}
-
-[data-theme='dark'] .file-action-btn.download:hover {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    color: white;
-}
-
-/* Кнопка удаления - мягкий красный, а не чёрный */
-.file-action-btn.delete {
-    background: rgba(239, 68, 68, 0.08);
-    color: #dc2626;
-    border: 1px solid rgba(239, 68, 68, 0.15);
-}
-
-.file-action-btn.delete:hover {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
-    border-color: transparent;
-}
-
-[data-theme='dark'] .file-action-btn.delete {
-    background: rgba(239, 68, 68, 0.15);
-    color: #f87171;
-    border-color: rgba(239, 68, 68, 0.2);
-}
-
-[data-theme='dark'] .file-action-btn.delete:hover {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: white;
-}
-
-/* Маленькие кнопки в управлении загрузкой */
-.small-download-btn {
-    background: rgba(59, 130, 246, 0.08);
-    color: #2563eb;
-    border: 1px solid rgba(59, 130, 246, 0.15);
-}
-
-.small-download-btn:hover {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    color: white;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-    border-color: transparent;
-}
-
-[data-theme='dark'] .small-download-btn {
-    background: rgba(59, 130, 246, 0.15);
-    color: #60a5fa;
-    border-color: rgba(59, 130, 246, 0.2);
-}
-
-[data-theme='dark'] .small-download-btn:hover {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    color: white;
-}
-
-.small-delete-btn {
-    background: rgba(239, 68, 68, 0.08);
-    color: #dc2626;
-    border: 1px solid rgba(239, 68, 68, 0.15);
-}
-
-.small-delete-btn:hover {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: white;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
-    border-color: transparent;
-}
-
-[data-theme='dark'] .small-delete-btn {
-    background: rgba(239, 68, 68, 0.15);
-    color: #f87171;
-    border-color: rgba(239, 68, 68, 0.2);
-}
-
-[data-theme='dark'] .small-delete-btn:hover {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: white;
-}
-
-/* Иконки файлов - более приглушённые цвета */
-.file-icon.excel svg { 
-    stroke: #3b82f6;
-    opacity: 0.8;
-}
-
-.file-icon.pdf svg { 
-    stroke: #8b5cf6;
-    opacity: 0.8;
-}
-
-.file-icon.image svg { 
-    stroke: #6366f1;
-    opacity: 0.8;
-}
-
-[data-theme='dark'] .file-icon.excel svg { 
-    stroke: #60a5fa;
-    opacity: 0.9;
-}
-
-[data-theme='dark'] .file-icon.pdf svg { 
-    stroke: #a78bfa;
-    opacity: 0.9;
-}
-
-[data-theme='dark'] .file-icon.image svg { 
-    stroke: #818cf8;
-    opacity: 0.9;
-}
-
-/* ========== ОСТАЛЬНЫЕ СТИЛИ ========== */
-
-.special-file-section {
-    background: var(--bg-card);
-    backdrop-filter: var(--glass-blur, blur(16px));
-    -webkit-backdrop-filter: var(--glass-blur, blur(16px));
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-light);
-    overflow: hidden;
-    margin-bottom: 2rem;
-    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.04);
-}
-
-.special-file-section:hover {
-    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.06);
-}
-
-.special-file-header {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.04) 0%, rgba(59, 130, 246, 0.01) 100%);
-    padding: 0.75rem 1.25rem;
-    border-bottom: 1px solid var(--border-light);
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-[data-theme='dark'] .special-file-header {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(59, 130, 246, 0.02) 100%);
-}
-
-.special-file-header svg {
-    width: 18px;
-    height: 18px;
-    stroke: var(--primary);
-}
-
-.special-file-header h4 {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.special-file-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 0.75rem;
-    padding: 1rem;
-}
-
-.special-file-card {
-    position: relative;
-    overflow: hidden;
-}
-
-.special-file-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    z-index: 1;
-}
-
-.special-file-card.tm-card::before {
-    background: linear-gradient(90deg, #f59e0b, #f97316);
-}
-
-.special-file-card.kp-card::before {
-    background: linear-gradient(90deg, #8b5cf6, #a855f7);
-}
-
-.special-file-card.findex-card::before {
-    background: linear-gradient(90deg, #3b82f6, #6366f1);
-}
-
-.findex-note {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    color: #b45309;
-    padding: 0.15rem 0.5rem;
-    border-radius: 1rem;
-    font-size: 0.55rem;
-    font-weight: 600;
-    margin-left: 0.5rem;
-    white-space: nowrap;
-}
-
-[data-theme='dark'] .findex-note {
-    background: linear-gradient(135deg, #422006 0%, #713f12 100%);
-    color: #fcd34d;
-}
-
-.findex-note svg {
-    width: 10px;
-    height: 10px;
-}
-
-.file-upload-card {
-    background: linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(240, 248, 255, 0.92) 100%);
-    backdrop-filter: var(--glass-blur, blur(16px));
-    -webkit-backdrop-filter: var(--glass-blur, blur(16px));
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-light);
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.04);
-}
-
-[data-theme='dark'] .file-upload-card {
-    background: linear-gradient(145deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.92) 100%);
-}
-
-.file-upload-card:hover {
-    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.06);
-}
-
-.file-upload-card h3 {
-    font-size: 1rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    color: var(--text-primary);
-}
-
-.file-upload-area {
-    border: 2px dashed var(--border-light);
-    border-radius: var(--radius-md);
-    padding: 1.5rem;
-    text-align: center;
-    margin-bottom: 1rem;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    position: relative;
-    background: var(--bg-card);
-}
-
-.file-upload-area:hover {
-    border-color: var(--primary);
-    background: rgba(59, 130, 246, 0.03);
-}
-
-.file-input-wrapper {
-    position: relative;
-}
-
-.file-input-wrapper input {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-}
-
-.file-input-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    background: var(--gray-100);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    font-weight: 500;
-    font-size: 0.85rem;
-    transition: all 0.3s ease;
-}
-
-[data-theme='dark'] .file-input-label {
-    background: rgba(51, 65, 85, 0.8);
-}
-
-.file-upload-area:hover .file-input-label {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    color: white;
-    transform: translateY(-2px);
-}
-
-.upload-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-light);
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.small-checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-}
-
-.small-checkbox-label input {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-    accent-color: var(--primary);
-}
-
-.small-action-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.4rem 0.8rem;
-    border-radius: var(--radius-sm);
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-    background: transparent;
-}
-
-.card {
-    background: linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(240, 248, 255, 0.92) 100%);
-    backdrop-filter: var(--glass-blur, blur(16px));
-    -webkit-backdrop-filter: var(--glass-blur, blur(16px));
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-light);
-    padding: 1.5rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.04);
-}
-
-[data-theme='dark'] .card {
-    background: linear-gradient(145deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.92) 100%);
-}
-
-.card:hover {
-    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.06);
-}
-
-.files-stats {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border-light);
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.stats-info {
-    display: flex;
-    gap: 1rem;
-}
-
-.stat-badge {
-    background: var(--bg-card);
-    backdrop-filter: var(--glass-blur, blur(8px));
-    padding: 0.35rem 0.9rem;
-    border-radius: 2rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    transition: all 0.2s ease;
-    border: 1px solid var(--border-light);
-}
-
-[data-theme='dark'] .stat-badge {
-    background: rgba(51, 65, 85, 0.4);
-}
-
-.stat-badge svg {
-    width: 14px;
-    height: 14px;
-    stroke: var(--primary);
-}
-
-.files-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
-    max-height: 550px;
-    overflow-y: auto;
-    padding: 0.25rem;
-}
-
-.file-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-md);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-}
-
-.file-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-    border-color: var(--primary);
-}
-
-.file-card.selected {
-    border-color: var(--primary);
-    background: rgba(59, 130, 246, 0.04);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.file-select {
-    position: absolute;
-    top: 0.75rem;
-    left: 0.75rem;
-    z-index: 2;
-}
-
-.file-select input {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: var(--primary);
-}
-
-.file-preview {
-    height: 120px;
-    background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-[data-theme='dark'] .file-preview {
-    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-}
-
-.file-icon svg {
-    transition: transform 0.3s ease;
-}
-
-.file-card:hover .file-icon svg {
-    transform: scale(1.1);
-}
-
-.file-info {
-    padding: 0.75rem;
-}
-
-.file-name {
-    font-weight: 700;
-    font-size: 0.8rem;
-    color: var(--text-primary);
-    margin-bottom: 0.4rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.file-meta {
-    font-size: 0.65rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.6rem;
-    display: flex;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-}
-
-.file-meta span {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.2rem;
-}
-
-.file-meta svg {
-    width: 10px;
-    height: 10px;
-    stroke: var(--primary);
-}
-
-.file-actions {
-    display: flex;
-    gap: 0.5rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid var(--border-light);
-}
-
-.file-action-btn {
-    flex: 1;
-    padding: 0.35rem;
-    border-radius: var(--radius-sm);
-    font-size: 0.7rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.3rem;
-    transition: all 0.2s ease;
-    text-decoration: none;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-}
-
-.file-action-btn svg {
-    width: 12px;
-    height: 12px;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 3rem;
-}
-
-.empty-state svg {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 1rem;
-    stroke: var(--border-light);
-    animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-}
-
-.empty-state p {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-
-.empty-hint {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    margin-top: 0.5rem;
-    opacity: 0.7;
-}
-
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.modal-window {
-    background: var(--bg-card);
-    backdrop-filter: var(--glass-blur, blur(16px));
-    border-radius: var(--radius-lg);
-    padding: 1.5rem;
-    min-width: 320px;
-    text-align: center;
-    border: 1px solid var(--border-light);
-    box-shadow: var(--shadow-xl);
-    animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
+    /* ===== МИНИМАЛИСТИЧНЫЙ СТИЛЬ - БЕЗ АНИМАЦИЙ, ГРАДИЕНТОВ И ЛИШНИХ ЭФФЕКТОВ ===== */
+    :root {
+        --radius-sm: 4px;
+        --radius-md: 6px;
+        --radius-lg: 8px;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+        --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+        --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
+        --border-light: #e5e7eb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --text-primary: #111827;
+        --text-secondary: #6b7280;
+        --primary: #2563eb;
+        --primary-hover: #1d4ed8;
+        --bg-card: #ffffff;
+        --bg-card-solid: #ffffff;
+        --bg-body: #f9fafb;
     }
-    to {
-        opacity: 1;
-        transform: scale(1);
+
+    [data-theme='dark'] {
+        --border-light: #374151;
+        --gray-100: #1f2937;
+        --gray-200: #374151;
+        --gray-300: #4b5563;
+        --text-primary: #f3f4f6;
+        --text-secondary: #9ca3af;
+        --primary: #60a5fa;
+        --primary-hover: #93bbfc;
+        --bg-card: #1f2937;
+        --bg-card-solid: #1f2937;
+        --bg-body: #111827;
     }
-}
 
-.modal-window h3 {
-    margin-bottom: 0.75rem;
-    color: var(--text-primary);
-    font-size: 1.2rem;
-}
-
-.modal-window p {
-    margin-bottom: 1.5rem;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-
-.modal-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-}
-
-.modal-buttons button {
-    padding: 0.6rem 1.5rem;
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.85rem;
-    transition: all 0.2s ease;
-}
-
-#cancelDelete {
-    background: var(--gray-200);
-    color: var(--text-secondary);
-}
-
-#cancelDelete:hover {
-    background: var(--gray-300);
-    transform: translateY(-1px);
-}
-
-[data-theme='dark'] #cancelDelete {
-    background: rgba(51, 65, 85, 0.8);
-}
-
-[data-theme='dark'] #cancelDelete:hover {
-    background: rgba(71, 85, 105, 0.8);
-}
-
-#confirmDelete {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: white;
-}
-
-#confirmDelete:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-}
-
-.copy-notification {
-    position: fixed;
-    top: 1.5rem;
-    right: 1.5rem;
-    background: var(--bg-card);
-    backdrop-filter: var(--glass-blur, blur(16px));
-    color: var(--text-primary);
-    padding: 0.6rem 1.2rem;
-    border-radius: var(--radius-md);
-    font-size: 0.85rem;
-    font-weight: 500;
-    z-index: 1100;
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: all 0.2s ease;
-    box-shadow: var(--shadow-lg);
-    border: 1px solid var(--border-light);
-    pointer-events: none;
-}
-
-.copy-notification.show {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
+    * {
+        box-sizing: border-box;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
 
-.fade-in-up {
-    animation: fadeInUp 0.4s ease-out forwards;
-}
-
-.files-grid::-webkit-scrollbar {
-    width: 6px;
-}
-
-.files-grid::-webkit-scrollbar-track {
-    background: var(--gray-100);
-    border-radius: 3px;
-}
-
-.files-grid::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #3b82f6, #1d4ed8);
-    border-radius: 3px;
-}
-
-.files-grid::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #2563eb, #1e40af);
-}
-
-[data-theme='dark'] .files-grid::-webkit-scrollbar-track {
-    background: #1e293b;
-}
-
-@media (max-width: 768px) {
     .dashboard-layout {
-        padding: 1rem;
-    }
-    
-    .profile-header {
-        padding: 1.5rem;
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .school-avatar {
+        max-width: 1200px;
         margin: 0 auto;
+        padding: 1.5rem;
     }
-    
+
+    /* ===== ОБЩИЕ КАРТОЧКИ ===== */
+    .dashboard-header,
+    .file-upload-card,
+    .card,
+    .special-file-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+
+    /* ===== ПРОФИЛЬ ===== */
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        flex-wrap: wrap;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .school-avatar {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        flex-shrink: 0;
+    }
+
+    .avatar-image {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--primary);
+        background: var(--bg-card);
+    }
+
+    .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--primary);
+    }
+
+    .avatar-placeholder svg {
+        width: 40px;
+        height: 40px;
+        color: white;
+    }
+
+    .avatar-upload-btn {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--primary);
+        border: 2px solid var(--bg-card);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .avatar-upload-btn svg {
+        width: 14px;
+        height: 14px;
+        color: white;
+    }
+
+    .avatar-upload-input {
+        display: none;
+    }
+
     .school-info {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .school-title-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+    }
+
+    .school-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .edit-title-btn {
+        background: var(--gray-100);
+        border: 1px solid var(--border-light);
+        padding: 0.2rem 0.6rem;
+        border-radius: 1rem;
+        font-size: 0.65rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--text-secondary);
+    }
+
+    .edit-title-btn:hover {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .school-badges {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+    }
+
+    .school-badge {
+        background: var(--gray-100);
+        color: var(--text-secondary);
+        padding: 0.2rem 0.6rem;
+        border-radius: 1rem;
+        font-size: 0.7rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        border: 1px solid var(--border-light);
+    }
+
+    .school-badge svg {
+        width: 12px;
+        height: 12px;
+        stroke: var(--primary);
+    }
+
+    .school-title-edit-form {
+        display: none;
+        margin: 0.5rem 0;
+        padding: 0.75rem;
+        background: var(--gray-100);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-light);
+    }
+
+    .school-title-edit-form input {
+        width: 100%;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-light);
+        background: var(--bg-card);
+        color: var(--text-primary);
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .director-section {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+    }
+
+    .director-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .director-name {
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .edit-director-btn {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 0.65rem;
+        padding: 0.1rem 0.4rem;
+        border-radius: var(--radius-sm);
+    }
+
+    .edit-director-btn:hover {
+        background: var(--gray-100);
+        color: var(--primary);
+    }
+
+    .director-form {
+        display: none;
+        width: 100%;
+        margin-top: 0.25rem;
+    }
+
+    .director-form .form-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .director-form input {
+        flex: 1;
+        padding: 0.4rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-light);
+        background: var(--bg-card);
+        color: var(--text-primary);
+    }
+
+    .external-path {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0.6rem;
+        background: var(--gray-100);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-light);
+        margin-top: 0.25rem;
+    }
+
+    .external-path-icon {
+        width: 24px;
+        height: 24px;
+        background: var(--primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .external-path-icon svg {
+        width: 12px;
+        height: 12px;
+        color: white;
+    }
+
+    .external-path-label {
+        font-size: 0.55rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+    }
+
+    .external-path-link {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+    }
+
+    .external-path-link span {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--primary);
+        cursor: pointer;
+    }
+
+    .copy-badge {
+        background: var(--gray-200);
+        padding: 0.1rem 0.4rem;
+        border-radius: 1rem;
+        font-size: 0.6rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--text-secondary);
+    }
+
+    .copy-badge:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-external {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: var(--primary);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 1.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        flex-shrink: 0;
+    }
+
+    .btn-external:hover {
+        background: var(--primary-hover);
+    }
+
+    /* ===== ССЫЛКИ ШКОЛЫ ===== */
+    .school-links {
+        display: flex;
+        gap: 1rem;
+        padding: 0 1.5rem 1rem 1.5rem;
+        flex-wrap: wrap;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .school-link-card {
+        flex: 1;
+        min-width: 180px;
+        background: var(--gray-100);
+        border-radius: var(--radius-md);
+        padding: 0.6rem 0.8rem;
+        border: 1px solid var(--border-light);
+    }
+
+    .school-link-card h4 {
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 0.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .school-link-card h4 svg {
+        width: 12px;
+        height: 12px;
+        stroke: var(--primary);
+    }
+
+    .school-link-card a {
+        color: var(--primary);
+        text-decoration: none;
+        font-size: 0.75rem;
+        font-weight: 500;
+        word-break: break-all;
+    }
+
+    .school-link-card a:hover {
+        text-decoration: underline;
+    }
+
+    .edit-link-icon {
+        margin-left: 0.3rem;
+        cursor: pointer;
+        font-size: 0.6rem;
+        color: var(--text-secondary);
+        padding: 0.1rem 0.3rem;
+        border-radius: var(--radius-sm);
+    }
+
+    .edit-link-icon:hover {
+        background: var(--gray-200);
+        color: var(--primary);
+    }
+
+    .link-edit-form {
+        display: none;
+        margin-top: 0.3rem;
+    }
+
+    .link-edit-form input {
+        width: 100%;
+        padding: 0.4rem;
+        font-size: 0.75rem;
+        margin-bottom: 0.3rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-light);
+        background: var(--bg-card);
+        color: var(--text-primary);
+    }
+
+    .link-edit-actions {
+        display: flex;
+        gap: 0.4rem;
+    }
+
+    .link-save-btn {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 0.2rem 0.6rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.65rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .link-save-btn:hover {
+        background: var(--primary-hover);
+    }
+
+    .link-cancel-btn {
+        background: var(--gray-200);
+        color: var(--text-secondary);
+        border: none;
+        padding: 0.2rem 0.6rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.65rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    /* ===== ПАНЕЛЬ ПЕРИОДА ===== */
+    .period-panel {
+        padding: 1rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .period-badge {
+        background: var(--primary);
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 1.5rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .period-badge svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .period-controls {
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .period-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .period-field label {
+        font-size: 0.6rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+    }
+
+    .period-field input,
+    .period-field select {
+        padding: 0.35rem 0.5rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-light);
+        background: var(--bg-card);
+        color: var(--text-primary);
+        font-size: 0.8rem;
+    }
+
+    .period-field input {
+        width: 70px;
         text-align: center;
     }
-    
-    .school-title-wrapper {
-        justify-content: center;
+
+    .apply-btn {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 0.35rem 0.8rem;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 0.75rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
     }
-    
-    .school-badges {
-        justify-content: center;
+
+    .apply-btn:hover {
+        background: var(--primary-hover);
     }
-    
-    .director-section {
-        justify-content: center;
+
+    /* ===== ЗАГРУЗКА ФАЙЛОВ ===== */
+    .file-upload-card {
+        padding: 1.25rem;
     }
-    
-    .external-path {
-        justify-content: center;
+
+    .file-upload-card h3 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: var(--text-primary);
+    }
+
+    .file-upload-area {
+        border: 2px dashed var(--border-light);
+        border-radius: var(--radius-md);
+        padding: 1.25rem;
+        text-align: center;
+        margin-bottom: 0.75rem;
+        background: var(--gray-100);
+    }
+
+    .file-upload-area:hover {
+        border-color: var(--primary);
+        background: var(--bg-card);
+    }
+
+    .file-input-wrapper {
+        position: relative;
+    }
+
+    .file-input-wrapper input {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .file-input-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 0.8rem;
+        background: var(--gray-200);
+        border-radius: var(--radius-md);
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+
+    .file-input-label:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 0.8rem;
+        cursor: pointer;
         width: 100%;
     }
-    
-    .school-links {
-        padding: 0 1rem 1rem 1rem;
+
+    .btn-primary:hover {
+        background: var(--primary-hover);
     }
-    
-    .period-panel {
-        padding: 1rem;
-        flex-direction: column;
-    }
-    
-    .period-controls {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .files-grid {
-        grid-template-columns: 1fr;
-    }
-    
+
     .upload-controls {
-        flex-direction: column;
-        align-items: stretch;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-light);
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
-    
-    .stats-info {
-        justify-content: center;
+
+    .small-checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        cursor: pointer;
     }
-    
-    .modal-window {
-        min-width: 280px;
-        margin: 0 1rem;
+
+    .small-checkbox-label input {
+        width: 14px;
+        height: 14px;
+        cursor: pointer;
+        accent-color: var(--primary);
     }
-    
+
+    .small-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.7rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid var(--border-light);
+        background: var(--gray-100);
+        color: var(--text-secondary);
+    }
+
+    .small-download-btn:hover {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .small-delete-btn:hover {
+        background: #ef4444;
+        color: white;
+        border-color: #ef4444;
+    }
+
+    /* ===== СПЕЦИАЛЬНЫЕ ФАЙЛЫ ===== */
+    .special-file-header {
+        padding: 0.6rem 1rem;
+        border-bottom: 1px solid var(--border-light);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--gray-100);
+    }
+
+    .special-file-header svg {
+        width: 16px;
+        height: 16px;
+        stroke: var(--primary);
+    }
+
+    .special-file-header h4 {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
     .special-file-grid {
-        grid-template-columns: 1fr;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
         gap: 0.5rem;
         padding: 0.75rem;
     }
-    
-    .findex-note {
-        font-size: 0.5rem;
-        padding: 0.1rem 0.4rem;
+
+    .special-file-card {
+        position: relative;
+        border-left: 3px solid var(--primary);
     }
-}
 
-.btn-primary {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-sm);
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
+    .special-file-card.tm-card {
+        border-left-color: #f59e0b;
+    }
 
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-}
+    .special-file-card.kp-card {
+        border-left-color: #8b5cf6;
+    }
 
-[data-theme='dark'] .logo-icon {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-}
+    .special-file-card.findex-card {
+        border-left-color: var(--primary);
+    }
 
-[data-theme='dark'] .logo-text h1 {
-    background: linear-gradient(135deg, #e2e8f0 0%, #a78bfa 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
+    .findex-note {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        background: #fef3c7;
+        color: #b45309;
+        padding: 0.1rem 0.4rem;
+        border-radius: 1rem;
+        font-size: 0.5rem;
+        font-weight: 600;
+        margin-left: 0.3rem;
+        white-space: nowrap;
+    }
+
+    [data-theme='dark'] .findex-note {
+        background: #422006;
+        color: #fcd34d;
+    }
+
+    .findex-note svg {
+        width: 8px;
+        height: 8px;
+    }
+
+    /* ===== ОБЫЧНЫЕ ФАЙЛЫ ===== */
+    .card {
+        padding: 1.25rem;
+    }
+
+    .card h3 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: var(--text-primary);
+    }
+
+    .files-stats {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border-light);
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .stats-info {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .stat-badge {
+        background: var(--gray-100);
+        padding: 0.25rem 0.6rem;
+        border-radius: 1rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        border: 1px solid var(--border-light);
+    }
+
+    .stat-badge svg {
+        width: 12px;
+        height: 12px;
+        stroke: var(--primary);
+    }
+
+    .files-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 0.75rem;
+        max-height: 500px;
+        overflow-y: auto;
+        padding: 0.15rem;
+    }
+
+    .file-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .file-card.selected {
+        border-color: var(--primary);
+        background: var(--gray-100);
+    }
+
+    .file-select {
+        position: absolute;
+        top: 0.5rem;
+        left: 0.5rem;
+        z-index: 2;
+    }
+
+    .file-select input {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        accent-color: var(--primary);
+    }
+
+    .file-preview {
+        height: 100px;
+        background: var(--gray-100);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .file-info {
+        padding: 0.5rem;
+    }
+
+    .file-name {
+        font-weight: 600;
+        font-size: 0.75rem;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .file-meta {
+        font-size: 0.6rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.4rem;
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+    }
+
+    .file-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.15rem;
+    }
+
+    .file-meta svg {
+        width: 10px;
+        height: 10px;
+        stroke: var(--primary);
+    }
+
+    .file-actions {
+        display: flex;
+        gap: 0.4rem;
+        padding-top: 0.4rem;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .file-action-btn {
+        flex: 1;
+        padding: 0.25rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.65rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+        text-decoration: none;
+        cursor: pointer;
+        border: 1px solid var(--border-light);
+        background: var(--gray-100);
+        color: var(--text-secondary);
+    }
+
+    .file-action-btn.download:hover {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .file-action-btn.delete:hover {
+        background: #ef4444;
+        color: white;
+        border-color: #ef4444;
+    }
+
+    .file-action-btn svg {
+        width: 10px;
+        height: 10px;
+    }
+
+    /* ===== ПУСТОЕ СОСТОЯНИЕ ===== */
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .empty-state svg {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 0.75rem;
+        stroke: var(--border-light);
+    }
+
+    .empty-state p {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+    }
+
+    .empty-hint {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        margin-top: 0.25rem;
+        opacity: 0.7;
+    }
+
+    /* ===== МОДАЛЬНОЕ ОКНО ===== */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    .modal-window {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        padding: 1.25rem;
+        min-width: 280px;
+        max-width: 90%;
+        text-align: center;
+        border: 1px solid var(--border-light);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .modal-window h3 {
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+        font-size: 1.1rem;
+    }
+
+    .modal-window p {
+        margin-bottom: 1rem;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+    }
+
+    .modal-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 0.75rem;
+    }
+
+    .modal-buttons button {
+        padding: 0.4rem 1.2rem;
+        border: none;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    #cancelDelete {
+        background: var(--gray-200);
+        color: var(--text-secondary);
+    }
+
+    #cancelDelete:hover {
+        background: var(--gray-300);
+    }
+
+    #confirmDelete {
+        background: #ef4444;
+        color: white;
+    }
+
+    #confirmDelete:hover {
+        background: #dc2626;
+    }
+
+    /* ===== УВЕДОМЛЕНИЕ ===== */
+    .copy-notification {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        background: var(--bg-card);
+        color: var(--text-primary);
+        padding: 0.4rem 1rem;
+        border-radius: var(--radius-md);
+        font-size: 0.8rem;
+        font-weight: 500;
+        z-index: 1100;
+        opacity: 0;
+        pointer-events: none;
+        border: 1px solid var(--border-light);
+        box-shadow: var(--shadow-md);
+    }
+
+    .copy-notification.show {
+        opacity: 1;
+    }
+
+    /* ===== СКРОЛЛБАР ===== */
+    .files-grid::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .files-grid::-webkit-scrollbar-track {
+        background: var(--gray-100);
+        border-radius: 2px;
+    }
+
+    .files-grid::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 2px;
+    }
+
+    /* ===== АДАПТИВНОСТЬ ===== */
+    @media (max-width: 768px) {
+        .dashboard-layout {
+            padding: 0.75rem;
+        }
+
+        .profile-header {
+            padding: 1rem;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .school-avatar {
+            margin: 0 auto;
+        }
+
+        .school-info {
+            text-align: center;
+        }
+
+        .school-title-wrapper {
+            justify-content: center;
+        }
+
+        .school-badges {
+            justify-content: center;
+        }
+
+        .director-section {
+            justify-content: center;
+        }
+
+        .external-path {
+            justify-content: center;
+            width: 100%;
+        }
+
+        .school-links {
+            padding: 0 1rem 0.75rem 1rem;
+        }
+
+        .period-panel {
+            padding: 0.75rem 1rem;
+            flex-direction: column;
+        }
+
+        .period-controls {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .files-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .upload-controls {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .stats-info {
+            justify-content: center;
+        }
+
+        .modal-window {
+            min-width: 240px;
+            margin: 0 1rem;
+        }
+
+        .special-file-grid {
+            grid-template-columns: 1fr;
+            gap: 0.4rem;
+            padding: 0.5rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dashboard-header,
+        .file-upload-card,
+        .card,
+        .special-file-section {
+            border-radius: var(--radius-sm);
+        }
+
+        .profile-header {
+            padding: 0.75rem;
+        }
+
+        .school-title {
+            font-size: 1.2rem;
+        }
+
+        .school-avatar {
+            width: 60px;
+            height: 60px;
+        }
+
+        .file-preview {
+            height: 80px;
+        }
+
+        .file-upload-area {
+            padding: 0.75rem;
+        }
+
+        .file-action-btn {
+            font-size: 0.6rem;
+            padding: 0.2rem;
+        }
+
+        .file-name {
+            font-size: 0.7rem;
+        }
+
+        .file-meta {
+            font-size: 0.55rem;
+        }
+    }
 </style>
 
-<div class="dashboard-layout fade-in-up">
-    <!-- Объединённая панель: профиль + период -->
+<div class="dashboard-layout">
+    <!-- ===== ПРОФИЛЬ + ПЕРИОД ===== -->
     <div class="dashboard-header">
         <div class="profile-header">
             <div class="school-avatar">
                 {% if profile and profile.avatar %}
-                    <img src="/{{ user.id }}/avatar/{{ profile.avatar }}" alt="Логотип школы" class="avatar-image" id="schoolAvatar">
+                <img src="/{{ user.id }}/avatar/{{ profile.avatar }}" alt="Логотип школы" class="avatar-image"
+                     id="schoolAvatar">
                 {% else %}
-                    <div class="avatar-placeholder" id="avatarPlaceholder">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.586a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 7.586 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                    </div>
+                <div class="avatar-placeholder" id="avatarPlaceholder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.586a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 7.586 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </div>
                 {% endif %}
-                
-                <form id="avatarUploadForm" action="/profile/upload-avatar" method="post" enctype="multipart/form-data" style="position: relative;">
+
+                <form id="avatarUploadForm" action="/profile/upload-avatar" method="post" enctype="multipart/form-data"
+                      style="position: relative;">
                     <input type="hidden" name="uid" value="{{ user.id }}">
                     <label for="avatarInput" class="avatar-upload-btn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1469,7 +1183,8 @@
                             <circle cx="12" cy="13" r="4"></circle>
                         </svg>
                     </label>
-                    <input type="file" id="avatarInput" name="avatar" class="avatar-upload-input" accept="image/*" onchange="this.form.submit()">
+                    <input type="file" id="avatarInput" name="avatar" class="avatar-upload-input" accept="image/*"
+                           onchange="this.form.submit()">
                 </form>
             </div>
 
@@ -1504,10 +1219,14 @@
                 <div class="school-title-edit-form" id="schoolTitleEditForm">
                     <form action="/profile/update" method="post">
                         <input type="hidden" name="uid" value="{{ user.id }}">
-                        <input type="text" name="unit_name" value="{{ user.unit_name }}" placeholder="Название школы" required>
+                        <input type="text" name="unit_name" value="{{ user.unit_name }}" placeholder="Название школы"
+                               required>
                         <div class="form-actions">
                             <button type="submit" class="btn-primary">Сохранить</button>
-                            <button type="button" id="cancelSchoolTitleBtn" style="background: var(--gray-200); border: none; padding: 0.5rem 1rem; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600;">Отмена</button>
+                            <button type="button" id="cancelSchoolTitleBtn"
+                                    style="background: var(--gray-200); border: none; padding: 0.4rem 0.8rem; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; font-size: 0.8rem;">
+                                Отмена
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -1516,13 +1235,17 @@
                     <span class="director-label">Директор:</span>
                     <span class="director-name" id="directorNameDisplay">{{ user.director_name or 'Не указано' }}</span>
                     <button type="button" id="editDirectorBtn" class="edit-director-btn">✎</button>
-                    
+
                     <form id="directorForm" class="director-form" action="/profile/update" method="post">
                         <input type="hidden" name="uid" value="{{ user.id }}">
                         <div class="form-row">
-                            <input type="text" name="director_name" value="{{ user.director_name }}" placeholder="ФИО директора">
-                            <button type="submit" class="btn-primary" style="padding: 0.5rem 0.8rem;">✓</button>
-                            <button type="button" id="cancelDirectorBtn" style="padding: 0.5rem 0.8rem; background: var(--gray-200); border: none; border-radius: var(--radius-sm); cursor: pointer;">✕</button>
+                            <input type="text" name="director_name" value="{{ user.director_name }}"
+                                   placeholder="ФИО директора">
+                            <button type="submit" class="btn-primary" style="padding: 0.3rem 0.6rem;">✓</button>
+                            <button type="button" id="cancelDirectorBtn"
+                                    style="padding: 0.3rem 0.6rem; background: var(--gray-200); border: none; border-radius: var(--radius-sm); cursor: pointer;">
+                                ✕
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -1545,7 +1268,7 @@
             </div>
 
             <a href="https://xn--80afhjabb0ajcdecrl4ah.xn--p1ai/#/home" target="_blank" class="btn-external">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                     <polyline points="15 3 21 3 21 9"></polyline>
                     <line x1="10" y1="14" x2="21" y2="3"></line>
@@ -1566,16 +1289,17 @@
                 </h4>
                 <div id="schoolWebsiteDisplay">
                     {% if profile and profile.website_url %}
-                        <a href="{{ profile.website_url }}" target="_blank">{{ profile.website_url }}</a>
+                    <a href="{{ profile.website_url }}" target="_blank">{{ profile.website_url }}</a>
                     {% else %}
-                        <span style="color: var(--text-secondary);">Не указан</span>
+                    <span style="color: var(--text-secondary);">Не указан</span>
                     {% endif %}
                     <span class="edit-link-icon" id="editWebsiteBtn" title="Редактировать">✎</span>
                 </div>
                 <div class="link-edit-form" id="websiteEditForm">
                     <form action="/profile/update-links" method="post">
                         <input type="hidden" name="uid" value="{{ user.id }}">
-                        <input type="url" name="website_url" value="{{ profile.website_url or '' }}" placeholder="https://...">
+                        <input type="url" name="website_url" value="{{ profile.website_url or '' }}"
+                               placeholder="https://...">
                         <div class="link-edit-actions">
                             <button type="submit" class="link-save-btn">Сохранить</button>
                             <button type="button" class="link-cancel-btn" id="cancelWebsiteBtn">Отмена</button>
@@ -1594,16 +1318,17 @@
                 </h4>
                 <div id="hotMealDisplay">
                     {% if profile and profile.hot_meal_url %}
-                        <a href="{{ profile.hot_meal_url }}" target="_blank">{{ profile.hot_meal_url }}</a>
+                    <a href="{{ profile.hot_meal_url }}" target="_blank">{{ profile.hot_meal_url }}</a>
                     {% else %}
-                        <span style="color: var(--text-secondary);">Не указан</span>
+                    <span style="color: var(--text-secondary);">Не указан</span>
                     {% endif %}
                     <span class="edit-link-icon" id="editHotMealBtn" title="Редактировать">✎</span>
                 </div>
                 <div class="link-edit-form" id="hotMealEditForm">
                     <form action="/profile/update-links" method="post">
                         <input type="hidden" name="uid" value="{{ user.id }}">
-                        <input type="url" name="hot_meal_url" value="{{ profile.hot_meal_url or '' }}" placeholder="https://...">
+                        <input type="url" name="hot_meal_url" value="{{ profile.hot_meal_url or '' }}"
+                               placeholder="https://...">
                         <div class="link-edit-actions">
                             <button type="submit" class="link-save-btn">Сохранить</button>
                             <button type="button" class="link-cancel-btn" id="cancelHotMealBtn">Отмена</button>
@@ -1623,7 +1348,7 @@
                 </svg>
                 {{ months[month] }} {{ year }}
             </div>
-            
+
             <form action="/dashboard" method="get" class="period-controls">
                 <input type="hidden" name="uid" value="{{ user.id }}">
                 <div class="period-field">
@@ -1634,7 +1359,7 @@
                     <label>Месяц</label>
                     <select name="month">
                         {% for m_id, m_name in months.items() %}
-                        <option value="{{ m_id }}" {% if m_id == month %}selected{% endif %}>{{ m_name }}</option>
+                        <option value="{{ m_id }}" {% if m_id== month %}selected{% endif %}>{{ m_name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -1648,19 +1373,20 @@
         </div>
     </div>
 
-    <!-- Загрузка файлов -->
+    <!-- ===== ЗАГРУЗКА ФАЙЛОВ ===== -->
     <div class="file-upload-card">
         <h3>Загрузить файлы в этот период</h3>
         <form action="/upload" method="post" enctype="multipart/form-data">
             <input type="hidden" name="uid" value="{{ user.id }}">
             <input type="hidden" name="year" value="{{ year }}">
             <input type="hidden" name="month" value="{{ month }}">
-            
+
             <div class="file-upload-area">
                 <div class="file-input-wrapper">
                     <input type="file" name="files" id="fileInput" multiple required>
                     <label for="fileInput" class="file-input-label">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="7 10 12 15 17 10"></polyline>
                             <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -1669,8 +1395,8 @@
                     </label>
                 </div>
             </div>
-            
-            <button class="btn-primary" type="submit" style="width:100%;">Загрузить файлы</button>
+
+            <button class="btn-primary" type="submit">Загрузить файлы</button>
         </form>
 
         {% if files_grouped and files_grouped.get(year) and files_grouped[year].get(months[month]) %}
@@ -1679,274 +1405,271 @@
                 <input type="checkbox" id="checkAll">
                 Отметить все файлы месяца
             </label>
-            <div style="display: flex; gap: 0.5rem;">
+            <div style="display: flex; gap: 0.4rem;">
                 <button type="button" id="downloadSelected" class="small-action-btn small-download-btn">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
                         <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
-                    Скачать выделенные
+                    Скачать
                 </button>
                 <button type="button" id="openConfirm" class="small-action-btn small-delete-btn">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                     </svg>
-                    Удалить выделенные
+                    Удалить
                 </button>
             </div>
         </div>
         {% endif %}
     </div>
 
-    <!-- Блок специальных файлов (tm, kp, findex) -->
-    {% if files_grouped and files_grouped.get(year) and files_grouped[year].get(months[month]) %}
-        {% set special_files = [] %}
-        {% for file_info in files_grouped[year][months[month]] %}
-            {% if (file_info.filename.startswith('tm') and file_info.filename.endswith('-sm.xlsx')) 
-               or (file_info.filename.startswith('kp') and file_info.filename.endswith('.xlsx'))
-               or file_info.filename == 'findex.xlsx' %}
-                {% set special_files = special_files.append(file_info) %}
-            {% endif %}
-        {% endfor %}
-        
-        {% if special_files %}
-        <div class="special-file-section">
-            <div class="special-file-header">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                </svg>
-                <h4>Специальные файлы</h4>
-            </div>
-            <div class="special-file-grid">
-                {% for file_info in special_files|sort(attribute='filename', reverse=true) %}
-                <div class="file-card special-file-card 
-                    {% if file_info.filename.startswith('tm') %}tm-card
-                    {% elif file_info.filename.startswith('kp') %}kp-card
-                    {% elif file_info.filename == 'findex.xlsx' %}findex-card{% endif %}"
-                    data-filename="{{ file_info.filename }}">
-                    <div class="file-select">
-                        <input type="checkbox" class="file-checkbox" data-filename="{{ file_info.filename }}" id="special_file_{{ loop.index }}">
-                    </div>
-                    
-                    <div class="file-preview">
-                        <div class="file-icon excel">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                                <text x="8" y="18" font-size="8" fill="currentColor">
-                                    {% if file_info.filename.startswith('tm') %}TM
-                                    {% elif file_info.filename.startswith('kp') %}KP
-                                    {% else %}XLS{% endif %}
-                                </text>
-                            </svg>
-                        </div>
-                    </div>
-                    
-                    <div class="file-info">
-                        <div class="file-name" title="{{ file_info.filename }}">
-                            {{ file_info.filename|truncate(30, true) }}
-                            {% if file_info.filename == 'findex.xlsx' %}
-                            <span class="findex-note" title="Файл findex необходимо обновлять ежемесячно">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                                </svg>
-                                Обновлять раз в месяц
-                            </span>
-                            {% endif %}
-                        </div>
-                        <div class="file-meta">
-                            <span>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                                </svg>
-                                {{ file_info.date }}
-                            </span>
-                            <span>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                </svg>
-                                {{ file_info.uploader }}
-                            </span>
-                        </div>
-                        <div class="file-actions">
-                            <a href="/{{ user.id }}/food/{{ file_info.filename }}" class="file-action-btn download" download>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="7 10 12 15 17 10"></polyline>
-                                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                                </svg>
-                                Скачать
-                            </a>
-                            <button class="file-action-btn delete" data-filename="{{ file_info.filename }}" data-year="{{ year }}" data-month="{{ month }}">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                </svg>
-                                Удалить
-                            </button>
-                        </div>
+    <!-- ===== СПЕЦИАЛЬНЫЕ ФАЙЛЫ ===== -->
+    {% if special_files_all %}
+    <div class="special-file-section">
+        <div class="special-file-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+            <h4>Специальные файлы (постоянные)</h4>
+            <span style="font-size:0.65rem; color:var(--text-secondary); margin-left:auto;">Не зависят от месяца</span>
+        </div>
+        <div class="special-file-grid" id="specialFilesGrid">
+            {% for file_info in special_files_all %}
+            <div class="file-card special-file-card
+                {% if file_info.filename.startswith('tm') %}tm-card
+                {% elif file_info.filename.startswith('kp') %}kp-card
+                {% elif file_info.filename == 'findex.xlsx' %}findex-card{% endif %}"
+                 data-filename="{{ file_info.filename }}" data-special="true">
+                <div class="file-select">
+                    <input type="checkbox" class="file-checkbox" data-filename="{{ file_info.filename }}"
+                           id="special_file_{{ loop.index }}" data-special="true">
+                </div>
+
+                <div class="file-preview">
+                    <div class="file-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <text x="8" y="18" font-size="8" fill="currentColor">
+                                {% if file_info.filename.startswith('tm') %}TM
+                                {% elif file_info.filename.startswith('kp') %}KP
+                                {% else %}XLS{% endif %}
+                            </text>
+                        </svg>
                     </div>
                 </div>
-                {% endfor %}
+
+                <div class="file-info">
+                    <div class="file-name" title="{{ file_info.filename }}">
+                        {{ file_info.filename|truncate(30, true) }}
+                        {% if file_info.filename == 'findex.xlsx' %}
+                        <span class="findex-note" title="Файл findex необходимо обновлять ежемесячно">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            Обновлять ежемесячно
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="file-meta">
+                        <span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            {{ file_info.date }}
+                        </span>
+                        <span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            {{ file_info.uploader }}
+                        </span>
+                    </div>
+                    <div class="file-actions">
+                        <a href="/{{ user.id }}/food/{{ file_info.filename }}" class="file-action-btn download"
+                           download>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Скачать
+                        </a>
+                        <button class="file-action-btn delete" data-filename="{{ file_info.filename }}"
+                                data-year="{{ file_info.year }}" data-month="{{ file_info.month }}" data-special="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Удалить
+                        </button>
+                    </div>
+                </div>
             </div>
+            {% endfor %}
         </div>
-        {% endif %}
+    </div>
     {% endif %}
 
-    <!-- Файлы месяца (обычные файлы) -->
+    <!-- ===== ОБЫЧНЫЕ ФАЙЛЫ ===== -->
     <div class="card">
-        <h3 style="font-size: 1rem; margin-bottom: 1rem;">Ежедневное меню</h3>
+        <h3>Ежедневное меню</h3>
 
         {% if files_grouped and files_grouped.get(year) and files_grouped[year].get(months[month]) %}
-            {% set regular_files = [] %}
-            {% for file_info in files_grouped[year][months[month]] %}
-                {% if not ((file_info.filename.startswith('tm') and file_info.filename.endswith('-sm.xlsx')) 
-                   or (file_info.filename.startswith('kp') and file_info.filename.endswith('.xlsx'))
-                   or file_info.filename == 'findex.xlsx') %}
-                    {% set regular_files = regular_files.append(file_info) %}
-                {% endif %}
-            {% endfor %}
-            
-            {% if regular_files %}
-            <div class="files-stats">
-                <div class="stats-info">
-                    <div class="stat-badge">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        {% set regular_files = [] %}
+        {% for file_info in files_grouped[year][months[month]] %}
+        {% if not ((file_info.filename.startswith('tm') and file_info.filename.endswith('-sm.xlsx'))
+        or (file_info.filename.startswith('kp') and file_info.filename.endswith('.xlsx'))
+        or file_info.filename == 'findex.xlsx') %}
+        {% set regular_files = regular_files.append(file_info) %}
+        {% endif %}
+        {% endfor %}
+
+        {% if regular_files %}
+        <div class="files-stats">
+            <div class="stats-info">
+                <div class="stat-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    Всего: {{ regular_files|length }}
+                </div>
+                <div class="stat-badge" id="selectedCount" style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span id="selectedCountText">Выбрано: 0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="files-grid" id="filesGrid">
+            {% set sorted_files = regular_files|sort(attribute='filename') %}
+            {% for file_info in sorted_files %}
+            <div class="file-card" data-filename="{{ file_info.filename }}" data-card-index="{{ loop.index0 }}">
+                <div class="file-select">
+                    <input type="checkbox" class="file-checkbox" data-filename="{{ file_info.filename }}"
+                           id="file_{{ loop.index }}">
+                </div>
+
+                <div class="file-preview">
+                    {% set file_ext = file_info.filename.split('.')[-1].lower() %}
+                    <div class="file-icon">
+                        {% if file_ext in ['xls', 'xlsx', 'csv'] %}
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <text x="8" y="18" font-size="8" fill="currentColor">XLS</text>
+                        </svg>
+                        {% elif file_ext in ['pdf'] %}
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <text x="8" y="18" font-size="8" fill="currentColor">PDF</text>
+                        </svg>
+                        {% elif file_ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.5">
+                            <rect x="2" y="2" width="20" height="20" rx="2.18"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        {% else %}
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.5">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                             <polyline points="14 2 14 8 20 8"></polyline>
                         </svg>
-                        Всего: {{ regular_files|length }}
-                    </div>
-                    <div class="stat-badge" id="selectedCount" style="display: none;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                        <span id="selectedCountText">Выбрано: 0</span>
+                        {% endif %}
                     </div>
                 </div>
-            </div>
 
-            <div class="files-grid" id="filesGrid">
-                {% set sorted_files = regular_files|sort(attribute='filename') %}
-                {% for file_info in sorted_files %}
-                <div class="file-card" data-filename="{{ file_info.filename }}" data-card-index="{{ loop.index0 }}">
-                    <div class="file-select">
-                        <input type="checkbox" class="file-checkbox" data-filename="{{ file_info.filename }}" id="file_{{ loop.index }}">
+                <div class="file-info">
+                    <div class="file-name" title="{{ file_info.filename }}">
+                        {{ file_info.filename|truncate(30, true) }}
                     </div>
-                    
-                    <div class="file-preview">
-                        {% set file_ext = file_info.filename.split('.')[-1].lower() %}
-                        <div class="file-icon 
-                            {% if file_ext in ['xls', 'xlsx', 'csv'] %}excel
-                            {% elif file_ext in ['pdf'] %}pdf
-                            {% elif file_ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}image
-                            {% else %}default{% endif %}">
-                            {% if file_ext in ['xls', 'xlsx', 'csv'] %}
-                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                    <text x="8" y="18" font-size="8" fill="currentColor">XLS</text>
-                                </svg>
-                            {% elif file_ext in ['pdf'] %}
-                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                    <text x="8" y="18" font-size="8" fill="currentColor">PDF</text>
-                                </svg>
-                            {% elif file_ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
-                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                    <rect x="2" y="2" width="20" height="20" rx="2.18"></rect>
-                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                    <polyline points="21 15 16 10 5 21"></polyline>
-                                </svg>
-                            {% else %}
-                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                </svg>
-                            {% endif %}
-                        </div>
+                    <div class="file-meta">
+                        <span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            {{ file_info.date }}
+                        </span>
+                        <span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            {{ file_info.uploader }}
+                        </span>
                     </div>
-                    
-                    <div class="file-info">
-                        <div class="file-name" title="{{ file_info.filename }}">
-                            {{ file_info.filename|truncate(30, true) }}
-                        </div>
-                        <div class="file-meta">
-                            <span>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                                </svg>
-                                {{ file_info.date }}
-                            </span>
-                            <span>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                </svg>
-                                {{ file_info.uploader }}
-                            </span>
-                        </div>
-                        <div class="file-actions">
-                            <a href="/{{ user.id }}/food/{{ file_info.filename }}" class="file-action-btn download" download>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="7 10 12 15 17 10"></polyline>
-                                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                                </svg>
-                                Скачать
-                            </a>
-                            <button class="file-action-btn delete" data-filename="{{ file_info.filename }}" data-year="{{ year }}" data-month="{{ month }}">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                </svg>
-                                Удалить
-                            </button>
-                        </div>
+                    <div class="file-actions">
+                        <a href="/{{ user.id }}/food/{{ file_info.filename }}" class="file-action-btn download"
+                           download>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Скачать
+                        </a>
+                        <button class="file-action-btn delete" data-filename="{{ file_info.filename }}"
+                                data-year="{{ year }}" data-month="{{ month }}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Удалить
+                        </button>
                     </div>
                 </div>
-                {% endfor %}
             </div>
-            {% else %}
-            <div class="empty-state">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="12" y1="18" x2="12" y2="12"></line>
-                    <line x1="9" y1="15" x2="15" y2="15"></line>
-                </svg>
-                <p>Нет файлов ежедневного меню за {{ months[month] }} {{ year }} год</p>
-                <div class="empty-hint">Загрузите файлы, чтобы они появились здесь</div>
-            </div>
-            {% endif %}
+            {% endfor %}
+        </div>
         {% else %}
-            <div class="empty-state">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="12" y1="18" x2="12" y2="12"></line>
-                    <line x1="9" y1="15" x2="15" y2="15"></line>
-                </svg>
-                <p>Нет файлов за {{ months[month] }} {{ year }} год</p>
-                <div class="empty-hint">Загрузите файлы, чтобы они появились здесь</div>
-            </div>
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="12" y1="18" x2="12" y2="12"></line>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+            <p>Нет файлов ежедневного меню за {{ months[month] }} {{ year }} год</p>
+            <div class="empty-hint">Загрузите файлы, чтобы они появились здесь</div>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="12" y1="18" x2="12" y2="12"></line>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+            <p>Нет файлов за {{ months[month] }} {{ year }} год</p>
+            <div class="empty-hint">Загрузите файлы, чтобы они появились здесь</div>
+        </div>
         {% endif %}
     </div>
 </div>
 
-<!-- Модальное окно подтверждения удаления -->
+<!-- ===== МОДАЛЬНОЕ ОКНО ===== -->
 <div class="modal-overlay" id="deleteModal">
     <div class="modal-window">
         <h3>Подтверждение удаления</h3>
@@ -1958,151 +1681,122 @@
     </div>
 </div>
 
-<!-- Уведомление о копировании -->
+<!-- ===== УВЕДОМЛЕНИЕ ===== -->
 <div class="copy-notification" id="copyNotification">Ссылка скопирована!</div>
 
 <script>
-// Оптимизированный JavaScript с делегированием событий и снижением нагрузки на слабых ПК
-document.addEventListener('DOMContentLoaded', function() {
-    // --- Оптимизация: кэширование часто используемых элементов ---
-    const $ = (sel) => document.querySelector(sel);
-    const $$ = (sel) => document.querySelectorAll(sel);
-    
-    const directorDisplay = $('#directorNameDisplay');
-    const editDirectorBtn = $('#editDirectorBtn');
-    const directorForm = $('#directorForm');
-    const cancelDirectorBtn = $('#cancelDirectorBtn');
-    
-    const schoolTitle = $('#schoolTitle');
-    const editSchoolTitleBtn = $('#editSchoolTitleBtn');
-    const schoolTitleEditForm = $('#schoolTitleEditForm');
-    const cancelSchoolTitleBtn = $('#cancelSchoolTitleBtn');
-    
-    const editWebsiteBtn = $('#editWebsiteBtn');
-    const websiteEditForm = $('#websiteEditForm');
-    const cancelWebsiteBtn = $('#cancelWebsiteBtn');
-    const websiteDisplay = $('#schoolWebsiteDisplay');
-    
-    const editHotMealBtn = $('#editHotMealBtn');
-    const hotMealEditForm = $('#hotMealEditForm');
-    const cancelHotMealBtn = $('#cancelHotMealBtn');
-    const hotMealDisplay = $('#hotMealDisplay');
-    
-    const monitoringUrl = $('#monitoringUrl');
-    const copyUrlBtn = $('#copyUrlBtn');
-    const copyNotification = $('#copyNotification');
-    
-    const checkAll = $('#checkAll');
-    const selectedCountSpan = $('#selectedCount');
-    const selectedCountText = $('#selectedCountText');
-    
-    const deleteModal = $('#deleteModal');
-    const confirmDeleteBtn = $('#confirmDelete');
-    const cancelDeleteBtn = $('#cancelDelete');
-    const deleteMessage = $('#deleteMessage');
-    const openConfirmBtn = $('#openConfirm');
-    const downloadSelected = $('#downloadSelected');
-    
-    const filesGrid = $('#filesGrid');
-    let pendingDeleteFiles = [];
-    let currentDeleteCallback = null;
-    let selectedFiles = new Set();
-    
-    // --- Функция уведомления ---
-    function showCopyNotification() {
-        if (copyNotification) {
-            copyNotification.classList.add('show');
-            clearTimeout(copyNotification._timeout);
-            copyNotification._timeout = setTimeout(() => copyNotification.classList.remove('show'), 1500);
+    document.addEventListener('DOMContentLoaded', function() {
+        // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
+        const $ = (sel) => document.querySelector(sel);
+        const $$ = (sel) => document.querySelectorAll(sel);
+
+        // ===== РЕДАКТИРОВАНИЕ ДИРЕКТОРА =====
+        const directorDisplay = $('#directorNameDisplay');
+        const editDirectorBtn = $('#editDirectorBtn');
+        const directorForm = $('#directorForm');
+        const cancelDirectorBtn = $('#cancelDirectorBtn');
+
+        if (editDirectorBtn && directorForm && cancelDirectorBtn) {
+            editDirectorBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                directorDisplay.style.display = 'none';
+                editDirectorBtn.style.display = 'none';
+                directorForm.style.display = 'block';
+                const input = directorForm.querySelector('input');
+                if (input) setTimeout(() => input.focus(), 50);
+            });
+            cancelDirectorBtn.addEventListener('click', function() {
+                directorForm.style.display = 'none';
+                directorDisplay.style.display = 'inline';
+                editDirectorBtn.style.display = 'inline-flex';
+            });
         }
-    }
-    
-    // --- Функция обновления счётчика выбранных (оптимизирована) ---
-    function updateSelectedCount() {
-        const count = selectedFiles.size;
-        if (selectedCountSpan && selectedCountText) {
-            if (count > 0) {
-                selectedCountSpan.style.display = 'flex';
-                selectedCountText.textContent = `Выбрано: ${count}`;
-            } else {
-                selectedCountSpan.style.display = 'none';
+
+        // ===== РЕДАКТИРОВАНИЕ НАЗВАНИЯ ШКОЛЫ =====
+        const schoolTitle = $('#schoolTitle');
+        const editSchoolTitleBtn = $('#editSchoolTitleBtn');
+        const schoolTitleEditForm = $('#schoolTitleEditForm');
+        const cancelSchoolTitleBtn = $('#cancelSchoolTitleBtn');
+
+        if (editSchoolTitleBtn && schoolTitleEditForm && cancelSchoolTitleBtn) {
+            editSchoolTitleBtn.addEventListener('click', function() {
+                schoolTitle.style.display = 'none';
+                editSchoolTitleBtn.style.display = 'none';
+                schoolTitleEditForm.style.display = 'block';
+                const input = schoolTitleEditForm.querySelector('input');
+                if (input) setTimeout(() => input.focus(), 50);
+            });
+            cancelSchoolTitleBtn.addEventListener('click', function() {
+                schoolTitleEditForm.style.display = 'none';
+                schoolTitle.style.display = 'block';
+                editSchoolTitleBtn.style.display = 'inline-block';
+            });
+        }
+
+        // ===== РЕДАКТИРОВАНИЕ ССЫЛОК =====
+        const editWebsiteBtn = $('#editWebsiteBtn');
+        const websiteEditForm = $('#websiteEditForm');
+        const cancelWebsiteBtn = $('#cancelWebsiteBtn');
+        const websiteDisplay = $('#schoolWebsiteDisplay');
+
+        if (editWebsiteBtn && websiteEditForm && cancelWebsiteBtn) {
+            editWebsiteBtn.addEventListener('click', function() {
+                websiteDisplay.style.display = 'none';
+                websiteEditForm.style.display = 'block';
+                const input = websiteEditForm.querySelector('input');
+                if (input) setTimeout(() => input.focus(), 50);
+            });
+            cancelWebsiteBtn.addEventListener('click', function() {
+                websiteEditForm.style.display = 'none';
+                websiteDisplay.style.display = 'block';
+            });
+        }
+
+        const editHotMealBtn = $('#editHotMealBtn');
+        const hotMealEditForm = $('#hotMealEditForm');
+        const cancelHotMealBtn = $('#cancelHotMealBtn');
+        const hotMealDisplay = $('#hotMealDisplay');
+
+        if (editHotMealBtn && hotMealEditForm && cancelHotMealBtn) {
+            editHotMealBtn.addEventListener('click', function() {
+                hotMealDisplay.style.display = 'none';
+                hotMealEditForm.style.display = 'block';
+                const input = hotMealEditForm.querySelector('input');
+                if (input) setTimeout(() => input.focus(), 50);
+            });
+            cancelHotMealBtn.addEventListener('click', function() {
+                hotMealEditForm.style.display = 'none';
+                hotMealDisplay.style.display = 'block';
+            });
+        }
+
+        // ===== КОПИРОВАНИЕ ССЫЛКИ =====
+        const monitoringUrl = $('#monitoringUrl');
+        const copyUrlBtn = $('#copyUrlBtn');
+        const copyNotification = $('#copyNotification');
+
+        function showCopyNotification() {
+            if (copyNotification) {
+                copyNotification.classList.add('show');
+                clearTimeout(copyNotification._timeout);
+                copyNotification._timeout = setTimeout(() => copyNotification.classList.remove('show'), 1500);
             }
         }
-        // Используем классы вместо перебора всех карточек при каждом изменении
-        const cards = document.querySelectorAll('.file-card');
-        for (const card of cards) {
-            const filename = card.dataset.filename;
-            card.classList.toggle('selected', selectedFiles.has(filename));
-        }
-    }
-    
-    // --- Редактирование директора ---
-    if (editDirectorBtn && directorForm && cancelDirectorBtn) {
-        editDirectorBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            directorDisplay.style.display = 'none';
-            editDirectorBtn.style.display = 'none';
-            directorForm.style.display = 'block';
-            const input = directorForm.querySelector('input');
-            if (input) setTimeout(() => input.focus(), 50);
-        });
-        cancelDirectorBtn.addEventListener('click', function() {
-            directorForm.style.display = 'none';
-            directorDisplay.style.display = 'inline';
-            editDirectorBtn.style.display = 'inline-flex';
-        });
-    }
-    
-    // --- Редактирование названия школы ---
-    if (editSchoolTitleBtn && schoolTitleEditForm && cancelSchoolTitleBtn) {
-        editSchoolTitleBtn.addEventListener('click', function() {
-            schoolTitle.style.display = 'none';
-            editSchoolTitleBtn.style.display = 'none';
-            schoolTitleEditForm.style.display = 'block';
-            const input = schoolTitleEditForm.querySelector('input');
-            if (input) setTimeout(() => input.focus(), 50);
-        });
-        cancelSchoolTitleBtn.addEventListener('click', function() {
-            schoolTitleEditForm.style.display = 'none';
-            schoolTitle.style.display = 'block';
-            editSchoolTitleBtn.style.display = 'inline-block';
-        });
-    }
-    
-    // --- Редактирование ссылок ---
-    if (editWebsiteBtn && websiteEditForm && cancelWebsiteBtn) {
-        editWebsiteBtn.addEventListener('click', function() {
-            websiteDisplay.style.display = 'none';
-            websiteEditForm.style.display = 'block';
-            const input = websiteEditForm.querySelector('input');
-            if (input) setTimeout(() => input.focus(), 50);
-        });
-        cancelWebsiteBtn.addEventListener('click', function() {
-            websiteEditForm.style.display = 'none';
-            websiteDisplay.style.display = 'block';
-        });
-    }
-    
-    if (editHotMealBtn && hotMealEditForm && cancelHotMealBtn) {
-        editHotMealBtn.addEventListener('click', function() {
-            hotMealDisplay.style.display = 'none';
-            hotMealEditForm.style.display = 'block';
-            const input = hotMealEditForm.querySelector('input');
-            if (input) setTimeout(() => input.focus(), 50);
-        });
-        cancelHotMealBtn.addEventListener('click', function() {
-            hotMealEditForm.style.display = 'none';
-            hotMealDisplay.style.display = 'block';
-        });
-    }
-    
-    // --- Копирование ссылки ---
-    if (monitoringUrl && copyUrlBtn) {
-        const copyUrl = () => {
-            const text = monitoringUrl.textContent;
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(showCopyNotification).catch(() => {
-                    // fallback
+
+        if (monitoringUrl && copyUrlBtn) {
+            const copyUrl = () => {
+                const text = monitoringUrl.textContent;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(showCopyNotification).catch(() => {
+                        const ta = document.createElement('textarea');
+                        ta.value = text;
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        ta.remove();
+                        showCopyNotification();
+                    });
+                } else {
                     const ta = document.createElement('textarea');
                     ta.value = text;
                     document.body.appendChild(ta);
@@ -2110,79 +1804,98 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.execCommand('copy');
                     ta.remove();
                     showCopyNotification();
-                });
-            } else {
-                const ta = document.createElement('textarea');
-                ta.value = text;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                ta.remove();
-                showCopyNotification();
-            }
-        };
-        monitoringUrl.addEventListener('click', copyUrl);
-        copyUrlBtn.addEventListener('click', copyUrl);
-    }
-    
-    // --- Инициализация выбранных файлов ---
-    const initialCheckboxes = document.querySelectorAll('.file-checkbox');
-    for (const cb of initialCheckboxes) {
-        if (cb.checked) {
-            selectedFiles.add(cb.dataset.filename);
+                }
+            };
+            monitoringUrl.addEventListener('click', copyUrl);
+            copyUrlBtn.addEventListener('click', copyUrl);
         }
-    }
-    updateSelectedCount();
-    
-    // --- Делегирование событий для чекбоксов (оптимизация) ---
-    // Используем делегирование вместо отдельных обработчиков
-    document.addEventListener('change', function(e) {
-        const cb = e.target.closest('.file-checkbox');
-        if (!cb) return;
-        
-        const filename = cb.dataset.filename;
-        if (cb.checked) {
-            selectedFiles.add(filename);
-        } else {
-            selectedFiles.delete(filename);
-        }
-        updateSelectedCount();
-        
-        if (checkAll) {
-            const allCbs = document.querySelectorAll('.file-checkbox');
-            let allChecked = true;
-            for (const c of allCbs) {
-                if (!c.checked) { allChecked = false; break; }
-            }
-            checkAll.checked = allChecked;
-        }
-    });
-    
-    // --- Выделение всех ---
-    if (checkAll) {
-        checkAll.addEventListener('change', function() {
-            const isChecked = this.checked;
-            const allCbs = document.querySelectorAll('.file-checkbox');
-            for (const cb of allCbs) {
-                cb.checked = isChecked;
-                const filename = cb.dataset.filename;
-                if (isChecked) {
-                    selectedFiles.add(filename);
+
+        // ===== УПРАВЛЕНИЕ ВЫБРАННЫМИ ФАЙЛАМИ =====
+        const checkAll = $('#checkAll');
+        const selectedCountSpan = $('#selectedCount');
+        const selectedCountText = $('#selectedCountText');
+        const filesGrid = $('#filesGrid');
+        const specialFilesGrid = $('#specialFilesGrid');
+        let selectedFiles = new Set();
+
+        function updateSelectedCount() {
+            const count = selectedFiles.size;
+            if (selectedCountSpan && selectedCountText) {
+                if (count > 0) {
+                    selectedCountSpan.style.display = 'flex';
+                    selectedCountText.textContent = `Выбрано: ${count}`;
                 } else {
-                    selectedFiles.delete(filename);
+                    selectedCountSpan.style.display = 'none';
                 }
             }
+            const cards = document.querySelectorAll('.file-card');
+            for (const card of cards) {
+                const filename = card.dataset.filename;
+                card.classList.toggle('selected', selectedFiles.has(filename));
+            }
+        }
+
+        // Инициализация
+        const initialCheckboxes = document.querySelectorAll('.file-checkbox');
+        for (const cb of initialCheckboxes) {
+            if (cb.checked) {
+                selectedFiles.add(cb.dataset.filename);
+            }
+        }
+        updateSelectedCount();
+
+        // Делегирование для чекбоксов
+        document.addEventListener('change', function(e) {
+            const cb = e.target.closest('.file-checkbox');
+            if (!cb) return;
+
+            const filename = cb.dataset.filename;
+            if (cb.checked) {
+                selectedFiles.add(filename);
+            } else {
+                selectedFiles.delete(filename);
+            }
             updateSelectedCount();
+
+            if (checkAll) {
+                const allCbs = document.querySelectorAll('.file-checkbox:not([data-special])');
+                let allChecked = true;
+                for (const c of allCbs) {
+                    if (!c.checked) {
+                        allChecked = false;
+                        break;
+                    }
+                }
+                checkAll.checked = allChecked;
+            }
         });
-    }
-    
-    // --- Клик по карточке файла (делегирование) ---
-    if (filesGrid) {
-        filesGrid.addEventListener('click', function(e) {
+
+        // Выделение всех
+        if (checkAll) {
+            checkAll.addEventListener('change', function() {
+                const isChecked = this.checked;
+                const allCbs = document.querySelectorAll('.file-checkbox:not([data-special])');
+                for (const cb of allCbs) {
+                    cb.checked = isChecked;
+                    const filename = cb.dataset.filename;
+                    if (isChecked) {
+                        selectedFiles.add(filename);
+                    } else {
+                        selectedFiles.delete(filename);
+                    }
+                }
+                updateSelectedCount();
+            });
+        }
+
+        // Клик по карточке файла
+        function handleCardClick(e, gridId) {
+            const grid = document.getElementById(gridId);
+            if (!grid) return;
             const card = e.target.closest('.file-card');
             if (!card) return;
             if (e.target.closest('.file-action-btn') || e.target.closest('a')) return;
-            
+
             const cb = card.querySelector('.file-checkbox');
             if (cb) {
                 cb.checked = !cb.checked;
@@ -2193,177 +1906,179 @@ document.addEventListener('DOMContentLoaded', function() {
                     selectedFiles.delete(filename);
                 }
                 updateSelectedCount();
-                
-                if (checkAll) {
-                    const allCbs = document.querySelectorAll('.file-checkbox');
+
+                if (checkAll && gridId === 'filesGrid') {
+                    const allCbs = document.querySelectorAll('.file-checkbox:not([data-special])');
                     let allChecked = true;
                     for (const c of allCbs) {
-                        if (!c.checked) { allChecked = false; break; }
+                        if (!c.checked) {
+                            allChecked = false;
+                            break;
+                        }
                     }
                     checkAll.checked = allChecked;
                 }
             }
-        });
-    }
-    
-    // --- Удаление отдельного файла (делегирование) ---
-    document.addEventListener('click', function(e) {
-        const btn = e.target.closest('.file-action-btn.delete');
-        if (!btn) return;
-        e.stopPropagation();
-        
-        const filename = btn.dataset.filename;
-        const year = btn.dataset.year;
-        const month = btn.dataset.month;
-        
-        if (filename) {
-            pendingDeleteFiles = [filename];
-            if (deleteMessage) deleteMessage.textContent = `Вы действительно хотите удалить файл "${filename}"?`;
-            if (deleteModal) deleteModal.style.display = 'flex';
-            
-            currentDeleteCallback = function() {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/delete-files';
-                const uidInput = document.createElement('input');
-                uidInput.type = 'hidden';
-                uidInput.name = 'uid';
-                uidInput.value = '{{ user.id }}';
-                form.appendChild(uidInput);
-                const yearInput = document.createElement('input');
-                yearInput.type = 'hidden';
-                yearInput.name = 'year';
-                yearInput.value = year || '{{ year }}';
-                form.appendChild(yearInput);
-                const monthInput = document.createElement('input');
-                monthInput.type = 'hidden';
-                monthInput.name = 'month';
-                monthInput.value = month || '{{ month }}';
-                form.appendChild(monthInput);
-                const fileInput = document.createElement('input');
-                fileInput.type = 'hidden';
-                fileInput.name = 'files';
-                fileInput.value = filename;
-                form.appendChild(fileInput);
-                document.body.appendChild(form);
-                form.submit();
-            };
         }
-    });
-    
-    // --- Удаление выделенных ---
-    if (openConfirmBtn) {
-        openConfirmBtn.addEventListener('click', function() {
-            const selected = [];
-            const allCbs = document.querySelectorAll('.file-checkbox:checked');
-            for (const cb of allCbs) {
-                selected.push(cb.dataset.filename);
-            }
-            if (selected.length === 0) {
-                alert('Выберите файлы для удаления');
-                return;
-            }
-            pendingDeleteFiles = selected;
-            if (deleteMessage) deleteMessage.textContent = `Вы действительно хотите удалить выбранные файлы (${selected.length})?`;
-            if (deleteModal) deleteModal.style.display = 'flex';
-            
-            currentDeleteCallback = function() {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/delete-files';
-                const uidInput = document.createElement('input');
-                uidInput.type = 'hidden';
-                uidInput.name = 'uid';
-                uidInput.value = '{{ user.id }}';
-                form.appendChild(uidInput);
-                const yearInput = document.createElement('input');
-                yearInput.type = 'hidden';
-                yearInput.name = 'year';
-                yearInput.value = '{{ year }}';
-                form.appendChild(yearInput);
-                const monthInput = document.createElement('input');
-                monthInput.type = 'hidden';
-                monthInput.name = 'month';
-                monthInput.value = '{{ month }}';
-                form.appendChild(monthInput);
-                for (const filename of pendingDeleteFiles) {
+
+        if (filesGrid) {
+            filesGrid.addEventListener('click', function(e) {
+                handleCardClick(e, 'filesGrid');
+            });
+        }
+        if (specialFilesGrid) {
+            specialFilesGrid.addEventListener('click', function(e) {
+                handleCardClick(e, 'specialFilesGrid');
+            });
+        }
+
+        // ===== УДАЛЕНИЕ =====
+        const deleteModal = $('#deleteModal');
+        const confirmDeleteBtn = $('#confirmDelete');
+        const cancelDeleteBtn = $('#cancelDelete');
+        const deleteMessage = $('#deleteMessage');
+        const openConfirmBtn = $('#openConfirm');
+        const downloadSelected = $('#downloadSelected');
+
+        let pendingDeleteFiles = [];
+        let currentDeleteCallback = null;
+
+        // Удаление отдельного файла
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.file-action-btn.delete');
+            if (!btn) return;
+            e.stopPropagation();
+
+            const filename = btn.dataset.filename;
+            const year = btn.dataset.year;
+            const month = btn.dataset.month;
+
+            if (filename) {
+                pendingDeleteFiles = [filename];
+                if (deleteMessage) deleteMessage.textContent = `Вы действительно хотите удалить файл "${filename}"?`;
+                if (deleteModal) deleteModal.style.display = 'flex';
+
+                currentDeleteCallback = function() {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/delete-files';
+                    const uidInput = document.createElement('input');
+                    uidInput.type = 'hidden';
+                    uidInput.name = 'uid';
+                    uidInput.value = '{{ user.id }}';
+                    form.appendChild(uidInput);
+                    const yearInput = document.createElement('input');
+                    yearInput.type = 'hidden';
+                    yearInput.name = 'year';
+                    yearInput.value = year || '{{ year }}';
+                    form.appendChild(yearInput);
+                    const monthInput = document.createElement('input');
+                    monthInput.type = 'hidden';
+                    monthInput.name = 'month';
+                    monthInput.value = month || '{{ month }}';
+                    form.appendChild(monthInput);
                     const fileInput = document.createElement('input');
                     fileInput.type = 'hidden';
                     fileInput.name = 'files';
                     fileInput.value = filename;
                     form.appendChild(fileInput);
-                }
-                document.body.appendChild(form);
-                form.submit();
-            };
+                    document.body.appendChild(form);
+                    form.submit();
+                };
+            }
         });
-    }
-    
-    // --- Модальное окно ---
-    if (deleteModal) {
-        if (cancelDeleteBtn) {
-            cancelDeleteBtn.addEventListener('click', function() {
-                deleteModal.style.display = 'none';
-                pendingDeleteFiles = [];
-                currentDeleteCallback = null;
+
+        // Удаление выделенных
+        if (openConfirmBtn) {
+            openConfirmBtn.addEventListener('click', function() {
+                const selected = [];
+                const allCbs = document.querySelectorAll('.file-checkbox:checked');
+                for (const cb of allCbs) {
+                    selected.push(cb.dataset.filename);
+                }
+                if (selected.length === 0) {
+                    alert('Выберите файлы для удаления');
+                    return;
+                }
+                pendingDeleteFiles = selected;
+                if (deleteMessage) deleteMessage.textContent = `Вы действительно хотите удалить выбранные файлы (${selected.length})?`;
+                if (deleteModal) deleteModal.style.display = 'flex';
+
+                currentDeleteCallback = function() {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/delete-files';
+                    const uidInput = document.createElement('input');
+                    uidInput.type = 'hidden';
+                    uidInput.name = 'uid';
+                    uidInput.value = '{{ user.id }}';
+                    form.appendChild(uidInput);
+                    const yearInput = document.createElement('input');
+                    yearInput.type = 'hidden';
+                    yearInput.name = 'year';
+                    yearInput.value = '{{ year }}';
+                    form.appendChild(yearInput);
+                    const monthInput = document.createElement('input');
+                    monthInput.type = 'hidden';
+                    monthInput.name = 'month';
+                    monthInput.value = '{{ month }}';
+                    form.appendChild(monthInput);
+                    for (const filename of pendingDeleteFiles) {
+                        const fileInput = document.createElement('input');
+                        fileInput.type = 'hidden';
+                        fileInput.name = 'files';
+                        fileInput.value = filename;
+                        form.appendChild(fileInput);
+                    }
+                    document.body.appendChild(form);
+                    form.submit();
+                };
             });
         }
-        if (confirmDeleteBtn) {
-            confirmDeleteBtn.addEventListener('click', function() {
-                if (currentDeleteCallback) currentDeleteCallback();
-                deleteModal.style.display = 'none';
+
+        // Модальное окно
+        if (deleteModal) {
+            if (cancelDeleteBtn) {
+                cancelDeleteBtn.addEventListener('click', function() {
+                    deleteModal.style.display = 'none';
+                    pendingDeleteFiles = [];
+                    currentDeleteCallback = null;
+                });
+            }
+            if (confirmDeleteBtn) {
+                confirmDeleteBtn.addEventListener('click', function() {
+                    if (currentDeleteCallback) currentDeleteCallback();
+                    deleteModal.style.display = 'none';
+                });
+            }
+            deleteModal.addEventListener('click', function(e) {
+                if (e.target === deleteModal) {
+                    deleteModal.style.display = 'none';
+                    pendingDeleteFiles = [];
+                    currentDeleteCallback = null;
+                }
             });
         }
-        deleteModal.addEventListener('click', function(e) {
-            if (e.target === deleteModal) {
-                deleteModal.style.display = 'none';
-                pendingDeleteFiles = [];
-                currentDeleteCallback = null;
-            }
-        });
-    }
-    
-    // --- Скачивание выделенных ---
-    if (downloadSelected) {
-        downloadSelected.addEventListener('click', function() {
-            const selected = [];
-            const allCbs = document.querySelectorAll('.file-checkbox:checked');
-            for (const cb of allCbs) {
-                selected.push(cb.dataset.filename);
-            }
-            if (selected.length === 0) {
-                alert('Выберите файлы для скачивания');
-                return;
-            }
-            // Открываем каждый файл в новой вкладке - используем setTimeout для снижения нагрузки
-            for (let i = 0; i < selected.length; i++) {
-                setTimeout(() => {
-                    window.open(`/{{ user.id }}/food/${selected[i]}`, '_blank');
-                }, i * 100);
-            }
-        });
-    }
-    
-    // --- Анимация появления карточек с Intersection Observer (оптимизация) ---
-    if ('IntersectionObserver' in window) {
-        const cards = document.querySelectorAll('.file-card');
-        const observer = new IntersectionObserver((entries) => {
-            for (const entry of entries) {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    observer.unobserve(entry.target);
+
+        // ===== СКАЧИВАНИЕ ВЫДЕЛЕННЫХ =====
+        if (downloadSelected) {
+            downloadSelected.addEventListener('click', function() {
+                const selected = [];
+                const allCbs = document.querySelectorAll('.file-checkbox:checked:not([data-special])');
+                for (const cb of allCbs) {
+                    selected.push(cb.dataset.filename);
                 }
-            }
-        }, { threshold: 0.05, rootMargin: '50px' });
-        
-        for (const card of cards) {
-            card.style.opacity = '0';
-            observer.observe(card);
+                if (selected.length === 0) {
+                    alert('Выберите файлы для скачивания');
+                    return;
+                }
+                for (let i = 0; i < selected.length; i++) {
+                    setTimeout(() => {
+                        window.open(`/{{ user.id }}/food/${selected[i]}`, '_blank');
+                    }, i * 100);
+                }
+            });
         }
-    } else {
-        // Fallback для старых браузеров
-        document.querySelectorAll('.file-card').forEach(card => card.style.opacity = '1');
-    }
-});
+    });
 </script>
 {% endblock %}
