@@ -2574,10 +2574,19 @@ async def dashboard(
                 assigned_month = get_msk_time().strftime("%m")
 
         month_name = MONTHS.get(assigned_month, assigned_month)
+        # Время загрузки
 
-        upload_time = file_meta.get("upload_datetime", get_msk_time().strftime("%d.%m.%Y %H:%M"))
-        uploader_name = file_meta.get("uploader_name", user.unit_name)
+        if "upload_datetime" in file_meta:
+            upload_time = file_meta["upload_datetime"]
+        else:
+            mtime = f.stat().st_mtime
+            dt = datetime.utcfromtimestamp(mtime) + timedelta(hours=3)
+            upload_time = dt.strftime("%d.%m.%Y %H:%M")
+        # Кто загрузил (если неизвестно – ставим прочерк)
+
+        uploader_name = file_meta.get("uploader_name", "—")
         uploader_ip = file_meta.get("uploader_ip", "—")
+
 
         # ---------- ОПРЕДЕЛЯЕМ, ЯВЛЯЕТСЯ ЛИ ФАЙЛ СПЕЦИАЛЬНЫМ ----------
         is_special = False
