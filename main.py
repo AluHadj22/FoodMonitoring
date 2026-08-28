@@ -2652,12 +2652,13 @@ async def dashboard(
         "user": user,
         "profile": profile_data,
         "files_grouped": grouped_files,
-        "special_files_all": special_files_all,   # ← НОВАЯ ПЕРЕМЕННАЯ
+        "special_files_all": special_files_all,   # для отображения специальных файлов в дашборде
         "period": f"{year}-{month}",
         "year": year,
         "month": month,
         "months": MONTHS,
-        "monitoring_url": monitoring_url
+        "monitoring_url": monitoring_url,
+        "food_types": FOOD_TYPES,  # для отображения типа питания в дашборде
     })
 
 # --- ОБНОВЛЕННАЯ ЗАГРУЗКА АВАТАРА С ОПТИМИЗАЦИЕЙ ---
@@ -3025,7 +3026,32 @@ async def send_reset_email(email: str, token: str):
             status_code=500,
             detail=f"Не удалось отправить письмо: {str(e)}"
         )
+@app.post("/profile/update-food-type")
+async def update_food_type(
+    uid: int = Form(...),
+    food_type: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Обновление типа питания школы"""
+    user = db.query(models.User).filter(models.User.id == uid).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
 
+    # Проверяем, что переданный тип есть в списке допустимых
+    if food_type not in FOOD_TYPES:
+        raise HTTPException(status_code=400, detail="Недопустимый тип питания")
+
+    user.food_type = food_type
+    db.commit()
+    db.refresh(user)
+
+    # Инвалидируем кеш пользователя, чтобы изменения сразу подхватились
+    cache_key = f"user_{uid}"
+    async with CACHE_LOCK:
+        if cache_key in USER_CACHE:
+            del USER_CACHE[cache_key]
+
+    return RedirectResponse(f"/dashboard?uid={uid}", status_code=303)
 
 @app.get("/reset-password-request", response_class=HTMLResponse)
 async def reset_password_request_page(request: Request):

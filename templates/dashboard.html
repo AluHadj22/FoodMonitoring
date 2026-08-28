@@ -270,6 +270,58 @@
         color: var(--text-primary);
     }
 
+    /* НОВЫЙ БЛОК: редактирование типа питания */
+    .food-type-edit-form {
+        display: none;
+        width: 100%;
+        margin-top: 0.25rem;
+    }
+
+    .food-type-edit-form .form-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .food-type-edit-form select {
+        flex: 1;
+        padding: 0.4rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-light);
+        background: var(--bg-card);
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        min-width: 150px;
+    }
+
+    .food-type-edit-form .btn-sm {
+        padding: 0.3rem 0.6rem;
+        border: none;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .food-type-edit-form .btn-save {
+        background: var(--primary);
+        color: white;
+    }
+
+    .food-type-edit-form .btn-save:hover {
+        background: var(--primary-hover);
+    }
+
+    .food-type-edit-form .btn-cancel {
+        background: var(--gray-200);
+        color: var(--text-secondary);
+    }
+
+    .food-type-edit-form .btn-cancel:hover {
+        background: var(--gray-300);
+    }
+
     .external-path {
         display: inline-flex;
         align-items: center;
@@ -1208,12 +1260,29 @@
                         </svg>
                         {{ user.region or 'Регион не указан' }}
                     </span>
-                    <span class="school-badge">
+                    <span class="school-badge" id="foodTypeBadge">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"></path>
                         </svg>
                         {{ user.food_type }}
+                        <button type="button" id="editFoodTypeBtn" class="edit-director-btn" style="font-size:0.65rem; background:none; border:none; cursor:pointer; color:var(--text-secondary);">✎</button>
                     </span>
+                </div>
+
+                <!-- Форма для изменения типа питания -->
+                <div class="food-type-edit-form" id="foodTypeEditForm">
+                    <form action="/profile/update-food-type" method="post">
+                        <input type="hidden" name="uid" value="{{ user.id }}">
+                        <div class="form-row">
+                            <select name="food_type" required>
+                                {% for ft in food_types %}
+                                <option value="{{ ft }}" {% if ft == user.food_type %}selected{% endif %}>{{ ft }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn-sm btn-save">✓</button>
+                            <button type="button" class="btn-sm btn-cancel" id="cancelFoodTypeBtn">✕</button>
+                        </div>
+                    </form>
                 </div>
 
                 <div class="school-title-edit-form" id="schoolTitleEditForm">
@@ -1689,6 +1758,26 @@
         // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
         const $ = (sel) => document.querySelector(sel);
         const $$ = (sel) => document.querySelectorAll(sel);
+
+        // ===== РЕДАКТИРОВАНИЕ ТИПА ПИТАНИЯ =====
+        const foodTypeBadge = $('#foodTypeBadge');
+        const editFoodTypeBtn = $('#editFoodTypeBtn');
+        const foodTypeEditForm = $('#foodTypeEditForm');
+        const cancelFoodTypeBtn = $('#cancelFoodTypeBtn');
+
+        if (editFoodTypeBtn && foodTypeEditForm && cancelFoodTypeBtn) {
+            editFoodTypeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                foodTypeBadge.style.display = 'none';
+                foodTypeEditForm.style.display = 'block';
+                const select = foodTypeEditForm.querySelector('select');
+                if (select) setTimeout(() => select.focus(), 50);
+            });
+            cancelFoodTypeBtn.addEventListener('click', function() {
+                foodTypeEditForm.style.display = 'none';
+                foodTypeBadge.style.display = 'inline-flex';
+            });
+        }
 
         // ===== РЕДАКТИРОВАНИЕ ДИРЕКТОРА =====
         const directorDisplay = $('#directorNameDisplay');
