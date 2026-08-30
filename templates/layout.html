@@ -203,7 +203,7 @@
       z-index: 1;
     }
 
-    /* Логотип с синим градиентом - упрощенный */
+    /* Логотип с пользовательским изображением */
     .logo {
       display: flex;
       align-items: center;
@@ -213,29 +213,32 @@
     }
 
     .logo-icon {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      width: 44px;
+      height: 44px;
       border-radius: var(--radius-md);
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.2s ease;
-      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
       flex-shrink: 0;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.06), rgba(29, 78, 216, 0.06));
+      border: 1px solid var(--border-light);
     }
 
     .logo:hover .logo-icon {
       transform: scale(1.05) rotate(-2deg);
+      box-shadow: 0 6px 24px rgba(59, 130, 246, 0.25);
     }
 
-    .logo-icon svg {
-      width: 22px;
-      height: 22px;
-      stroke: white;
-      stroke-width: 1.8;
-      position: relative;
-      z-index: 1;
+    .logo-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: var(--radius-sm);
+      background: transparent;
     }
 
     .logo-text h1 {
@@ -490,12 +493,8 @@
         font-size: 0.9rem;
       }
       .logo-icon {
-        width: 34px;
-        height: 34px;
-      }
-      .logo-icon svg {
-        width: 18px;
-        height: 18px;
+        width: 36px;
+        height: 36px;
       }
       .navbar-container {
         padding: 0.6rem 0.75rem;
@@ -544,15 +543,17 @@
   <nav class="navbar">
     <div class="navbar-container">
       <a href="/" class="logo">
+        <!-- Пользовательский логотип (ICO) -->
         <div class="logo-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M12 3C7 3 3 7 3 12s4 9 9 9 9-4 9-9-4-9-9-9z"/>
-            <path d="M12 8v8M8 12h8"/>
-            <circle cx="12" cy="12" r="2"/>
-          </svg>
+          <img 
+            src="static/app.ico"
+            alt="Кот"
+            width="44"
+            height="44"
+          >
         </div>
         <div class="logo-text">
-          <h1>ЕЦМ</h1>
+          <h1>ЕЦМП</h1>
           <p>Единый Центр Мониторинга питания</p>
         </div>
       </a>
