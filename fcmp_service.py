@@ -287,3 +287,71 @@ def bind_external_link(
         "new_link": normalized,
         "fcmp_result": api_result.get("result"),
     }
+
+
+def _admin_fcmp_rayon(admin: models.User) -> str:
+    """Муниципальный — свой район; региональный — весь регион (rayon=0)."""
+    if admin.role == "municipal_admin":
+        rayon = (admin.district or "").strip()
+        if not rayon:
+            raise ValueError("У муниципального администратора не указан район")
+        return _match_fcmp_rayon_name(rayon)
+    if admin.role == "regional_admin":
+        return "0"
+    raise ValueError("Статистика ФЦМПО доступна только администраторам")
+
+
+def _match_fcmp_rayon_name(district: str) -> str:
+    """Сопоставляет district админа с названием района в API ФЦМПО."""
+    wanted = (district or "").strip()
+    if not wanted:
+        return wanted
+    try:
+        rayons = fcmp_parser.list_region_rayons()
+    except Exception:
+        return wanted
+    names = [
+        str(r.get("value") or "").strip()
+        for r in rayons
+        if str(r.get("value") or "").strip() and str(r.get("value")) != "0"
+    ]
+    if wanted in names:
+        return wanted
+    wanted_l = wanted.casefold().replace("ё", "е")
+    for name in names:
+        if name.casefold().replace("ё", "е") == wanted_l:
+            return name
+    for name in names:
+        nl = name.casefold().replace("ё", "е")
+        if wanted_l in nl or nl in wanted_l:
+            return name
+    return wanted
+
+
+def get_admin_fcmp_dashboard(
+    admin: models.User,
+    stat_date: Optional[date] = None,
+    rayon: Optional[str] = None,
+) -> dict[str, Any]:
+    """
+    Сводка ФЦМПО для кабинета админа.
+    Муниципальный: только свой район.
+    Региональный: весь регион, либо выбранный rayon (если передан).
+    """
+    if admin.role == "municipal_admin":
+        rayon_key = _admin_fcmp_rayon(admin)
+    elif admin.role == "regional_admin":
+        rayon_key = (rayon or "0").strip() or "0"
+        if rayon_key != "0":
+            rayon_key = _match_fcmp_rayon_name(rayon_key)
+    else:
+        raise ValueError("Статистика ФЦМПО доступна только администраторам")
+
+    data = fcmp_parser.fetch_region_dashboard(
+        region_id=fcmp_parser.CHECHNYA_REGION_ID,
+        rayon=rayon_key,
+        stat_date=stat_date,
+    )
+    data["admin_role"] = admin.role
+    data["admin_district"] = (admin.district or "").strip() or None
+    return data

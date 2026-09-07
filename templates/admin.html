@@ -752,6 +752,177 @@
     .notification.error { border-left: 3px solid var(--danger); }
     .notification.warning { border-left: 3px solid var(--warning); }
 
+    /* ===== ФЦМПО сводка для админа ===== */
+    .fcmp-admin-section {
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        padding: 1.15rem 1.25rem 1.35rem;
+        margin-bottom: 1.25rem;
+    }
+    .fcmp-admin-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 0.85rem;
+        margin-bottom: 0.85rem;
+    }
+    .fcmp-admin-title h3 {
+        margin: 0 0 0.2rem;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    .fcmp-admin-title p {
+        margin: 0;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+    .fcmp-admin-controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .fcmp-admin-controls input[type="date"],
+    .fcmp-admin-controls select {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.45rem 0.65rem;
+        background: var(--surface, #fff);
+        color: var(--text-primary);
+        font-size: 0.8rem;
+    }
+    .fcmp-admin-btn {
+        border: none;
+        border-radius: 8px;
+        padding: 0.55rem 0.95rem;
+        background: #3d7eb8;
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .fcmp-admin-btn:hover:not(:disabled) { background: #2f6a9c; }
+    .fcmp-admin-btn:disabled { opacity: 0.65; cursor: wait; }
+    .fcmp-admin-status {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.75rem;
+        min-height: 1.1em;
+    }
+    .fcmp-admin-status.error { color: var(--danger, #d46565); }
+    .fcmp-admin-status.ok { color: var(--success, #3d9a78); }
+    .fcmp-admin-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    .fcmp-admin-metric {
+        background: var(--gray-100, #f3f6fa);
+        border-radius: 10px;
+        padding: 0.75rem 0.9rem;
+    }
+    .fcmp-admin-metric .label {
+        display: block;
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+    }
+    .fcmp-admin-metric .value {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    .fcmp-admin-charts {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 0.85rem;
+        margin-bottom: 1rem;
+    }
+    .fcmp-admin-chart-box {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.75rem;
+        background: var(--surface, #fff);
+        position: relative;
+    }
+    .fcmp-admin-chart-box h4 {
+        margin: 0 0 0.55rem;
+        font-size: 0.82rem;
+        font-weight: 650;
+        color: var(--text-primary);
+    }
+    .fcmp-admin-chart-canvas-wrap {
+        position: relative;
+        min-height: 140px;
+    }
+    .fcmp-admin-chart-empty {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        font-weight: 650;
+        color: #3d9a78;
+        background: transparent;
+        pointer-events: none;
+        z-index: 2;
+    }
+    .fcmp-admin-chart-empty[hidden] { display: none !important; }
+    .fcmp-admin-tables {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.85rem;
+    }
+    .fcmp-admin-table-wrap {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: auto;
+        max-height: 280px;
+        background: var(--surface, #fff);
+    }
+    .fcmp-admin-table-wrap h4 {
+        margin: 0;
+        padding: 0.65rem 0.75rem;
+        font-size: 0.82rem;
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        background: var(--surface, #fff);
+    }
+    .fcmp-admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.75rem;
+    }
+    .fcmp-admin-table th,
+    .fcmp-admin-table td {
+        padding: 0.4rem 0.65rem;
+        border-bottom: 1px solid var(--border-light, #e8eef5);
+        text-align: left;
+    }
+    .fcmp-admin-table th {
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+    .fcmp-admin-empty {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+    .fcmp-admin-body[hidden] { display: none !important; }
+
+    @media (max-width: 900px) {
+        .fcmp-admin-metrics,
+        .fcmp-admin-charts,
+        .fcmp-admin-tables { grid-template-columns: 1fr; }
+    }
+
     @media (max-width: 768px) {
         .admin-layout { padding: 1rem 0.75rem 2.5rem; }
         .admin-sidebar { position: static; }
@@ -1006,6 +1177,90 @@
 
         <!-- Основной контент -->
         <main>
+            <!-- Сводная статистика ФЦМПО -->
+            <section class="fcmp-admin-section"
+                     id="fcmpAdminSection"
+                     data-admin-id="{{ admin.id }}"
+                     data-role="{{ admin.role }}"
+                     data-district="{{ admin.district or '' }}">
+                <div class="fcmp-admin-head">
+                    <div class="fcmp-admin-title">
+                        <h3>Статистика ФЦМПО</h3>
+                        <p>
+                            {% if admin.role == 'regional_admin' %}
+                            Сводка федерального мониторинга по региону
+                            {% else %}
+                            Сводка федерального мониторинга по району «{{ admin.district }}»
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="fcmp-admin-controls">
+                        <input type="date" id="fcmpAdminDate" title="Дата среза">
+                        {% if admin.role == 'regional_admin' and districts %}
+                        <select id="fcmpAdminRayon" title="Район">
+                            <option value="0">Весь регион</option>
+                            {% for d in districts %}
+                            <option value="{{ d }}">{{ d }}</option>
+                            {% endfor %}
+                        </select>
+                        {% endif %}
+                        <button type="button" class="fcmp-admin-btn" id="fcmpAdminLoadBtn">
+                            Показать статистику ФЦМПО
+                        </button>
+                    </div>
+                </div>
+                <div class="fcmp-admin-status" id="fcmpAdminStatus">
+                    Выберите дату и нажмите кнопку, чтобы загрузить данные с мониторингпитания.рф
+                </div>
+                <div class="fcmp-admin-body" id="fcmpAdminBody" hidden>
+                    <div class="fcmp-admin-metrics">
+                        <div class="fcmp-admin-metric">
+                            <span class="label">Всего пищеблоков</span>
+                            <span class="value" data-k="total">0</span>
+                        </div>
+                        <div class="fcmp-admin-metric">
+                            <span class="label">С меню</span>
+                            <span class="value" data-k="with_menu">0</span>
+                        </div>
+                        <div class="fcmp-admin-metric">
+                            <span class="label">Без меню</span>
+                            <span class="value" data-k="without_menu">0</span>
+                        </div>
+                    </div>
+                    <div class="fcmp-admin-charts">
+                        <div class="fcmp-admin-chart-box">
+                            <h4>Ошибки по дням</h4>
+                            <div class="fcmp-admin-chart-canvas-wrap">
+                                <canvas id="fcmpAdminErrorsChart" height="140"></canvas>
+                                <div class="fcmp-admin-chart-empty" id="fcmpAdminErrorsEmpty" hidden>нет ошибок</div>
+                            </div>
+                        </div>
+                        <div class="fcmp-admin-chart-box">
+                            <h4>Типы ошибок СанПиН</h4>
+                            <div class="fcmp-admin-chart-canvas-wrap">
+                                <canvas id="fcmpAdminErrorTypesChart" height="140"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fcmp-admin-tables">
+                        <div class="fcmp-admin-table-wrap">
+                            <h4 id="fcmpLeadersTitle">Лидеры</h4>
+                            <table class="fcmp-admin-table">
+                                <thead><tr><th>Название</th><th>Ошибки</th></tr></thead>
+                                <tbody id="fcmpLeadersBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="fcmp-admin-table-wrap">
+                            <h4 id="fcmpOutsidersTitle">Аутсайдеры</h4>
+                            <table class="fcmp-admin-table">
+                                <thead><tr><th>Название</th><th>Ошибки</th></tr></thead>
+                                <tbody id="fcmpOutsidersBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Поисковая панель с фильтрами -->
             <div class="search-panel">
                 <form class="search-form" action="/admin" method="get" id="searchForm">
@@ -1180,8 +1435,193 @@
 <!-- Уведомление -->
 <div class="notification" id="notification"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
     let uploadTimeout, deleteTimeout, monthDeleteTimeout;
+
+    // ===== ФЦМПО: сводка для админа =====
+    (function initFcmpAdminDashboard() {
+        const section = document.getElementById('fcmpAdminSection');
+        if (!section) return;
+
+        const adminId = section.dataset.adminId;
+        const role = section.dataset.role;
+        const btn = document.getElementById('fcmpAdminLoadBtn');
+        const statusEl = document.getElementById('fcmpAdminStatus');
+        const bodyEl = document.getElementById('fcmpAdminBody');
+        const dateInput = document.getElementById('fcmpAdminDate');
+        const rayonSelect = document.getElementById('fcmpAdminRayon');
+        let errorsChart = null;
+        let typesChart = null;
+
+        // дата по умолчанию — сегодня
+        const today = new Date();
+        const iso = [
+            today.getFullYear(),
+            String(today.getMonth() + 1).padStart(2, '0'),
+            String(today.getDate()).padStart(2, '0'),
+        ].join('-');
+        if (dateInput) dateInput.value = iso;
+
+        function destroyCharts() {
+            if (errorsChart) { errorsChart.destroy(); errorsChart = null; }
+            if (typesChart) { typesChart.destroy(); typesChart = null; }
+        }
+
+        function fillTable(tbodyId, rows) {
+            const tbody = document.getElementById(tbodyId);
+            if (!tbody) return;
+            if (!rows || !rows.length) {
+                tbody.innerHTML = '<tr><td colspan="2">Нет данных</td></tr>';
+                return;
+            }
+            tbody.innerHTML = rows.map((r) => (
+                `<tr><td>${r.name || '—'}</td><td>${r.errors ?? 0}</td></tr>`
+            )).join('');
+        }
+
+        function render(data) {
+            bodyEl.hidden = false;
+            const s = data.summary || {};
+            bodyEl.querySelector('[data-k="total"]').textContent = s.total ?? 0;
+            bodyEl.querySelector('[data-k="with_menu"]').textContent = s.with_menu ?? 0;
+            bodyEl.querySelector('[data-k="without_menu"]').textContent = s.without_menu ?? 0;
+
+            const isRayonLevel = data.rayon && data.rayon !== '0';
+            document.getElementById('fcmpLeadersTitle').textContent =
+                isRayonLevel ? 'Лидеры (школы)' : 'Лидеры (районы)';
+            document.getElementById('fcmpOutsidersTitle').textContent =
+                isRayonLevel ? 'Аутсайдеры (школы)' : 'Аутсайдеры (районы)';
+
+            fillTable('fcmpLeadersBody', data.leaders);
+            fillTable('fcmpOutsidersBody', data.outsiders);
+
+            destroyCharts();
+            const chart = data.chart || [];
+            const hasDayErrors = chart.some((r) => Number(r.errors) > 0);
+            const errorsEmptyEl = document.getElementById('fcmpAdminErrorsEmpty');
+            const errorsCanvas = document.getElementById('fcmpAdminErrorsChart');
+
+            if (!hasDayErrors) {
+                if (errorsEmptyEl) errorsEmptyEl.hidden = false;
+                if (errorsCanvas) errorsCanvas.style.visibility = 'hidden';
+                errorsChart = null;
+            } else {
+                if (errorsEmptyEl) errorsEmptyEl.hidden = true;
+                if (errorsCanvas) errorsCanvas.style.visibility = 'visible';
+                errorsChart = new Chart(errorsCanvas, {
+                    type: 'line',
+                    data: {
+                        labels: chart.map((r) => r.date),
+                        datasets: [{
+                            label: 'Ошибки',
+                            data: chart.map((r) => r.errors),
+                            borderColor: '#5b9fd4',
+                            backgroundColor: 'rgba(91,159,212,0.15)',
+                            tension: 0.25,
+                            fill: true,
+                        }],
+                    },
+                    options: {
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } },
+                    },
+                });
+            }
+
+            const types = (data.error_types || []).slice(0, 8);
+            const typesCanvas = document.getElementById('fcmpAdminErrorTypesChart');
+            if (!types.length) {
+                // Зелёное кольцо + подпись «нет ошибок» в центре
+                typesChart = new Chart(typesCanvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['нет ошибок'],
+                        datasets: [{
+                            data: [1],
+                            backgroundColor: ['#3d9a78'],
+                            borderWidth: 0,
+                        }],
+                    },
+                    options: {
+                        cutout: '68%',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { enabled: false },
+                        },
+                    },
+                    plugins: [{
+                        id: 'noErrorsCenterText',
+                        afterDraw(chartInstance) {
+                            const { ctx, chartArea } = chartInstance;
+                            if (!chartArea) return;
+                            const cx = (chartArea.left + chartArea.right) / 2;
+                            const cy = (chartArea.top + chartArea.bottom) / 2;
+                            ctx.save();
+                            ctx.fillStyle = '#3d9a78';
+                            ctx.font = '650 14px system-ui, sans-serif';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText('нет ошибок', cx, cy);
+                            ctx.restore();
+                        },
+                    }],
+                });
+            } else {
+                typesChart = new Chart(typesCanvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: types.map((t) => (t.text || t.meal || '—').slice(0, 42)),
+                        datasets: [{
+                            data: types.map((t) => t.count),
+                            backgroundColor: [
+                                '#5b9fd4', '#3d9a78', '#d4a15b', '#d46565',
+                                '#7f9bb8', '#8b5cf6', '#10b981', '#f59e0b',
+                            ],
+                        }],
+                    },
+                    options: {
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { boxWidth: 10, font: { size: 10 } },
+                            },
+                        },
+                    },
+                });
+            }
+
+            statusEl.className = 'fcmp-admin-status ok';
+            statusEl.textContent = `Срез: ${data.scope_label || ''} · дата ${data.date || ''}`;
+        }
+
+        async function loadStats() {
+            btn.disabled = true;
+            statusEl.className = 'fcmp-admin-status';
+            statusEl.textContent = 'Загрузка статистики с мониторингпитания.рф…';
+            try {
+                const params = new URLSearchParams();
+                if (dateInput && dateInput.value) params.set('date', dateInput.value);
+                if (role === 'regional_admin' && rayonSelect && rayonSelect.value) {
+                    params.set('rayon', rayonSelect.value);
+                }
+                const resp = await fetch(`/api/admin/${adminId}/fcmp-dashboard?` + params.toString());
+                const data = await resp.json();
+                if (!resp.ok) {
+                    const detail = typeof data.detail === 'string' ? data.detail : 'Ошибка загрузки';
+                    throw new Error(detail);
+                }
+                render(data);
+            } catch (err) {
+                statusEl.className = 'fcmp-admin-status error';
+                statusEl.textContent = err.message || String(err);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        btn.addEventListener('click', loadStats);
+    })();
 
     // Показ уведомления
     let notificationTimeout;

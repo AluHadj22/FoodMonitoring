@@ -2800,6 +2800,44 @@ async def bind_fcmp_link(
         raise HTTPException(status_code=502, detail=f"Не удалось изменить ссылку в ФЦМПО: {e}")
 
 
+@app.get("/api/admin/{admin_id}/fcmp-dashboard")
+async def admin_fcmp_dashboard(
+    admin_id: int,
+    date: str = "",
+    rayon: str = "",
+    db: Session = Depends(get_db),
+):
+    """Сводная статистика ФЦМПО для регионального/муниципального админа."""
+    from datetime import date as date_cls
+
+    admin = await get_cached_user(admin_id, db)
+    if not admin or admin.role not in ("regional_admin", "municipal_admin"):
+        raise HTTPException(status_code=403, detail="Доступ только для администраторов")
+
+    stat_date = None
+    if date.strip():
+        try:
+            stat_date = date_cls.fromisoformat(date.strip()[:10])
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Некорректная дата (ожидается YYYY-MM-DD)")
+
+    # Муниципальный админ не может запрашивать чужой район
+    rayon_arg = rayon.strip() if admin.role == "regional_admin" else ""
+
+    try:
+        return await run_in_threadpool(
+            fcmp_service.get_admin_fcmp_dashboard,
+            admin,
+            stat_date,
+            rayon_arg or None,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("FCMP admin dashboard failed for admin_id=%s", admin_id)
+        raise HTTPException(status_code=502, detail=f"Не удалось получить статистику ФЦМПО: {e}")
+
+
 # --- ОБНОВЛЕННАЯ ЗАГРУЗКА АВАТАРА С ОПТИМИЗАЦИЕЙ ---
 @app.post("/profile/upload-avatar")
 async def upload_avatar(

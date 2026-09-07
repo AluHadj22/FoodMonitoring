@@ -382,3 +382,96 @@ def update_foodblock_link(foodblock_id: int, link: str, pin: str | int) -> dict[
         "result": message,
         "raw": result,
     }
+
+
+def _dashboard_post(path: str, region_id: int, rayon: str, stat_date: date) -> Any:
+    payload = {
+        "region": region_id,
+        "rayon": rayon,
+        "date": stat_date.isoformat(),
+    }
+    return _http_post_json(f"{API_BASE}/{path.lstrip('/')}", payload)
+
+
+def list_region_rayons(region_id: int = CHECHNYA_REGION_ID) -> list[dict]:
+    data = _http_get_json(f"{API_BASE}/listrayon/?id={region_id}")
+    if not isinstance(data, list):
+        return []
+    return [x for x in data if isinstance(x, dict)]
+
+
+def fetch_region_dashboard(
+    region_id: int = CHECHNYA_REGION_ID,
+    rayon: str = "0",
+    stat_date: Optional[date] = None,
+) -> dict[str, Any]:
+    """
+    Сводная статистика ФЦМПО (как дашборд на мониторингпитания.рф).
+    rayon='0' — весь регион; иначе название района (например «Шалинский»).
+    """
+    day = stat_date or date.today()
+    rayon_key = (rayon or "0").strip() or "0"
+
+    summary_raw = _dashboard_post("dashboard/", region_id, rayon_key, day)
+    grafik_raw = _dashboard_post("dashboard/grafik/", region_id, rayon_key, day)
+    errors_raw = _dashboard_post("dashboard/svodoshibok/", region_id, rayon_key, day)
+    leaders_raw = _dashboard_post("dashboard/liders/", region_id, rayon_key, day)
+    outsiders_raw = _dashboard_post("dashboard/outsiders/", region_id, rayon_key, day)
+
+    summary = {}
+    if isinstance(summary_raw, list) and summary_raw and isinstance(summary_raw[0], dict):
+        summary = summary_raw[0]
+    elif isinstance(summary_raw, dict):
+        summary = summary_raw
+
+    def _rows(raw: Any) -> list[dict]:
+        if isinstance(raw, list):
+            return [x for x in raw if isinstance(x, dict)]
+        return []
+
+    scope_label = "Весь регион" if rayon_key == "0" else rayon_key
+    return {
+        "ok": True,
+        "region_id": region_id,
+        "region_name": CHECHNYA_REGION_NAME,
+        "rayon": rayon_key,
+        "scope_label": scope_label,
+        "date": day.isoformat(),
+        "summary": {
+            "total": int(summary.get("Всего") or 0),
+            "with_menu": int(summary.get("СМеню") or 0),
+            "without_menu": int(summary.get("БезМеню") or 0),
+        },
+        "chart": [
+            {
+                "date": str(r.get("Дата") or ""),
+                "errors": int(r.get("Ошибок") or 0),
+                "pct": float(r.get("Процент") or 0),
+            }
+            for r in _rows(grafik_raw)
+        ],
+        "error_types": [
+            {
+                "meal": str(r.get("ПриемПищи") or ""),
+                "text": str(r.get("Текст") or ""),
+                "count": int(r.get("Количество") or 0),
+            }
+            for r in _rows(errors_raw)
+        ],
+        "leaders": [
+            {
+                "name": str(r.get("Наименование") or r.get("РайонНаименование") or ""),
+                "errors": int(r.get("ЧислоОшибок") or 0),
+                "is_rayon": "РайонНаименование" in r and "Наименование" not in r,
+            }
+            for r in _rows(leaders_raw)
+        ],
+        "outsiders": [
+            {
+                "name": str(r.get("Наименование") or r.get("РайонНаименование") or ""),
+                "errors": int(r.get("ЧислоОшибок") or 0),
+                "is_rayon": "РайонНаименование" in r and "Наименование" not in r,
+            }
+            for r in _rows(outsiders_raw)
+        ],
+    }
