@@ -385,6 +385,41 @@
         color: white;
     }
 
+    .btn-fcmp-bind {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        margin-left: 0.25rem;
+        padding: 0.2rem 0.55rem;
+        border: 1px solid var(--primary);
+        background: white;
+        color: var(--primary);
+        border-radius: 1rem;
+        font-size: 0.65rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .btn-fcmp-bind:hover:not(:disabled) {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-fcmp-bind:disabled {
+        opacity: 0.6;
+        cursor: wait;
+    }
+
+    .fcmp-bind-status {
+        font-size: 0.65rem;
+        margin-top: 0.25rem;
+        color: var(--text-secondary);
+    }
+
+    .fcmp-bind-status.ok { color: var(--success, #3d9a78); }
+    .fcmp-bind-status.error { color: var(--danger, #d46565); }
+
     .btn-external {
         display: inline-flex;
         align-items: center;
@@ -1897,7 +1932,13 @@
                         <div class="external-path-link">
                             <span id="monitoringUrl" class="copy-link">{{ monitoring_url.rstrip('/') }}</span>
                             <span class="copy-badge" id="copyUrlBtn">Копировать</span>
+                            <button type="button" class="btn-fcmp-bind" id="fcmpBindLinkBtn"
+                                    data-uid="{{ user.id }}"
+                                    data-link="{{ monitoring_url.rstrip('/') }}">
+                                Привязать к ФЦМПО
+                            </button>
                         </div>
+                        <div class="fcmp-bind-status" id="fcmpBindStatus"></div>
                     </div>
                 </div>
             </div>
@@ -2642,6 +2683,93 @@
                     window.__renderFcmp(data);
                 } catch (err) {
                     statusEl.className = 'fcmp-status error';
+                    statusEl.textContent = err.message || String(err);
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        })();
+
+        // ===== ПРИВЯЗКА ВНЕШНЕГО ПУТИ К ФЦМПО =====
+        (function initFcmpBindLink() {
+            const btn = document.getElementById('fcmpBindLinkBtn');
+            const statusEl = document.getElementById('fcmpBindStatus');
+            if (!btn || !statusEl) return;
+            const uid = btn.dataset.uid;
+            const link = btn.dataset.link;
+
+            function detailText(payload) {
+                if (!payload) return 'Ошибка запроса';
+                if (typeof payload.detail === 'string') return payload.detail;
+                if (Array.isArray(payload.detail)) {
+                    return payload.detail.map((d) => d.msg || JSON.stringify(d)).join('; ');
+                }
+                return payload.message || 'Ошибка запроса';
+            }
+
+            btn.addEventListener('click', async function () {
+                btn.disabled = true;
+                statusEl.className = 'fcmp-bind-status';
+                statusEl.textContent = 'Поиск пищеблока в ФЦМПО…';
+                try {
+                    const previewResp = await fetch(
+                        '/api/school/' + uid + '/fcmp-bind-link/preview?link=' + encodeURIComponent(link)
+                    );
+                    const preview = await previewResp.json();
+                    if (!previewResp.ok) throw new Error(detailText(preview));
+
+                    const code = preview.foodblock_id;
+                    const label = preview.label || '—';
+                    const current = preview.current_link || 'не указана';
+                    const msg = [
+                        'Пищеблок: код ' + code + (label ? ' — ' + label : ''),
+                        'Текущая ссылка в ФЦМПО: ' + current,
+                        'Новая ссылка: ' + preview.new_link,
+                        '',
+                        'Отправить ссылку внешнего пути в базу ФЦМПО?',
+                    ].join('\n');
+                    if (!confirm(msg)) {
+                        statusEl.textContent = '';
+                        return;
+                    }
+
+                    let pin = '';
+                    if (preview.pin_required) {
+                        pin = prompt('У пищеблока задан PIN. Введите 4 цифры PIN-кода:', '') || '';
+                        if (!/^\d{4}$/.test(pin.trim())) {
+                            throw new Error('Нужен PIN из 4 цифр');
+                        }
+                    } else {
+                        const entered = prompt(
+                            'PIN ещё не задан. Введите любые 4 цифры (запомнятся как PIN) или оставьте 0000:',
+                            '0000'
+                        );
+                        if (entered === null) {
+                            statusEl.textContent = '';
+                            return;
+                        }
+                        pin = (entered || '0000').trim();
+                        if (!/^\d{4}$/.test(pin)) {
+                            throw new Error('PIN должен состоять из 4 цифр');
+                        }
+                    }
+
+                    statusEl.textContent = 'Отправка ссылки в базу ФЦМПО…';
+                    const body = new FormData();
+                    body.append('link', link);
+                    body.append('pin', pin);
+                    const resp = await fetch('/api/school/' + uid + '/fcmp-bind-link', {
+                        method: 'POST',
+                        body,
+                    });
+                    const data = await resp.json();
+                    if (!resp.ok) throw new Error(detailText(data));
+
+                    statusEl.className = 'fcmp-bind-status ok';
+                    statusEl.textContent = 'Готово: код ' + data.foodblock_id + ' → ' + data.new_link
+                        + (data.fcmp_result ? ' (' + data.fcmp_result + ')' : '');
+                } catch (err) {
+                    statusEl.className = 'fcmp-bind-status error';
                     statusEl.textContent = err.message || String(err);
                 } finally {
                     btn.disabled = false;

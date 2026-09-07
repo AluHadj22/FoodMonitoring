@@ -2761,6 +2761,45 @@ async def refresh_fcmp_stats(uid: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=502, detail=f"Не удалось получить данные ФЦМПО: {e}")
 
 
+@app.get("/api/school/{uid}/fcmp-bind-link/preview")
+async def preview_fcmp_bind_link(
+    uid: int,
+    link: str,
+    db: Session = Depends(get_db),
+):
+    """Предпросмотр: какой пищеблок и какая ссылка уйдут в ФЦМПО."""
+    user = await get_cached_user(uid, db)
+    if not user:
+        raise HTTPException(status_code=404, detail="Школа не найдена")
+    try:
+        return await run_in_threadpool(fcmp_service.preview_bind_external_link, db, user, link)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("FCMP bind preview failed for uid=%s", uid)
+        raise HTTPException(status_code=502, detail=f"Не удалось проверить пищеблок ФЦМПО: {e}")
+
+
+@app.post("/api/school/{uid}/fcmp-bind-link")
+async def bind_fcmp_link(
+    uid: int,
+    db: Session = Depends(get_db),
+    link: str = Form(...),
+    pin: str = Form(""),
+):
+    """Привязать внешний путь школы как ссылку пищеблока в базе ФЦМПО."""
+    user = await get_cached_user(uid, db)
+    if not user:
+        raise HTTPException(status_code=404, detail="Школа не найдена")
+    try:
+        return await run_in_threadpool(fcmp_service.bind_external_link, db, user, link, pin)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("FCMP bind link failed for uid=%s", uid)
+        raise HTTPException(status_code=502, detail=f"Не удалось изменить ссылку в ФЦМПО: {e}")
+
+
 # --- ОБНОВЛЕННАЯ ЗАГРУЗКА АВАТАРА С ОПТИМИЗАЦИЕЙ ---
 @app.post("/profile/upload-avatar")
 async def upload_avatar(

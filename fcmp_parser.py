@@ -71,6 +71,34 @@ def _http_get_json(url: str, timeout: int = 90) -> Any:
     return json.loads(raw)
 
 
+def _http_post_json(url: str, payload: dict, timeout: int = 90) -> Any:
+    data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        method="POST",
+        headers={
+            "User-Agent": USER_AGENT,
+            "Accept": "application/json, text/plain, */*",
+            "Content-Type": "application/json",
+            "Referer": REFERER,
+            "Origin": "https://xn--80afhjabb0ajcdecrl4ah.xn--p1ai",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", "replace") if e.fp else ""
+        raise RuntimeError(f"HTTP {e.code} от ФЦМПО: {body or e.reason}") from e
+    if not raw or not raw.strip():
+        return None
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        return {"raw": raw}
+
+
 def normalize_school_name(name: str) -> str:
     if not name:
         return ""
@@ -286,3 +314,71 @@ def fetch_school_fcmp_stats(
         raise RuntimeError("Пищеблоки Чеченской Республики не найдены")
     rows = fetch_all_stats_for_foodblock(match.foodblock_id, date_from=date_from, date_to=date_to)
     return match, rows
+
+
+def normalize_food_folder_link(link: str) -> str:
+    """Ссылка для ФЦМПО: http(s)://…/food (без лишнего слэша в конце)."""
+    s = (link or "").strip()
+    if not s:
+        raise ValueError("Пустая ссылка")
+    if not (s.startswith("http://") or s.startswith("https://")):
+        raise ValueError("Ссылка должна начинаться с http:// или https://")
+    s = s.rstrip("/")
+    if not s.endswith("/food"):
+        raise ValueError("Ссылка должна заканчиваться на /food")
+    return s
+
+
+def get_foodblock_guid(foodblock_id: int) -> str:
+    data = _http_get_json(f"{API_BASE}/perezaprosmenu/guid/?id={foodblock_id}")
+    if isinstance(data, list) and data and data[0].get("Ref_Key"):
+        return str(data[0]["Ref_Key"])
+    raise RuntimeError(f"Не удалось получить GUID пищеблока {foodblock_id}")
+
+
+def foodblock_pin_is_set(foodblock_id: int) -> bool:
+    """pinchange возвращает {pin: 0|1}: 1 — пин уже задан."""
+    data = _http_get_json(f"{API_BASE}/pinchange/?id={foodblock_id}")
+    if isinstance(data, dict):
+        return int(data.get("pin") or 0) == 1
+    return False
+
+
+def get_foodblock_link(foodblock_id: int) -> Optional[str]:
+    data = _http_get_json(f"{API_BASE}/pishinfo?id={foodblock_id}")
+    if not isinstance(data, list):
+        return None
+    for item in data:
+        if not isinstance(item, dict):
+            continue
+        key = str(item.get("Показатель") or item.get("показатель") or "").casefold()
+        if key in {"ссылка", "link", "url"}:
+            val = item.get("Значение")
+            return str(val).strip() if val is not None else None
+    # запасной вариант: 5-й элемент как на UI ФЦМПО
+    if len(data) > 4 and isinstance(data[4], dict) and data[4].get("Значение") is not None:
+        return str(data[4]["Значение"]).strip()
+    return None
+
+
+def update_foodblock_link(foodblock_id: int, link: str, pin: str | int) -> dict[str, Any]:
+    """
+    Меняет ссылку пищеблока в базе ФЦМПО (как кнопка «Изменить ссылку пищеблока»).
+    POST api.cemon.ru/editlink/ {guid, link, pin}
+    """
+    normalized = normalize_food_folder_link(link)
+    guid = get_foodblock_guid(foodblock_id)
+    payload = {"guid": guid, "link": normalized, "pin": str(pin)}
+    result = _http_post_json(f"{API_BASE}/editlink/", payload)
+    if not isinstance(result, dict):
+        raise RuntimeError(f"Неожиданный ответ editlink: {result!r}")
+    message = result.get("result", result)
+    if isinstance(message, str) and "ошиб" in message.casefold():
+        raise RuntimeError(message)
+    return {
+        "foodblock_id": foodblock_id,
+        "guid": guid,
+        "link": normalized,
+        "result": message,
+        "raw": result,
+    }

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import date, datetime
 from typing import Any, Optional
 
@@ -188,4 +189,101 @@ def get_school_fcmp_stats(db: Session, user_id: int) -> dict[str, Any]:
         },
         "summary": compute_summary(rows),
         "rows": [row_to_dict(r) for r in rows],
+    }
+
+
+def _resolve_foodblock_match(db: Session, user: models.User) -> models.FcmpSchoolMatch:
+    """Берём сохранённый матч или ищем школу в ФЦМПО и сохраняем."""
+    db_match = (
+        db.query(models.FcmpSchoolMatch)
+        .filter(models.FcmpSchoolMatch.user_id == user.id)
+        .first()
+    )
+    if db_match and db_match.foodblock_id:
+        return db_match
+
+    school_name = (user.unit_name or "").strip()
+    if not school_name:
+        raise ValueError("У школы не указано название (unit_name)")
+
+    match = fcmp_parser.find_best_foodblock(
+        school_name,
+        district=(user.district or "").strip(),
+    )
+    if not match:
+        raise ValueError("Пищеблок для этой школы не найден в ФЦМПО")
+
+    now = datetime.utcnow()
+    if not db_match:
+        db_match = models.FcmpSchoolMatch(user_id=user.id)
+        db.add(db_match)
+    db_match.foodblock_id = match.foodblock_id
+    db_match.foodblock_label = match.label
+    db_match.foodblock_rayon = match.rayon
+    db_match.match_score = match.score
+    db_match.matched_at = now
+    db.commit()
+    db.refresh(db_match)
+    return db_match
+
+
+def preview_bind_external_link(db: Session, user: models.User, link: str) -> dict[str, Any]:
+    """Информация перед привязкой: код пищеблока, текущая и новая ссылка, нужен ли пин."""
+    normalized = fcmp_parser.normalize_food_folder_link(link)
+    db_match = _resolve_foodblock_match(db, user)
+    current = None
+    pin_required = False
+    try:
+        current = fcmp_parser.get_foodblock_link(db_match.foodblock_id)
+    except Exception:
+        current = None
+    try:
+        pin_required = fcmp_parser.foodblock_pin_is_set(db_match.foodblock_id)
+    except Exception:
+        pin_required = True
+    return {
+        "ok": True,
+        "foodblock_id": db_match.foodblock_id,
+        "label": db_match.foodblock_label,
+        "rayon": db_match.foodblock_rayon,
+        "current_link": current,
+        "new_link": normalized,
+        "pin_required": pin_required,
+        "already_same": bool(current and current.rstrip("/") == normalized),
+    }
+
+
+def bind_external_link(
+    db: Session,
+    user: models.User,
+    link: str,
+    pin: Optional[str] = None,
+) -> dict[str, Any]:
+    """Отправляет внешний путь школы в базу ФЦМПО (editlink)."""
+    normalized = fcmp_parser.normalize_food_folder_link(link)
+    db_match = _resolve_foodblock_match(db, user)
+    pin_required = fcmp_parser.foodblock_pin_is_set(db_match.foodblock_id)
+    pin_value = (pin or "").strip()
+    if pin_required and not pin_value:
+        raise ValueError("Для этого пищеблока нужен PIN-код (4 цифры)")
+    if not pin_value:
+        # если пин ещё не задан — на стороне ФЦМПО принимаются любые 4 цифры
+        pin_value = "0000"
+    if not re.fullmatch(r"\d{4}", pin_value):
+        raise ValueError("PIN-код должен состоять из 4 цифр")
+
+    previous = fcmp_parser.get_foodblock_link(db_match.foodblock_id)
+    api_result = fcmp_parser.update_foodblock_link(
+        db_match.foodblock_id,
+        normalized,
+        pin_value,
+    )
+    return {
+        "ok": True,
+        "foodblock_id": db_match.foodblock_id,
+        "label": db_match.foodblock_label,
+        "rayon": db_match.foodblock_rayon,
+        "previous_link": previous,
+        "new_link": normalized,
+        "fcmp_result": api_result.get("result"),
     }
