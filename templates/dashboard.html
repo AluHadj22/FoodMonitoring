@@ -2530,7 +2530,16 @@
         summaryEl.querySelector('[data-k="deadline_pct"]').textContent = (s.deadline_pct ?? 0) + "%";
         summaryEl.querySelector('[data-k="avg_tm_compliance_pct"]').textContent = (s.avg_tm_compliance_pct ?? 0) + "%";
 
-        tbody.innerHTML = data.rows.map((r) => `
+        // Только уже наступившие дни (дата <= сегодня по локальному календарю)
+        const now = new Date();
+        const todayIso = [
+            now.getFullYear(),
+            String(now.getMonth() + 1).padStart(2, "0"),
+            String(now.getDate()).padStart(2, "0"),
+        ].join("-");
+        const elapsedRows = data.rows.filter((r) => r.date && r.date <= todayIso);
+
+        tbody.innerHTML = elapsedRows.map((r) => `
             <tr>
                 <td>${r.date_label || r.date || "—"}</td>
                 <td>${r.file_downloaded_label}</td>
@@ -2541,8 +2550,8 @@
             </tr>
         `).join("");
 
-        // Charts: last 60 days with meaningful activity for readability
-        const chartRows = data.rows.filter((r) => r.file_downloaded || r.file_processed || r.deadline_ok || (r.sanpin_errors != null)).slice(-60);
+        // Charts: last 60 elapsed days with meaningful activity for readability
+        const chartRows = elapsedRows.filter((r) => r.file_downloaded || r.file_processed || r.deadline_ok || (r.sanpin_errors != null)).slice(-60);
         const labels = chartRows.map((r) => (r.date || "").slice(5));
         destroyCharts();
 
@@ -2564,9 +2573,9 @@
             },
         });
 
-        const processedYes = data.rows.filter((r) => r.file_processed === true).length;
-        const processedNo = data.rows.filter((r) => r.file_processed === false).length;
-        const processedUnk = data.rows.length - processedYes - processedNo;
+        const processedYes = elapsedRows.filter((r) => r.file_processed === true).length;
+        const processedNo = elapsedRows.filter((r) => r.file_processed === false).length;
+        const processedUnk = elapsedRows.length - processedYes - processedNo;
         processedChart = new Chart(document.getElementById("fcmpProcessedChart"), {
             type: "doughnut",
             data: {

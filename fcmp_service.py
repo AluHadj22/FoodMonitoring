@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any, Optional
 
 from sqlalchemy.orm import Session
@@ -18,6 +18,12 @@ def _bool_label(v: Optional[bool]) -> str:
     if v is False:
         return "нет"
     return "—"
+
+
+def _elapsed_days(rows: list[models.FcmpDailyStat]) -> list[models.FcmpDailyStat]:
+    """Только уже наступившие дни (stat_date <= сегодня). Будущие даты не показываем."""
+    today = date.today()
+    return [r for r in rows if r.stat_date and r.stat_date <= today]
 
 
 def row_to_dict(row: models.FcmpDailyStat) -> dict[str, Any]:
@@ -133,7 +139,7 @@ def sync_school_fcmp_stats(db: Session, user: models.User) -> dict[str, Any]:
 
     db.commit()
 
-    rows = (
+    rows = _elapsed_days(
         db.query(models.FcmpDailyStat)
         .filter(models.FcmpDailyStat.user_id == user.id)
         .order_by(models.FcmpDailyStat.stat_date.asc())
@@ -160,7 +166,7 @@ def get_school_fcmp_stats(db: Session, user_id: int) -> dict[str, Any]:
         .filter(models.FcmpSchoolMatch.user_id == user_id)
         .first()
     )
-    rows = (
+    rows = _elapsed_days(
         db.query(models.FcmpDailyStat)
         .filter(models.FcmpDailyStat.user_id == user_id)
         .order_by(models.FcmpDailyStat.stat_date.asc())
