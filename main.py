@@ -11,6 +11,7 @@ import urllib.parse
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Optional, Dict
+import calendar as pycal
 from contextlib import asynccontextmanager
 from fastapi.responses import JSONResponse  # Уже есть, не меняем
 from fastapi.middleware.cors import CORSMiddleware  # Добавить, если нет
@@ -48,6 +49,7 @@ from sqlalchemy import or_, func, and_
 from database import engine, Base, get_db
 import models
 from models import User
+import fcmp_service
 
 # Аутентификация и безопасность
 from jose import JWTError, jwt
@@ -538,6 +540,60 @@ RESET_SECRET_CODE = "9f#G7$kL2!pQ4@mZ8?xR5"  # Сложный код
 # Настраиваем логирование
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def _norm_text(value: Optional[str]) -> str:
+    return (value or "").strip()
+
+
+def _is_chechnya_region(region: Optional[str]) -> bool:
+    region_l = _norm_text(region).lower()
+    return any(token in region_l for token in ("чечен", "чечня", "грозн"))
+
+
+def get_districts_for_regional_admin(db: Session, admin: models.User) -> list:
+    """Районы, видимые региональному админу (включая школы с «битым» region)."""
+    districts = set()
+
+    rows = db.query(models.User.district).filter(
+        models.User.region == admin.region,
+        models.User.district.isnot(None),
+        models.User.district != "",
+    ).distinct().all()
+    districts.update(_norm_text(r[0]) for r in rows if r[0])
+
+    mun_rows = db.query(models.User.district).filter(
+        models.User.role == "municipal_admin",
+        models.User.region == admin.region,
+        models.User.district.isnot(None),
+        models.User.district != "",
+    ).distinct().all()
+    districts.update(_norm_text(r[0]) for r in mun_rows if r[0])
+
+    # Регион вводится вручную → школы часто без/с другим region; муниципальный
+    # их видит по district. Для ЧР подключаем справочник районов.
+    if _is_chechnya_region(admin.region):
+        districts.update(DISTRICTS)
+
+    return sorted(d for d in districts if d)
+
+
+def apply_admin_school_scope(query, admin: models.User, db: Session):
+    """Ограничение списка школ по роли админа (единая логика для /admin и bulk)."""
+    if admin.role == "municipal_admin":
+        admin_district = _norm_text(admin.district)
+        return query.filter(func.trim(models.User.district) == admin_district)
+
+    if admin.role == "regional_admin":
+        region_districts = get_districts_for_regional_admin(db, admin)
+        scope_filters = [models.User.region == admin.region]
+        if region_districts:
+            # Школы района, которые видит муниципальный админ, даже если region не совпал
+            scope_filters.append(func.trim(models.User.district).in_(region_districts))
+        return query.filter(or_(*scope_filters))
+
+    # Неизвестная роль — ничего не отдаём
+    return query.filter(models.User.id == -1)
 
 
 ## ИСПРАВЛЕННАЯ ФУНКЦИЯ update_excel_content (обновляет содержимое в файлах)
@@ -2047,28 +2103,28 @@ async def admin_panel(
     query = db.query(models.User).filter(models.User.role == "user")
 
     # ========== ОГРАНИЧЕНИЕ ПО РЕГИОНУ/РАЙОНУ (безопасность) ==========
-    if admin.role == "regional_admin":
-        # Региональный админ видит только свой регион
-        query = query.filter(models.User.region == admin.region)
-    elif admin.role == "municipal_admin":
-        # Муниципальный админ видит только свой район
-        query = query.filter(models.User.district == admin.district)
-        # Для муниципального админа фильтр по району не имеет смысла
-        # (он всё равно видит только свой район)
-        # Поэтому игнорируем параметр district, если он передан
-        district = ""
+    # Региональный: region ИЛИ district из справочника районов региона
+    #   (школы с пустым/другим region всё равно видны муниципальному админу)
+    # Муниципальный: только свой район
+    if admin.role == "municipal_admin":
+        district = ""  # фильтр по району для муниципального не применяется
+
+    query = apply_admin_school_scope(query, admin, db)
+
+    # Общее число школ в зоне ответственности (до поисковых фильтров)
+    unfiltered_total = await run_in_threadpool(query.count)
 
     # ========== ПОИСК ПО НАЗВАНИЮ ==========
     if q:
         query = query.filter(models.User.unit_name.ilike(f"%{q}%"))
 
-    # ========== НОВЫЙ ФИЛЬТР ПО ТИПУ ПИТАНИЯ ==========
+    # ========== ФИЛЬТР ПО ТИПУ ПИТАНИЯ ==========
     if food_type:
         query = query.filter(models.User.food_type == food_type)
 
-    # ========== НОВЫЙ ФИЛЬТР ПО РАЙОНУ (только для регионального админа) ==========
+    # ========== ФИЛЬТР ПО РАЙОНУ (только для регионального админа) ==========
     if district and admin.role == "regional_admin":
-        query = query.filter(models.User.district == district)
+        query = query.filter(func.trim(models.User.district) == district.strip())
 
     # ========== ПАГИНАЦИЯ ==========
     total_count = await run_in_threadpool(query.count)
@@ -2077,23 +2133,14 @@ async def admin_panel(
         lambda: query.offset(offset).limit(per_page).all()
     )
 
-    # ========== ПОЛУЧАЕМ СПИСОК РАЙОНОВ ДЛЯ ФИЛЬТРА ==========
-    # Для регионального админа - все районы в его регионе
-    # Для муниципального - только его район (или пустой список)
+    # ========== СПИСОК РАЙОНОВ ДЛЯ ФИЛЬТРА ==========
     districts_for_filter = []
     if admin.role == "regional_admin":
-        # Получаем уникальные районы из региона админа
-        districts_query = db.query(models.User.district).filter(
-            models.User.role == "user",
-            models.User.region == admin.region
-        ).distinct()
-        districts_result = await run_in_threadpool(districts_query.all)
-        districts_for_filter = [d[0] for d in districts_result if d[0]]
-        # Сортируем для удобства
-        districts_for_filter.sort()
+        districts_for_filter = await run_in_threadpool(
+            lambda: get_districts_for_regional_admin(db, admin)
+        )
     elif admin.role == "municipal_admin" and admin.district:
-        districts_for_filter = [admin.district]
-    # Для других ролей (user и т.д.) - пустой список
+        districts_for_filter = [_norm_text(admin.district)]
 
     # ========== ОТВЕТ ==========
     return templates.TemplateResponse("admin.html", {
@@ -2101,13 +2148,14 @@ async def admin_panel(
         "admin": admin,
         "schools": schools,
         "total_count": total_count,
+        "unfiltered_total": unfiltered_total,
         "current_page": page,
         "per_page": per_page,
         "search_query": q,
-        "food_type_filter": food_type,  # НОВОЕ - для сохранения выбранного фильтра
-        "district_filter": district,  # НОВОЕ - для сохранения выбранного фильтра
-        "food_types": FOOD_TYPES,  # Все типы питания для выпадающего списка
-        "districts": districts_for_filter,  # НОВОЕ - список районов для фильтра
+        "food_type_filter": food_type,
+        "district_filter": district,
+        "food_types": FOOD_TYPES,
+        "districts": districts_for_filter,
         "months": MONTHS,
     })
 
@@ -2134,13 +2182,10 @@ async def bulk_upload(
         models.User.role == "user"
     )
 
-    # Ограничиваем доступ в зависимости от роли администратора
-    if admin.role == "municipal_admin":
-        query = query.filter(models.User.district == admin.district)
-    elif admin.role == "regional_admin":
-        query = query.filter(models.User.region == admin.region)
-    else:
+    if admin.role not in ("municipal_admin", "regional_admin"):
         raise HTTPException(status_code=403, detail="Доступ запрещен")
+
+    query = apply_admin_school_scope(query, admin, db)
 
     schools = await run_in_threadpool(query.all)
 
@@ -2260,8 +2305,9 @@ async def bulk_delete_files(
         models.User.id.in_(school_ids),
         models.User.role == "user"
     )
-    if admin.role == "municipal_admin":
-        schools_query = schools_query.filter(models.User.district == admin.district)
+    if admin.role not in ("municipal_admin", "regional_admin"):
+        return RedirectResponse("/login", status_code=303)
+    schools_query = apply_admin_school_scope(schools_query, admin, db)
 
     schools = await run_in_threadpool(schools_query.all)
 
@@ -2399,8 +2445,9 @@ async def bulk_delete_files_by_month(
         models.User.id.in_(school_ids),
         models.User.role == "user"
     )
-    if admin.role == "municipal_admin":
-        schools_query = schools_query.filter(models.User.district == admin.district)
+    if admin.role not in ("municipal_admin", "regional_admin"):
+        return RedirectResponse("/login", status_code=303)
+    schools_query = apply_admin_school_scope(schools_query, admin, db)
 
     schools = await run_in_threadpool(schools_query.all)
 
@@ -2512,6 +2559,7 @@ async def dashboard(
         uid: int,
         year: str = None,
         month: str = None,
+        view: str = "list",
         db: Session = Depends(get_db)
 ):
     user = await get_cached_user(uid, db)
@@ -2562,19 +2610,26 @@ async def dashboard(
         assigned_year = file_meta.get("assigned_year")
         assigned_month = file_meta.get("assigned_month")
 
-        # Если в манифесте нет данных, пробуем извлечь из имени файла
-        if not assigned_year or not assigned_month:
+        # День меню из имени (YYYY-MM-DD-sm.xlsx)
+        day = None
+        menu_date = None
+        full_date_match = re.search(r'(\d{4})-(\d{2})-(\d{2})', f.name)
+        if full_date_match:
+            # Для ежедневных меню приоритет — дата в имени файла
+            assigned_year = full_date_match.group(1)
+            assigned_month = full_date_match.group(2)
+            day = full_date_match.group(3)
+            menu_date = f"{day}.{assigned_month}.{assigned_year}"
+        elif not assigned_year or not assigned_month:
             date_match = re.search(r'(\d{4})-(\d{2})', f.name)
             if date_match:
                 assigned_year = date_match.group(1)
                 assigned_month = date_match.group(2)
             else:
-                # Если не удалось определить, используем текущую дату
                 assigned_year = str(get_msk_time().year)
                 assigned_month = get_msk_time().strftime("%m")
 
         month_name = MONTHS.get(assigned_month, assigned_month)
-        # Время загрузки
 
         if "upload_datetime" in file_meta:
             upload_time = file_meta["upload_datetime"]
@@ -2582,26 +2637,20 @@ async def dashboard(
             mtime = f.stat().st_mtime
             dt = datetime.utcfromtimestamp(mtime) + timedelta(hours=3)
             upload_time = dt.strftime("%d.%m.%Y %H:%M")
-        # Кто загрузил (если неизвестно – ставим прочерк)
 
         uploader_name = file_meta.get("uploader_name", "—")
         uploader_ip = file_meta.get("uploader_ip", "—")
 
-
         # ---------- ОПРЕДЕЛЯЕМ, ЯВЛЯЕТСЯ ЛИ ФАЙЛ СПЕЦИАЛЬНЫМ ----------
         is_special = False
-        # Типовое меню: tm2025-sm.xlsx
         if re.match(r'^tm\d{4}-sm\.xlsx$', f.name):
             is_special = True
-        # Календарь питания: kp2025.xlsx
         elif re.match(r'^kp\d{4}\.xlsx$', f.name):
             is_special = True
-        # Файл ФЦМПО: findex.xlsx
         elif f.name == "findex.xlsx":
             is_special = True
 
         if is_special:
-            # Добавляем в список специальных файлов (независимо от года/месяца)
             special_files_all.append({
                 "filename": f.name,
                 "year": assigned_year,
@@ -2610,24 +2659,23 @@ async def dashboard(
                 "date": upload_time,
                 "uploader": uploader_name,
                 "ip": uploader_ip,
-                "size": f.stat().st_size,  # размер в байтах
+                "size": f.stat().st_size,
             })
         else:
-            # Обычные файлы – добавляем в grouped_files как раньше
             grouped_files.setdefault(assigned_year, {}).setdefault(month_name, []).append({
                 "filename": f.name,
                 "date": upload_time,
                 "uploader": uploader_name,
                 "ip": uploader_ip,
+                "day": day,
+                "menu_date": menu_date,
             })
 
-    # ---------- СОРТИРУЕМ СПЕЦИАЛЬНЫЕ ФАЙЛЫ (сначала новые по году и месяцу) ----------
     special_files_all.sort(
         key=lambda x: (x["year"], x["month"]),
         reverse=True
     )
 
-    # Если year и month не переданы, выбираем последний доступный год и месяц
     if not year or not month:
         if grouped_files:
             latest_year = max(grouped_files.keys())
@@ -2645,6 +2693,26 @@ async def dashboard(
             year = "2025"
             month = "05"
 
+    # Данные для календарного вида текущего периода
+    month_name_current = MONTHS.get(month, month)
+    period_files = list(grouped_files.get(year, {}).get(month_name_current, []))
+    files_by_day = {}
+    undated_files = []
+    for fi in period_files:
+        if fi.get("day"):
+            files_by_day.setdefault(fi["day"], []).append(fi)
+        else:
+            undated_files.append(fi)
+
+    try:
+        y_int, m_int = int(year), int(month)
+        pycal.setfirstweekday(pycal.MONDAY)
+        calendar_weeks = pycal.monthcalendar(y_int, m_int)
+    except (TypeError, ValueError):
+        calendar_weeks = []
+
+    view_mode = "calendar" if (view or "").lower() in ("calendar", "cal", "календарь") else "list"
+
     monitoring_url = f"{request.base_url}{uid}/food/"
 
     return templates.TemplateResponse("dashboard.html", {
@@ -2652,14 +2720,46 @@ async def dashboard(
         "user": user,
         "profile": profile_data,
         "files_grouped": grouped_files,
-        "special_files_all": special_files_all,   # для отображения специальных файлов в дашборде
+        "special_files_all": special_files_all,
         "period": f"{year}-{month}",
         "year": year,
         "month": month,
         "months": MONTHS,
         "monitoring_url": monitoring_url,
-        "food_types": FOOD_TYPES,  # для отображения типа питания в дашборде
+        "food_types": FOOD_TYPES,
+        "files_by_day": files_by_day,
+        "undated_files": undated_files,
+        "calendar_weeks": calendar_weeks,
+        "weekday_labels": ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
+        "view_mode": view_mode,
+        "period_files_count": len(period_files),
+        "special_files_count": len(special_files_all),
+        "fcmp_stats": await run_in_threadpool(fcmp_service.get_school_fcmp_stats, db, uid),
     })
+
+
+# --- СТАТИСТИКА ФЦМПО (Чеченская Республика) ---
+@app.get("/api/school/{uid}/fcmp-stats")
+async def get_fcmp_stats(uid: int, db: Session = Depends(get_db)):
+    user = await get_cached_user(uid, db)
+    if not user:
+        raise HTTPException(status_code=404, detail="Школа не найдена")
+    return await run_in_threadpool(fcmp_service.get_school_fcmp_stats, db, uid)
+
+
+@app.post("/api/school/{uid}/fcmp-stats/refresh")
+async def refresh_fcmp_stats(uid: int, db: Session = Depends(get_db)):
+    user = await get_cached_user(uid, db)
+    if not user:
+        raise HTTPException(status_code=404, detail="Школа не найдена")
+    try:
+        return await run_in_threadpool(fcmp_service.sync_school_fcmp_stats, db, user)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("FCMP refresh failed for uid=%s", uid)
+        raise HTTPException(status_code=502, detail=f"Не удалось получить данные ФЦМПО: {e}")
+
 
 # --- ОБНОВЛЕННАЯ ЗАГРУЗКА АВАТАРА С ОПТИМИЗАЦИЕЙ ---
 @app.post("/profile/upload-avatar")

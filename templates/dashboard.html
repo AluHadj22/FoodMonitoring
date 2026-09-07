@@ -3,23 +3,23 @@
 <style>
     /* ===== МИНИМАЛИСТИЧНЫЙ СТИЛЬ - БЕЗ АНИМАЦИЙ, ГРАДИЕНТОВ И ЛИШНИХ ЭФФЕКТОВ ===== */
     :root {
-        --radius-sm: 4px;
-        --radius-md: 6px;
-        --radius-lg: 8px;
-        --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-        --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
-        --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
-        --border-light: #e5e7eb;
-        --gray-100: #f3f4f6;
-        --gray-200: #e5e7eb;
-        --gray-300: #d1d5db;
-        --text-primary: #111827;
-        --text-secondary: #6b7280;
-        --primary: #2563eb;
-        --primary-hover: #1d4ed8;
+        --radius-sm: 6px;
+        --radius-md: 10px;
+        --radius-lg: 14px;
+        --shadow-sm: 0 1px 2px rgba(26, 39, 64, 0.05);
+        --shadow-md: 0 4px 14px rgba(26, 39, 64, 0.07);
+        --shadow-lg: 0 12px 28px rgba(26, 39, 64, 0.09);
+        --border-light: rgba(26, 39, 64, 0.1);
+        --gray-100: #f5f8fc;
+        --gray-200: #eaf1f8;
+        --gray-300: #d7e5f2;
+        --text-primary: #1a2740;
+        --text-secondary: #445e7a;
+        --primary-hover: #3d7eb8;
         --bg-card: #ffffff;
         --bg-card-solid: #ffffff;
-        --bg-body: #f9fafb;
+        --bg-body: transparent;
+        --mist-100: #eaf1f8;
     }
 
     [data-theme='dark'] {
@@ -27,11 +27,10 @@
         --gray-100: #1f2937;
         --gray-200: #374151;
         --gray-300: #4b5563;
-        --text-primary: #f3f4f6;
-        --text-secondary: #9ca3af;
-        --primary: #60a5fa;
-        --primary-hover: #93bbfc;
-        --bg-card: #1f2937;
+        --text-primary: #eaf1f8;
+        --text-secondary: #b8cde3;
+        --primary-hover: #8bbfe6;
+        --bg-card: #162033;
         --bg-card-solid: #1f2937;
         --bg-body: #111827;
     }
@@ -1207,6 +1206,573 @@
             font-size: 0.55rem;
         }
     }
+
+    /* ===== Upload zone + counts ===== */
+    .file-upload-card > h3,
+    .card > h3 {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .section-title-left {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .count-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.25rem 0.55rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.68rem;
+        font-weight: 750;
+        background: var(--primary-bg, rgba(91, 159, 212, 0.09));
+        color: var(--primary-dark, #3d7eb8);
+        border: 1px solid rgba(91, 159, 212, 0.18);
+        white-space: nowrap;
+    }
+
+    [data-theme='dark'] .count-chip {
+        color: var(--primary-light, #a8d4f5);
+    }
+
+    .file-upload-area {
+        border: 1.5px dashed var(--gray-300);
+        border-radius: var(--radius-lg);
+        background: var(--gray-100);
+        padding: 1.25rem;
+        transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+        position: relative;
+        margin-bottom: 0.85rem;
+    }
+
+    .file-upload-area.drag-over {
+        border-color: var(--primary);
+        background: var(--primary-bg, rgba(91, 159, 212, 0.09));
+        box-shadow: var(--shadow-focus, 0 0 0 3px rgba(91, 159, 212, 0.2));
+    }
+
+    .file-upload-area.has-files {
+        border-style: solid;
+        border-color: var(--primary);
+    }
+
+    .upload-selected-list {
+        margin-top: 0.75rem;
+        display: none;
+        text-align: left;
+        max-height: 140px;
+        overflow-y: auto;
+        border-top: 1px solid var(--border-light);
+        padding-top: 0.65rem;
+    }
+
+    .upload-selected-list.show { display: block; }
+
+    .upload-selected-list .upload-picked-title {
+        font-size: 0.7rem;
+        font-weight: 750;
+        color: var(--text-secondary);
+        margin-bottom: 0.4rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .upload-picked-item {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.45rem;
+        border-radius: var(--radius-sm);
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border-light);
+        margin-bottom: 0.3rem;
+        color: var(--text-primary);
+        word-break: break-all;
+    }
+
+    /* ===== View toggle ===== */
+    .view-toggle {
+        display: inline-flex;
+        background: var(--gray-100);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: 0.15rem;
+        gap: 0.15rem;
+    }
+
+    .view-toggle button {
+        border: none;
+        background: transparent;
+        padding: 0.4rem 0.7rem;
+        border-radius: var(--radius-sm);
+        font-family: inherit;
+        font-size: 0.72rem;
+        font-weight: 750;
+        color: var(--text-secondary);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: background 0.15s, color 0.15s;
+    }
+
+    .view-toggle button svg { width: 14px; height: 14px; }
+
+    .view-toggle button.active {
+        background: var(--primary);
+        color: #fff;
+    }
+
+    .view-toggle button:not(.active):hover {
+        background: var(--bg-card-solid);
+        color: var(--primary);
+    }
+
+    /* ===== Calendar ===== */
+    .menu-calendar {
+        display: none;
+        margin-top: 0.5rem;
+    }
+
+    .menu-calendar.active { display: block !important; }
+    .files-grid.view-hidden { display: none !important; }
+
+    .cal-weekdays {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.4rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .cal-weekday {
+        text-align: center;
+        font-size: 0.65rem;
+        font-weight: 750;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-secondary);
+        padding: 0.35rem 0;
+    }
+
+    .cal-week {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.4rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .cal-cell {
+        min-height: 88px;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        background: var(--gray-100);
+        padding: 0.4rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        transition: border-color 0.15s, background 0.15s, transform 0.15s;
+    }
+
+    .cal-cell.empty {
+        background: transparent;
+        border-color: transparent;
+        min-height: 0;
+    }
+
+    .cal-cell.has-files {
+        background: var(--primary-bg, rgba(91, 159, 212, 0.09));
+        border-color: rgba(91, 159, 212, 0.35);
+    }
+
+    .cal-cell.has-files:hover {
+        border-color: var(--primary);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .cal-cell.weekend:not(.empty) {
+        background: rgba(26, 39, 64, 0.03);
+    }
+
+    .cal-cell.has-files.weekend {
+        background: var(--primary-bg, rgba(91, 159, 212, 0.09));
+    }
+
+    .cal-day-num {
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .cal-day-badge {
+        font-size: 0.62rem;
+        font-weight: 800;
+        background: var(--primary);
+        color: #fff;
+        border-radius: var(--radius-sm);
+        min-width: 1.2rem;
+        height: 1.2rem;
+        padding: 0 0.3rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .cal-file-chip {
+        display: block;
+        font-size: 0.62rem;
+        font-weight: 650;
+        color: var(--primary-dark, #3d7eb8);
+        background: var(--bg-card-solid);
+        border: 1px solid rgba(91, 159, 212, 0.15);
+        border-radius: 4px;
+        padding: 0.2rem 0.3rem;
+        text-decoration: none;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        transition: background 0.12s;
+    }
+
+    [data-theme='dark'] .cal-file-chip { color: var(--primary-light, #a8d4f5); }
+
+    .cal-file-chip:hover {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+    }
+
+    .cal-more {
+        font-size: 0.6rem;
+        color: var(--text-secondary);
+        font-weight: 650;
+        padding: 0.1rem 0.2rem;
+    }
+
+    .undated-strip {
+        margin-top: 1rem;
+        padding: 0.85rem;
+        border: 1px dashed var(--border-light);
+        border-radius: var(--radius-md);
+        background: var(--gray-100);
+    }
+
+    .undated-strip h4 {
+        font-size: 0.75rem;
+        font-weight: 750;
+        color: var(--text-secondary);
+        margin-bottom: 0.55rem;
+    }
+
+    .menu-day-tag {
+        display: inline-flex;
+        align-items: center;
+        margin-left: 0.35rem;
+        padding: 0.1rem 0.35rem;
+        border-radius: 4px;
+        font-size: 0.62rem;
+        font-weight: 750;
+        background: var(--primary-bg, rgba(91, 159, 212, 0.09));
+        color: var(--primary-dark, #3d7eb8);
+        border: 1px solid rgba(91, 159, 212, 0.15);
+        vertical-align: middle;
+    }
+
+    @media (max-width: 768px) {
+        .cal-cell { min-height: 64px; padding: 0.3rem; }
+        .cal-file-chip { font-size: 0.55rem; }
+        .cal-weekday { font-size: 0.58rem; }
+        .view-toggle { width: 100%; }
+        .view-toggle button { flex: 1; justify-content: center; }
+    }
+
+
+    .file-upload-area {
+        position: relative;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.65rem;
+        cursor: pointer;
+    }
+
+    .file-input-wrapper {
+        position: relative;
+        width: 100%;
+        text-align: center;
+        z-index: 1;
+        min-height: 48px;
+    }
+
+    .file-input-wrapper input[type="file"] {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 2;
+    }
+
+    .upload-zone-stats {
+        position: relative;
+        z-index: 5;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        justify-content: center;
+        pointer-events: auto;
+    }
+
+    .upload-stat-badge {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.7rem;
+        border-radius: var(--radius-md);
+        font-size: 0.75rem;
+        font-weight: 750;
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border-light);
+        color: var(--text-primary);
+        cursor: default;
+    }
+
+    .upload-stat-badge.pending {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+    }
+
+    .upload-stat-badge.pending[hidden] {
+        display: none !important;
+    }
+
+    .upload-stat-badge .upload-hover-panel {
+        display: none;
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 8px);
+        transform: translateX(-50%);
+        min-width: 220px;
+        max-width: 320px;
+        max-height: 220px;
+        overflow-y: auto;
+        background: var(--bg-card-solid);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+        padding: 0.55rem 0.65rem;
+        z-index: 20;
+        text-align: left;
+    }
+
+    .upload-stat-badge:hover .upload-hover-panel,
+    .upload-stat-badge:focus-within .upload-hover-panel {
+        display: block;
+    }
+
+    .upload-hover-panel strong {
+        display: block;
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-secondary);
+        margin-bottom: 0.4rem;
+    }
+
+    .upload-hover-panel ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .upload-hover-panel li {
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 0.25rem 0;
+        border-bottom: 1px solid var(--border-light);
+        word-break: break-all;
+    }
+
+    .upload-hover-panel li:last-child { border-bottom: none; }
+
+    .upload-hover-empty {
+        font-size: 0.72rem;
+        color: var(--text-muted, var(--text-secondary));
+        font-weight: 600;
+    }
+
+    #fileDropHint {
+        position: relative;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .file-input-label {
+        pointer-events: none;
+        position: relative;
+        z-index: 1;
+    }
+
+
+    /* ===== ФЦМПО СТАТИСТИКА ===== */
+    .fcmp-section {
+        margin: 1.25rem 0 1.75rem;
+        padding: 1.25rem 1.35rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+    .fcmp-section-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    .fcmp-section-title {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+    .fcmp-section-title h3 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    .fcmp-section-title span {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+    .fcmp-refresh-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        border: none;
+        border-radius: var(--radius-md);
+        padding: 0.65rem 1rem;
+        background: var(--primary, #5b9fd4);
+        color: #fff;
+        font-weight: 650;
+        font-size: 0.875rem;
+        cursor: pointer;
+    }
+    .fcmp-refresh-btn:disabled {
+        opacity: 0.65;
+        cursor: wait;
+    }
+    .fcmp-refresh-btn:hover:not(:disabled) {
+        background: var(--primary-hover, #3d7eb8);
+    }
+    .fcmp-match {
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.85rem;
+    }
+    .fcmp-summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    .fcmp-metric {
+        padding: 0.85rem 0.9rem;
+        border-radius: var(--radius-md);
+        background: var(--gray-100);
+        border: 1px solid var(--border-light);
+    }
+    .fcmp-metric .label {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+    }
+    .fcmp-metric .value {
+        font-size: 1.25rem;
+        font-weight: 750;
+        color: var(--text-primary);
+    }
+    .fcmp-charts {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.85rem;
+        margin-bottom: 1rem;
+    }
+    .fcmp-chart-box {
+        padding: 0.75rem;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        background: #fff;
+        min-height: 220px;
+    }
+    .fcmp-chart-box h4 {
+        margin: 0 0 0.5rem;
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        font-weight: 650;
+    }
+    .fcmp-table-wrap {
+        overflow: auto;
+        max-height: 420px;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+    }
+    .fcmp-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+    }
+    .fcmp-table th,
+    .fcmp-table td {
+        padding: 0.55rem 0.65rem;
+        border-bottom: 1px solid var(--border-light);
+        text-align: left;
+        white-space: nowrap;
+    }
+    .fcmp-table th {
+        position: sticky;
+        top: 0;
+        background: var(--gray-100);
+        z-index: 1;
+        font-weight: 650;
+        color: var(--text-secondary);
+    }
+    .fcmp-empty {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        padding: 0.5rem 0;
+    }
+    .fcmp-status {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        min-height: 1.2em;
+    }
+    .fcmp-status.error { color: var(--danger, #d46565); }
+    .fcmp-status.ok { color: var(--success, #3d9a78); }
+    @media (max-width: 980px) {
+        .fcmp-summary,
+        .fcmp-charts { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+        .fcmp-summary,
+        .fcmp-charts { grid-template-columns: 1fr; }
+    }
+
 </style>
 
 <div class="dashboard-layout">
@@ -1407,6 +1973,57 @@
             </div>
         </div>
 
+
+        <div class="fcmp-section" id="fcmpSection" data-uid="{{ user.id }}">
+            <div class="fcmp-section-head">
+                <div class="fcmp-section-title">
+                    <h3>Статистика ФЦМПО</h3>
+                    <span>Регион: Чеченская Республика · источник мониторингпитания.рф</span>
+                </div>
+                <button type="button" class="fcmp-refresh-btn" id="fcmpRefreshBtn">
+                    Показать статистику ФЦМПО
+                </button>
+            </div>
+            <div class="fcmp-status" id="fcmpStatus"></div>
+            <div class="fcmp-match" id="fcmpMatch"></div>
+            <div class="fcmp-summary" id="fcmpSummary" hidden>
+                <div class="fcmp-metric"><span class="label">Дней в выборке</span><span class="value" data-k="total_days">0</span></div>
+                <div class="fcmp-metric"><span class="label">Файлы обработаны</span><span class="value" data-k="processed_pct">0%</span></div>
+                <div class="fcmp-metric"><span class="label">Соблюдение сроков</span><span class="value" data-k="deadline_pct">0%</span></div>
+                <div class="fcmp-metric"><span class="label">Средний % ТМ</span><span class="value" data-k="avg_tm_compliance_pct">0%</span></div>
+            </div>
+            <div class="fcmp-charts" id="fcmpCharts" hidden>
+                <div class="fcmp-chart-box">
+                    <h4>Соблюдение сроков по дням</h4>
+                    <canvas id="fcmpDeadlineChart" height="160"></canvas>
+                </div>
+                <div class="fcmp-chart-box">
+                    <h4>Обработка файлов</h4>
+                    <canvas id="fcmpProcessedChart" height="160"></canvas>
+                </div>
+                <div class="fcmp-chart-box">
+                    <h4>Ошибки по СанПиН</h4>
+                    <canvas id="fcmpSanpinChart" height="160"></canvas>
+                </div>
+            </div>
+            <div class="fcmp-table-wrap" id="fcmpTableWrap" hidden>
+                <table class="fcmp-table">
+                    <thead>
+                        <tr>
+                            <th>Дата и номер дня</th>
+                            <th>Файл скачан</th>
+                            <th>Файл обработан</th>
+                            <th>Соблюдение сроков</th>
+                            <th>Ошибки СанПиН</th>
+                            <th>% соблюдения ТМ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fcmpTableBody"></tbody>
+                </table>
+            </div>
+            <p class="fcmp-empty" id="fcmpEmpty">Нажмите кнопку, чтобы загрузить статистику с федерального мониторинга.</p>
+        </div>
+
         <div class="period-panel">
             <div class="period-badge">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1418,8 +2035,9 @@
                 {{ months[month] }} {{ year }}
             </div>
 
-            <form action="/dashboard" method="get" class="period-controls">
+            <form action="/dashboard" method="get" class="period-controls" id="periodForm">
                 <input type="hidden" name="uid" value="{{ user.id }}">
+                <input type="hidden" name="view" id="periodViewInput" value="{{ view_mode }}">
                 <div class="period-field">
                     <label>Год</label>
                     <input type="number" name="year" value="{{ year }}">
@@ -1444,28 +2062,60 @@
 
     <!-- ===== ЗАГРУЗКА ФАЙЛОВ ===== -->
     <div class="file-upload-card">
-        <h3>Загрузить файлы в этот период</h3>
-        <form action="/upload" method="post" enctype="multipart/form-data">
+        <h3>
+            <span class="section-title-left">Загрузить файлы в этот период</span>
+            <span class="count-chip" id="periodFilesChip" title="Уже загружено в выбранный месяц">
+                В периоде: {{ period_files_count|default(0) }}
+            </span>
+        </h3>
+        <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
             <input type="hidden" name="uid" value="{{ user.id }}">
             <input type="hidden" name="year" value="{{ year }}">
             <input type="hidden" name="month" value="{{ month }}">
 
-            <div class="file-upload-area">
+            <div class="file-upload-area" id="fileUploadArea">
                 <div class="file-input-wrapper">
-                    <input type="file" name="files" id="fileInput" multiple required>
-                    <label for="fileInput" class="file-input-label">
+                    <input type="file" name="files" id="fileInput" multiple>
+                    <label for="fileInput" class="file-input-label" id="fileInputLabel">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                              stroke-width="2">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="7 10 12 15 17 10"></polyline>
                             <line x1="12" y1="15" x2="12" y2="3"></line>
                         </svg>
-                        Выберите файлы или перетащите их сюда
+                        <span id="fileDropHint">Выберите файлы или перетащите их сюда</span>
                     </label>
+                </div>
+
+                <div class="upload-zone-stats" id="uploadZoneStats">
+                    <div class="upload-stat-badge" id="uploadedStatBadge" tabindex="0">
+                        <span>Загружено: <strong id="uploadedCountLabel">{{ period_files_count|default(0) }}</strong></span>
+                        <div class="upload-hover-panel" id="uploadedHoverPanel">
+                            <strong>Файлы в этом периоде</strong>
+                            <ul id="uploadedFilesList">
+                                {% set _period = files_grouped.get(year, {}).get(months[month], []) if files_grouped else [] %}
+                                {% if _period %}
+                                    {% for file_info in _period %}
+                                    <li>{{ file_info.filename }}</li>
+                                    {% endfor %}
+                                {% else %}
+                                    <li class="upload-hover-empty">Пока нет загруженных файлов</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="upload-stat-badge pending" id="pendingStatBadge" hidden>
+                        <span>К загрузке: <strong id="pendingCountLabel">0</strong></span>
+                        <div class="upload-hover-panel" id="pendingHoverPanel">
+                            <strong>Выбранные файлы</strong>
+                            <ul id="pendingFilesList"></ul>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <button class="btn-primary" type="submit">Загрузить файлы</button>
+            <button class="btn-primary" type="submit" id="uploadSubmitBtn">Загрузить файлы</button>
         </form>
 
         {% if files_grouped and files_grouped.get(year) and files_grouped[year].get(months[month]) %}
@@ -1505,7 +2155,7 @@
                 <line x1="16" y1="17" x2="8" y2="17"></line>
             </svg>
             <h4>Специальные файлы (постоянные)</h4>
-            <span style="font-size:0.65rem; color:var(--text-secondary); margin-left:auto;">Не зависят от месяца</span>
+            <span class="count-chip" style="margin-left:auto;">{{ special_files_count|default(special_files_all|length) }}</span>
         </div>
         <div class="special-file-grid" id="specialFilesGrid">
             {% for file_info in special_files_all %}
@@ -1593,17 +2243,34 @@
 
     <!-- ===== ОБЫЧНЫЕ ФАЙЛЫ ===== -->
     <div class="card">
-        <h3>Ежедневное меню</h3>
+        <h3>
+            <span class="section-title-left">Ежедневное меню</span>
+            <div class="view-toggle" role="group" aria-label="Режим отображения">
+                <button type="button" id="viewListBtn" class="{% if view_mode != 'calendar' %}active{% endif %}" data-view="list">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                    Список
+                </button>
+                <button type="button" id="viewCalendarBtn" class="{% if view_mode == 'calendar' %}active{% endif %}" data-view="calendar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    Календарь
+                </button>
+            </div>
+        </h3>
 
         {% if files_grouped and files_grouped.get(year) and files_grouped[year].get(months[month]) %}
-        {% set regular_files = [] %}
-        {% for file_info in files_grouped[year][months[month]] %}
-        {% if not ((file_info.filename.startswith('tm') and file_info.filename.endswith('-sm.xlsx'))
-        or (file_info.filename.startswith('kp') and file_info.filename.endswith('.xlsx'))
-        or file_info.filename == 'findex.xlsx') %}
-        {% set regular_files = regular_files.append(file_info) %}
-        {% endif %}
-        {% endfor %}
+        {% set regular_files = files_grouped[year][months[month]] %}
 
         {% if regular_files %}
         <div class="files-stats">
@@ -1624,7 +2291,68 @@
             </div>
         </div>
 
-        <div class="files-grid" id="filesGrid">
+        <!-- Календарный вид -->
+        <div class="menu-calendar {% if view_mode == 'calendar' %}active{% endif %}" id="menuCalendar">
+            <div class="cal-weekdays">
+                {% for wd in weekday_labels %}
+                <div class="cal-weekday">{{ wd }}</div>
+                {% endfor %}
+            </div>
+            {% for week in calendar_weeks %}
+            <div class="cal-week">
+                {% for day in week %}
+                {% if day == 0 %}
+                <div class="cal-cell empty"></div>
+                {% else %}
+                {% set day_key = '%02d'|format(day) %}
+                {% set day_files = files_by_day.get(day_key, []) %}
+                <div class="cal-cell {% if day_files %}has-files{% endif %} {% if loop.index0 >= 5 %}weekend{% endif %}"
+                     data-day="{{ day_key }}">
+                    <div class="cal-day-num">
+                        <span>{{ day }}</span>
+                        {% if day_files %}
+                        <span class="cal-day-badge">{{ day_files|length }}</span>
+                        {% endif %}
+                    </div>
+                    {% for file_info in day_files[:3] %}
+                    <a class="cal-file-chip" href="/{{ user.id }}/food/{{ file_info.filename }}"
+                       title="{{ file_info.filename }}" download>
+                        {{ file_info.filename|truncate(18, true) }}
+                    </a>
+                    {% endfor %}
+                    {% if day_files|length > 3 %}
+                    <div class="cal-more">+ ещё {{ day_files|length - 3 }}</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+            {% if undated_files %}
+            <div class="undated-strip">
+                <h4>Без даты в имени файла ({{ undated_files|length }})</h4>
+                <div class="files-grid" style="margin:0;">
+                    {% for file_info in undated_files %}
+                    <div class="file-card" data-filename="{{ file_info.filename }}">
+                        <div class="file-select">
+                            <input type="checkbox" class="file-checkbox" data-filename="{{ file_info.filename }}">
+                        </div>
+                        <div class="file-info">
+                            <div class="file-name" title="{{ file_info.filename }}">{{ file_info.filename|truncate(28, true) }}</div>
+                            <div class="file-actions">
+                                <a href="/{{ user.id }}/food/{{ file_info.filename }}" class="file-action-btn download" download>Скачать</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Список -->
+        <div class="files-grid {% if view_mode == 'calendar' %}view-hidden{% endif %}" id="filesGrid">
             {% set sorted_files = regular_files|sort(attribute='filename') %}
             {% for file_info in sorted_files %}
             <div class="file-card" data-filename="{{ file_info.filename }}" data-card-index="{{ loop.index0 }}">
@@ -1650,13 +2378,6 @@
                             <polyline points="14 2 14 8 20 8"></polyline>
                             <text x="8" y="18" font-size="8" fill="currentColor">PDF</text>
                         </svg>
-                        {% elif file_ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="1.5">
-                            <rect x="2" y="2" width="20" height="20" rx="2.18"></rect>
-                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                            <polyline points="21 15 16 10 5 21"></polyline>
-                        </svg>
                         {% else %}
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                              stroke-width="1.5">
@@ -1670,6 +2391,9 @@
                 <div class="file-info">
                     <div class="file-name" title="{{ file_info.filename }}">
                         {{ file_info.filename|truncate(30, true) }}
+                        {% if file_info.menu_date %}
+                        <span class="menu-day-tag">{{ file_info.menu_date }}</span>
+                        {% endif %}
                     </div>
                     <div class="file-meta">
                         <span>
@@ -1720,7 +2444,7 @@
                 <line x1="9" y1="15" x2="15" y2="15"></line>
             </svg>
             <p>Нет файлов ежедневного меню за {{ months[month] }} {{ year }} год</p>
-            <div class="empty-hint">Загрузите файлы, чтобы они появились здесь</div>
+            <div class="empty-hint">Загрузите файлы вида YYYY-MM-DD-sm.xlsx</div>
         </div>
         {% endif %}
         {% else %}
@@ -1753,11 +2477,313 @@
 <!-- ===== УВЕДОМЛЕНИЕ ===== -->
 <div class="copy-notification" id="copyNotification">Ссылка скопирована!</div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    const initialFcmp = {{ (fcmp_stats or {})|tojson }};
+    let deadlineChart, processedChart, sanpinChart;
+
+    function yesNoColor(ok) {
+        if (ok === true) return "#3d9a78";
+        if (ok === false) return "#d46565";
+        return "#7f9bb8";
+    }
+
+    function destroyCharts() {
+        [deadlineChart, processedChart, sanpinChart].forEach((c) => { if (c) c.destroy(); });
+        deadlineChart = processedChart = sanpinChart = null;
+    }
+
+    function renderFcmp(data) {
+        const statusEl = document.getElementById("fcmpStatus");
+        const matchEl = document.getElementById("fcmpMatch");
+        const summaryEl = document.getElementById("fcmpSummary");
+        const chartsEl = document.getElementById("fcmpCharts");
+        const tableWrap = document.getElementById("fcmpTableWrap");
+        const tbody = document.getElementById("fcmpTableBody");
+        const emptyEl = document.getElementById("fcmpEmpty");
+        if (!data || !data.rows || !data.rows.length) {
+            destroyCharts();
+            summaryEl.hidden = true;
+            chartsEl.hidden = true;
+            tableWrap.hidden = true;
+            emptyEl.hidden = false;
+            emptyEl.textContent = "Данные ФЦМПО пока отсутствуют. Нажмите кнопку для обновления.";
+            matchEl.textContent = "";
+            return;
+        }
+        emptyEl.hidden = true;
+        summaryEl.hidden = false;
+        chartsEl.hidden = false;
+        tableWrap.hidden = false;
+
+        if (data.match) {
+            const score = data.match.score != null ? ` · сходство ${(data.match.score * 100).toFixed(0)}%` : "";
+            matchEl.textContent = `Пищеблок: ${data.match.label || "—"}${data.match.rayon ? " (" + data.match.rayon + ")" : ""}${score}`;
+        } else {
+            matchEl.textContent = "";
+        }
+
+        const s = data.summary || {};
+        summaryEl.querySelector('[data-k="total_days"]').textContent = s.total_days ?? 0;
+        summaryEl.querySelector('[data-k="processed_pct"]').textContent = (s.processed_pct ?? 0) + "%";
+        summaryEl.querySelector('[data-k="deadline_pct"]').textContent = (s.deadline_pct ?? 0) + "%";
+        summaryEl.querySelector('[data-k="avg_tm_compliance_pct"]').textContent = (s.avg_tm_compliance_pct ?? 0) + "%";
+
+        tbody.innerHTML = data.rows.map((r) => `
+            <tr>
+                <td>${r.date_label || r.date || "—"}</td>
+                <td>${r.file_downloaded_label}</td>
+                <td>${r.file_processed_label}</td>
+                <td>${r.deadline_ok_label}</td>
+                <td>${r.sanpin_errors ?? "—"}</td>
+                <td>${r.tm_compliance_pct != null ? r.tm_compliance_pct + "%" : "—"}</td>
+            </tr>
+        `).join("");
+
+        // Charts: last 60 days with meaningful activity for readability
+        const chartRows = data.rows.filter((r) => r.file_downloaded || r.file_processed || r.deadline_ok || (r.sanpin_errors != null)).slice(-60);
+        const labels = chartRows.map((r) => (r.date || "").slice(5));
+        destroyCharts();
+
+        deadlineChart = new Chart(document.getElementById("fcmpDeadlineChart"), {
+            type: "bar",
+            data: {
+                labels,
+                datasets: [{
+                    label: "Сроки",
+                    data: chartRows.map((r) => r.deadline_ok === true ? 1 : (r.deadline_ok === false ? 0 : null)),
+                    backgroundColor: chartRows.map((r) => yesNoColor(r.deadline_ok)),
+                }],
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { min: 0, max: 1, ticks: { callback: (v) => (v === 1 ? "да" : (v === 0 ? "нет" : "")) } },
+                },
+            },
+        });
+
+        const processedYes = data.rows.filter((r) => r.file_processed === true).length;
+        const processedNo = data.rows.filter((r) => r.file_processed === false).length;
+        const processedUnk = data.rows.length - processedYes - processedNo;
+        processedChart = new Chart(document.getElementById("fcmpProcessedChart"), {
+            type: "doughnut",
+            data: {
+                labels: ["Обработан", "Не обработан", "Нет данных"],
+                datasets: [{
+                    data: [processedYes, processedNo, processedUnk],
+                    backgroundColor: ["#3d9a78", "#d46565", "#b8cde3"],
+                }],
+            },
+            options: { plugins: { legend: { position: "bottom" } } },
+        });
+
+        sanpinChart = new Chart(document.getElementById("fcmpSanpinChart"), {
+            type: "line",
+            data: {
+                labels,
+                datasets: [{
+                    label: "Ошибки СанПиН",
+                    data: chartRows.map((r) => r.sanpin_errors ?? null),
+                    borderColor: "#5b9fd4",
+                    backgroundColor: "rgba(91,159,212,0.15)",
+                    tension: 0.25,
+                    fill: true,
+                }],
+            },
+            options: { plugins: { legend: { display: false } } },
+        });
+
+        if (statusEl && data.match && data.match.last_synced_at) {
+            statusEl.className = "fcmp-status ok";
+            statusEl.textContent = "Последнее обновление: " + data.match.last_synced_at.replace("T", " ").slice(0, 19);
+        }
+    }
+
+    window.__renderFcmp = renderFcmp;
+    window.__initialFcmp = initialFcmp;
+})();
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+
+        // ===== ФЦМПО =====
+        (function initFcmp() {
+            const btn = document.getElementById('fcmpRefreshBtn');
+            const section = document.getElementById('fcmpSection');
+            const statusEl = document.getElementById('fcmpStatus');
+            if (!btn || !section || !window.__renderFcmp) return;
+            const uid = section.dataset.uid;
+            if (window.__initialFcmp) {
+                window.__renderFcmp(window.__initialFcmp);
+            }
+            btn.addEventListener('click', async function () {
+                btn.disabled = true;
+                statusEl.className = 'fcmp-status';
+                statusEl.textContent = 'Загрузка статистики с мониторингпитания.рф…';
+                try {
+                    const resp = await fetch('/api/school/' + uid + '/fcmp-stats/refresh', { method: 'POST' });
+                    const data = await resp.json();
+                    if (!resp.ok) {
+                        throw new Error(data.detail || 'Ошибка загрузки');
+                    }
+                    statusEl.className = 'fcmp-status ok';
+                    statusEl.textContent = 'Статистика обновлена';
+                    window.__renderFcmp(data);
+                } catch (err) {
+                    statusEl.className = 'fcmp-status error';
+                    statusEl.textContent = err.message || String(err);
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        })();
+
         // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
         const $ = (sel) => document.querySelector(sel);
         const $$ = (sel) => document.querySelectorAll(sel);
+
+        // ===== СРАЗУ: загрузка + календарь (критичный UI) =====
+        (function initUploadAndViews() {
+            const fileInput = document.getElementById('fileInput');
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            const fileDropHint = document.getElementById('fileDropHint');
+            const pendingStatBadge = document.getElementById('pendingStatBadge');
+            const pendingCountLabel = document.getElementById('pendingCountLabel');
+            const pendingFilesList = document.getElementById('pendingFilesList');
+            const uploadForm = document.getElementById('uploadForm');
+
+            function pluralFiles(n) {
+                const n10 = n % 10, n100 = n % 100;
+                if (n10 === 1 && n100 !== 11) return `${n} файл`;
+                if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return `${n} файла`;
+                return `${n} файлов`;
+            }
+
+            function renderPickedFiles(fileList) {
+                const files = Array.from(fileList || []);
+                if (!pendingStatBadge || !pendingCountLabel || !pendingFilesList) return;
+
+                if (!files.length) {
+                    pendingStatBadge.hidden = true;
+                    pendingCountLabel.textContent = '0';
+                    pendingFilesList.innerHTML = '';
+                    if (fileUploadArea) fileUploadArea.classList.remove('has-files');
+                    if (fileDropHint) fileDropHint.textContent = 'Выберите файлы или перетащите их сюда';
+                    return;
+                }
+
+                pendingStatBadge.hidden = false;
+                pendingCountLabel.textContent = String(files.length);
+                pendingFilesList.innerHTML = files.map(f => `<li>${f.name}</li>`).join('');
+                if (fileUploadArea) fileUploadArea.classList.add('has-files');
+                if (fileDropHint) {
+                    fileDropHint.textContent = `Добавлено: ${pluralFiles(files.length)} — наведите на бейдж «К загрузке», чтобы увидеть список`;
+                }
+            }
+
+            function assignFiles(fileList) {
+                if (!fileInput || !fileList || !fileList.length) return;
+                try {
+                    const transfer = new DataTransfer();
+                    Array.from(fileList).forEach(f => transfer.items.add(f));
+                    fileInput.files = transfer.files;
+                } catch (err) {
+                    try { fileInput.files = fileList; } catch (e2) {}
+                }
+                renderPickedFiles(fileInput.files);
+            }
+
+            if (fileInput) {
+                fileInput.addEventListener('change', () => renderPickedFiles(fileInput.files));
+            }
+
+            if (fileUploadArea) {
+                ['dragenter', 'dragover'].forEach(evt => {
+                    fileUploadArea.addEventListener(evt, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        fileUploadArea.classList.add('drag-over');
+                    });
+                });
+                fileUploadArea.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    if (!fileUploadArea.contains(e.relatedTarget)) {
+                        fileUploadArea.classList.remove('drag-over');
+                    }
+                });
+                fileUploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    fileUploadArea.classList.remove('drag-over');
+                    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+                        assignFiles(e.dataTransfer.files);
+                    }
+                });
+            }
+
+            if (uploadForm) {
+                uploadForm.addEventListener('submit', (e) => {
+                    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                        e.preventDefault();
+                        alert('Выберите хотя бы один файл для загрузки');
+                    }
+                });
+            }
+
+            const viewListBtn = document.getElementById('viewListBtn');
+            const viewCalendarBtn = document.getElementById('viewCalendarBtn');
+            const menuCalendar = document.getElementById('menuCalendar');
+            const menuFilesGrid = document.getElementById('filesGrid');
+            const periodViewInput = document.getElementById('periodViewInput');
+
+            function setViewMode(mode) {
+                const isCal = mode === 'calendar';
+                if (viewListBtn) viewListBtn.classList.toggle('active', !isCal);
+                if (viewCalendarBtn) viewCalendarBtn.classList.toggle('active', isCal);
+                if (menuCalendar) {
+                    menuCalendar.classList.toggle('active', isCal);
+                    menuCalendar.style.display = isCal ? 'block' : 'none';
+                }
+                if (menuFilesGrid) {
+                    menuFilesGrid.classList.toggle('view-hidden', isCal);
+                    menuFilesGrid.style.display = isCal ? 'none' : '';
+                }
+                if (periodViewInput) periodViewInput.value = isCal ? 'calendar' : 'list';
+                try { localStorage.setItem('ecm_dashboard_view', isCal ? 'calendar' : 'list'); } catch (e) {}
+                try {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('view', isCal ? 'calendar' : 'list');
+                    window.history.replaceState({}, '', url);
+                } catch (e) {}
+            }
+
+            if (viewListBtn) {
+                viewListBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setViewMode('list');
+                });
+            }
+            if (viewCalendarBtn) {
+                viewCalendarBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setViewMode('calendar');
+                });
+            }
+
+            try {
+                const urlView = new URLSearchParams(window.location.search).get('view');
+                if (urlView === 'calendar' || urlView === 'list') {
+                    setViewMode(urlView);
+                } else {
+                    const saved = localStorage.getItem('ecm_dashboard_view');
+                    if (saved === 'calendar' || saved === 'list') setViewMode(saved);
+                }
+            } catch (e) {}
+        })();
 
         // ===== РЕДАКТИРОВАНИЕ ТИПА ПИТАНИЯ =====
         const foodTypeBadge = $('#foodTypeBadge');
@@ -2168,6 +3194,9 @@
                 }
             });
         }
+
     });
 </script>
+
+
 {% endblock %}

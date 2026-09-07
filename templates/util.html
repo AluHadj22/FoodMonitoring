@@ -2,7 +2,7 @@
 {% block content %}
 <style>
     /* ----------  UTILITIES MARKETPLACE - Единый стиль ---------- */
-    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+    
 
     .utilities-layout {
         max-width: 1280px;
@@ -66,7 +66,7 @@
     }
 
     .page-header h1 span {
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        background: var(--primary);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -118,7 +118,7 @@
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+        background: var(--primary);
         opacity: 0;
         transition: opacity 0.3s ease;
     }
@@ -148,7 +148,7 @@
 
     .utility-card:hover .icon-container {
         transform: scale(1.05);
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        background: var(--primary);
     }
 
     .icon-container svg {
@@ -225,7 +225,7 @@
         gap: 0.625rem;
         width: 100%;
         padding: 0.7rem;
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        background: var(--primary);
         color: white;
         border: none;
         border-radius: var(--radius-md);
@@ -240,7 +240,7 @@
     .download-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 24px rgba(59, 130, 246, 0.25);
-        background: linear-gradient(135deg, #2563eb, #1e40af);
+        background: var(--primary);
     }
 
     .download-btn:active {

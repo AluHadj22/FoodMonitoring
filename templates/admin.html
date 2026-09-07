@@ -1,400 +1,316 @@
 {% extends "layout.html" %}
 {% block content %}
 <style>
-    /* Оптимизированные стили для админ-панели */
     .admin-layout {
-        max-width: 1400px;
+        max-width: 1440px;
         margin: 0 auto;
-        padding: 2rem;
+        padding: 1.75rem 1.5rem 3rem;
         position: relative;
-    }
-
-    /* Фоновые круги - упрощенные для производительности */
-    .admin-layout::before,
-    .admin-layout::after {
-        content: '';
-        position: fixed;
-        pointer-events: none;
-        z-index: 0;
-        border-radius: 50%;
-        opacity: 0.4;
-    }
-
-    .admin-layout::before {
-        width: 400px;
-        height: 400px;
-        top: -100px;
-        right: -80px;
-        background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
-    }
-
-    .admin-layout::after {
-        width: 280px;
-        height: 280px;
-        bottom: -60px;
-        left: -60px;
-        background: radial-gradient(circle, rgba(59, 130, 246, 0.04) 0%, transparent 70%);
     }
 
     .admin-grid {
         display: grid;
-        gap: 2rem;
+        gap: 1.5rem;
         grid-template-columns: 1fr;
         position: relative;
         z-index: 1;
     }
 
-    @media (min-width: 1024px) {
+    @media (min-width: 1100px) {
         .admin-grid {
-            grid-template-columns: 400px 1fr;
+            grid-template-columns: 360px 1fr;
+            align-items: start;
         }
     }
 
-    /* Боковая панель - убраны тяжелые эффекты */
     .admin-sidebar {
-        background: var(--bg-card);
+        background: var(--bg-card-solid);
         border-radius: var(--radius-lg);
-        border: 1px solid var(--border-light);
-        padding: 1.5rem;
+        border: 1px solid var(--border);
+        padding: 0;
         height: fit-content;
         position: sticky;
-        top: 2rem;
-        box-shadow: 0 2px 12px rgba(59, 130, 246, 0.04);
-    }
-
-    [data-theme='dark'] .admin-sidebar {
-        background: var(--bg-card);
-        border-color: rgba(59, 130, 246, 0.08);
+        top: 5rem;
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
     }
 
     .admin-header {
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid var(--border-light);
+        padding: 1.25rem 1.35rem;
+        background: linear-gradient(135deg, #3d7eb8 0%, #5b9fd4 100%);
+        color: #eaf1f8;
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+
+    [data-theme='dark'] .admin-header {
+        background: linear-gradient(135deg, #1a2740 0%, #243552 100%);
     }
 
     .admin-header h2 {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 0.25rem;
+        font-size: 1.1rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: #f5f8fc;
+        margin-bottom: 0.4rem;
     }
 
     .admin-role {
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        font-weight: 500;
-        background: var(--primary-bg);
-        padding: 0.2rem 0.6rem;
-        border-radius: 12px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #eaf6ff;
+        background: rgba(126, 184, 232, 0.12);
+        border: 1px solid rgba(126, 184, 232, 0.25);
+        padding: 0.25rem 0.55rem;
+        border-radius: var(--radius-sm);
         display: inline-block;
     }
 
-    /* Кнопка 1С */
+    .admin-sidebar > .onec-button,
+    .admin-sidebar > .form-card {
+        margin: 1rem 1.1rem;
+    }
+
     .onec-button {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.75rem;
-        background: var(--gray-100);
+        gap: 0.6rem;
+        background: var(--mist-100);
         color: var(--text-primary);
-        font-weight: 600;
-        padding: 0.75rem 1.25rem;
+        font-weight: 700;
+        padding: 0.7rem 1rem;
         border-radius: var(--radius-md);
         text-decoration: none;
-        margin-bottom: 1.5rem;
-        transition: background 0.2s ease, transform 0.2s ease;
-        font-size: 0.85rem;
-        border: 1px solid var(--border-light);
-    }
-
-    [data-theme='dark'] .onec-button {
-        background: rgba(51, 65, 85, 0.6);
+        transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        font-size: 0.82rem;
+        border: 1px solid var(--border);
     }
 
     .onec-button:hover {
         background: var(--primary);
-        color: white;
+        color: #fff;
         border-color: var(--primary);
-        transform: translateY(-1px);
     }
 
-    .onec-button svg {
-        width: 18px;
-        height: 18px;
-        stroke: currentColor;
-    }
+    .onec-button svg { width: 16px; height: 16px; stroke: currentColor; }
 
-    /* Карточки форм - упрощенные */
     .form-card {
-        background: var(--bg-card);
-        border-radius: var(--radius-lg);
-        border: 1px solid var(--border-light);
-        margin-bottom: 1.5rem;
+        background: transparent;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+        margin-bottom: 1rem;
         overflow: hidden;
-        box-shadow: 0 1px 8px rgba(59, 130, 246, 0.03);
+        box-shadow: none;
     }
 
     .form-card-header {
-        padding: 0.75rem 1.25rem;
-        background: var(--gray-50);
+        padding: 0.7rem 1rem;
+        background: var(--bg-muted);
         border-bottom: 1px solid var(--border-light);
         display: flex;
         align-items: center;
         gap: 0.5rem;
     }
 
-    [data-theme='dark'] .form-card-header {
-        background: rgba(30, 41, 59, 0.4);
-    }
-
     .form-card-header svg {
-        width: 18px;
-        height: 18px;
+        width: 16px;
+        height: 16px;
         stroke: var(--primary);
     }
 
     .form-card-header h3 {
-        font-size: 0.9rem;
-        font-weight: 600;
+        font-size: 0.8rem;
+        font-weight: 750;
+        letter-spacing: -0.01em;
         color: var(--text-primary);
         margin: 0;
     }
 
-    .form-card-body {
-        padding: 1.25rem;
-    }
+    .form-card-body { padding: 1rem; }
 
-    /* Формы */
-    .form-group {
-        margin-bottom: 1.25rem;
-    }
+    .form-group { margin-bottom: 1rem; }
 
     .form-label {
         display: block;
-        font-size: 0.7rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-        margin-bottom: 0.5rem;
+        font-size: 0.65rem;
+        font-weight: 750;
+        color: var(--text-muted);
+        margin-bottom: 0.4rem;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.05em;
     }
 
     .form-select,
     .form-input {
         width: 100%;
-        padding: 0.6rem 0.875rem;
-        background: var(--bg-card);
-        border: 1px solid var(--border-light);
+        padding: 0.55rem 0.75rem;
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border);
         border-radius: var(--radius-md);
         color: var(--text-primary);
-        font-size: 0.85rem;
-        transition: border-color 0.2s ease;
+        font-size: 0.82rem;
         font-family: inherit;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
     .form-select:focus,
     .form-input:focus {
         outline: none;
         border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+        box-shadow: var(--shadow-focus);
     }
 
     .form-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 0.75rem;
+        gap: 0.6rem;
     }
 
-    /* Область загрузки файлов */
     .file-upload-zone {
-        border: 2px dashed var(--border-light);
+        border: 1.5px dashed var(--border);
         border-radius: var(--radius-md);
-        padding: 1.25rem;
+        padding: 1.1rem;
         text-align: center;
-        background: var(--gray-50);
-        transition: border-color 0.2s ease;
+        background: var(--bg-muted);
+        transition: border-color 0.15s ease, background 0.15s ease;
         cursor: pointer;
         position: relative;
     }
 
-    [data-theme='dark'] .file-upload-zone {
-        background: rgba(30, 41, 59, 0.4);
-    }
-
-    .file-upload-zone:hover {
+    .file-upload-zone:hover,
+    .file-upload-zone.drag-over {
         border-color: var(--primary);
         background: var(--primary-bg);
+    }
+
+    .file-upload-zone.has-files {
+        border-style: solid;
+        border-color: var(--primary);
     }
 
     .file-upload-zone input {
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+        inset: 0;
         opacity: 0;
         cursor: pointer;
     }
 
-    .file-upload-content {
-        position: relative;
-        z-index: 2;
-    }
-
+    .file-upload-content { position: relative; z-index: 2; pointer-events: none; }
     .file-upload-icon {
-        width: 36px;
-        height: 36px;
-        margin: 0 auto 0.5rem;
-        stroke: var(--text-secondary);
+        width: 32px; height: 32px; margin: 0 auto 0.4rem;
+        stroke: var(--text-muted);
     }
-
     .file-upload-text {
-        font-size: 0.8rem;
-        font-weight: 500;
-        color: var(--text-primary);
+        font-size: 0.78rem; font-weight: 650; color: var(--text-primary);
     }
-
     .file-upload-hint {
-        font-size: 0.65rem;
-        color: var(--text-secondary);
-        margin-top: 0.25rem;
+        font-size: 0.65rem; color: var(--text-muted); margin-top: 0.2rem;
     }
 
-    /* Кнопки */
     .btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 0.5rem;
-        padding: 0.6rem 1.25rem;
+        gap: 0.45rem;
+        padding: 0.65rem 1.1rem;
         border-radius: var(--radius-md);
-        font-weight: 600;
+        font-weight: 700;
         font-size: 0.8rem;
         cursor: pointer;
-        transition: background 0.2s ease, transform 0.2s ease;
+        transition: background 0.15s ease, transform 0.15s ease, filter 0.15s ease;
         border: none;
         width: 100%;
         font-family: inherit;
+        letter-spacing: -0.01em;
     }
+
+    .btn:active { transform: translateY(1px); }
+    .btn.loading { opacity: 0.65; pointer-events: none; }
 
     .btn-primary {
         background: var(--primary);
-        color: white;
+        color: #fff;
     }
+    .btn-primary:hover { background: var(--primary-dark); }
 
-    .btn-primary:hover {
-        background: var(--primary-dark);
-        transform: translateY(-1px);
-    }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { filter: brightness(1.06); }
 
-    .btn-danger {
-        background: #ef4444;
-        color: white;
-    }
+    .btn-warning { background: var(--warning); color: #fff; }
+    .btn-warning:hover { filter: brightness(1.06); }
 
-    .btn-danger:hover {
-        background: #dc2626;
-        transform: translateY(-1px);
-    }
-
-    .btn-warning {
-        background: #f59e0b;
-        color: white;
-    }
-
-    .btn-warning:hover {
-        background: #d97706;
-        transform: translateY(-1px);
-    }
-
-    /* Сетка чекбоксов школ */
     .schools-selection-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 0.75rem;
+        margin-bottom: 0.55rem;
         flex-wrap: wrap;
-        gap: 0.5rem;
+        gap: 0.4rem;
     }
 
-    .schools-count {
-        font-size: 0.65rem;
+    .schools-count,
+    .months-count {
+        font-size: 0.68rem;
         background: var(--primary-bg);
-        color: var(--primary);
-        padding: 0.2rem 0.6rem;
-        border-radius: 12px;
-        font-weight: 500;
+        color: var(--primary-dark);
+        padding: 0.25rem 0.55rem;
+        border-radius: var(--radius-sm);
+        font-weight: 700;
         display: inline-block;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.45rem;
+        border: 1px solid rgba(91, 159, 212, 0.16);
     }
 
-    .select-all-buttons {
-        display: flex;
-        gap: 0.5rem;
-    }
+    [data-theme='dark'] .schools-count,
+    [data-theme='dark'] .months-count { color: var(--primary-light); }
+
+    .select-all-buttons { display: flex; gap: 0.35rem; }
 
     .select-all-button {
-        background: var(--gray-100);
-        border: 1px solid var(--border-light);
-        padding: 0.25rem 0.7rem;
+        background: var(--bg-muted);
+        border: 1px solid var(--border);
         border-radius: var(--radius-sm);
+        padding: 0.2rem 0.55rem;
         font-size: 0.65rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.2s ease;
+        font-weight: 700;
         color: var(--text-secondary);
-    }
-
-    [data-theme='dark'] .select-all-button {
-        background: rgba(51, 65, 85, 0.6);
-        border-color: rgba(59, 130, 246, 0.1);
+        cursor: pointer;
+        font-family: inherit;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
 
     .select-all-button:hover {
-        background: var(--primary);
-        color: white;
+        background: var(--primary-bg);
+        color: var(--primary-dark);
         border-color: var(--primary);
     }
 
     .schools-checkbox-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 0.4rem;
         max-height: 200px;
         overflow-y: auto;
-        padding: 0.6rem;
-        background: var(--gray-50);
-        border-radius: var(--radius-md);
         border: 1px solid var(--border-light);
-        margin-bottom: 1rem;
-    }
-
-    [data-theme='dark'] .schools-checkbox-grid {
-        background: rgba(30, 41, 59, 0.4);
+        border-radius: var(--radius-md);
+        padding: 0.35rem;
+        background: var(--bg-muted);
     }
 
     .school-checkbox {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.25rem 0.35rem;
+        padding: 0.4rem 0.5rem;
         border-radius: var(--radius-sm);
         cursor: pointer;
+        transition: background 0.12s ease;
     }
 
-    .school-checkbox:hover {
-        background: var(--gray-100);
-    }
-
-    [data-theme='dark'] .school-checkbox:hover {
-        background: rgba(51, 65, 85, 0.6);
-    }
+    .school-checkbox:hover { background: var(--bg-card-solid); }
 
     .school-checkbox input[type="checkbox"] {
-        width: 14px;
-        height: 14px;
-        cursor: pointer;
+        width: 14px; height: 14px;
         accent-color: var(--primary);
         flex-shrink: 0;
     }
@@ -403,304 +319,232 @@
         font-size: 0.75rem;
         color: var(--text-primary);
         cursor: pointer;
-        font-weight: 500;
-        word-break: break-word;
+        line-height: 1.3;
     }
 
-    /* Скроллбар */
-    .schools-checkbox-grid::-webkit-scrollbar,
-    .months-grid::-webkit-scrollbar {
-        width: 4px;
-    }
-
-    .schools-checkbox-grid::-webkit-scrollbar-track,
-    .months-grid::-webkit-scrollbar-track {
-        background: var(--gray-100);
-        border-radius: 4px;
-    }
-
-    .schools-checkbox-grid::-webkit-scrollbar-thumb,
-    .months-grid::-webkit-scrollbar-thumb {
-        background: var(--primary);
-        border-radius: 4px;
-    }
-
-    /* Опции удаления */
-    .delete-options {
+    .months-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 0.5rem;
-        margin-bottom: 1rem;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.35rem;
+    }
+
+    .month-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.45rem;
+        background: var(--bg-muted);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        font-size: 0.72rem;
+    }
+
+    .month-checkbox input { accent-color: var(--primary); }
+
+    .delete-options {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin: 0.75rem 0 1rem;
     }
 
     .delete-option {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.4rem 0.6rem;
-        background: var(--gray-50);
-        border-radius: var(--radius-md);
-        border: 1px solid var(--border-light);
-        transition: border-color 0.2s ease;
-        cursor: pointer;
-    }
-
-    [data-theme='dark'] .delete-option {
-        background: rgba(30, 41, 59, 0.4);
-    }
-
-    .delete-option:hover {
-        border-color: #ef4444;
-    }
-
-    .delete-option input[type="checkbox"] {
-        width: 14px;
-        height: 14px;
-        accent-color: #ef4444;
-        flex-shrink: 0;
-    }
-
-    .delete-option label {
-        font-size: 0.75rem;
-        color: var(--text-primary);
-        font-weight: 500;
-        cursor: pointer;
-    }
-
-    .delete-option.tm-option {
-        border-left: 3px solid #f59e0b;
-    }
-
-    .delete-option.findex-option {
-        border-left: 3px solid #10b981;
-    }
-
-    .delete-option.kp-option {
-        border-left: 3px solid #8b5cf6;
-    }
-
-    /* Сетка месяцев */
-    .months-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-        gap: 0.4rem;
-        max-height: 180px;
-        overflow-y: auto;
-        padding: 0.6rem;
-        background: var(--gray-50);
-        border-radius: var(--radius-md);
-        border: 1px solid var(--border-light);
-        margin-bottom: 1rem;
-    }
-
-    [data-theme='dark'] .months-grid {
-        background: rgba(30, 41, 59, 0.4);
-    }
-
-    .months-count {
-        font-size: 0.65rem;
-        background: var(--primary-bg);
-        color: var(--primary);
-        padding: 0.2rem 0.6rem;
-        border-radius: 12px;
-        font-weight: 500;
-        display: inline-block;
-        margin-bottom: 0.5rem;
-    }
-
-    .month-checkbox {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.2rem 0.3rem;
+        padding: 0.5rem 0.65rem;
+        background: var(--bg-muted);
         border-radius: var(--radius-sm);
-        cursor: pointer;
-    }
-
-    .month-checkbox:hover {
-        background: var(--gray-100);
-    }
-
-    [data-theme='dark'] .month-checkbox:hover {
-        background: rgba(51, 65, 85, 0.6);
-    }
-
-    .month-checkbox input[type="checkbox"] {
-        width: 14px;
-        height: 14px;
-        cursor: pointer;
-        accent-color: #f59e0b;
-        flex-shrink: 0;
-    }
-
-    .month-checkbox label {
+        border-left: 3px solid var(--border);
         font-size: 0.75rem;
-        color: var(--text-primary);
-        cursor: pointer;
-        font-weight: 500;
     }
 
-    /* Поисковая панель */
+    .delete-option.tm-option { border-left-color: var(--primary); }
+    .delete-option.findex-option { border-left-color: var(--warning); }
+    .delete-option.kp-option { border-left-color: var(--accent); }
+
+    .delete-option input { accent-color: var(--primary); }
+    .delete-option label { cursor: pointer; font-weight: 600; color: var(--text-secondary); }
+
     .search-panel {
-        background: var(--bg-card);
+        background: var(--bg-card-solid);
         border-radius: var(--radius-lg);
-        border: 1px solid var(--border-light);
-        padding: 1.25rem 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 1px 8px rgba(59, 130, 246, 0.03);
+        border: 1px solid var(--border);
+        padding: 1rem 1.15rem;
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow-sm);
     }
 
-    [data-theme='dark'] .search-panel {
-        background: var(--bg-card);
+    .search-panel:focus-within {
+        border-color: rgba(91, 159, 212, 0.45);
+        box-shadow: var(--shadow-focus);
     }
 
     .search-form {
         display: flex;
-        gap: 0.75rem;
+        gap: 0.65rem;
         align-items: center;
         flex-wrap: wrap;
     }
 
     .search-input-wrapper {
         flex: 2;
-        min-width: 240px;
+        min-width: 200px;
         position: relative;
     }
 
     .search-icon {
         position: absolute;
-        left: 0.75rem;
+        left: 0.7rem;
         top: 50%;
         transform: translateY(-50%);
-        color: var(--text-secondary);
+        color: var(--text-muted);
         pointer-events: none;
     }
 
-    .search-icon svg {
-        width: 16px;
-        height: 16px;
-        stroke: currentColor;
-    }
+    .search-icon svg { width: 16px; height: 16px; }
 
     .search-input {
         width: 100%;
-        padding: 0.6rem 0.75rem 0.6rem 2.2rem;
-        background: var(--bg-card);
-        border: 1px solid var(--border-light);
+        padding: 0.6rem 0.75rem 0.6rem 2.25rem;
+        border: 1px solid var(--border);
         border-radius: var(--radius-md);
-        color: var(--text-primary);
+        background: var(--bg-muted);
+        font-family: inherit;
         font-size: 0.85rem;
-        transition: border-color 0.2s ease;
+        color: var(--text-primary);
+        transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
     }
 
     .search-input:focus {
         outline: none;
+        background: var(--bg-card-solid);
         border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+        box-shadow: var(--shadow-focus);
     }
 
-    .search-filters {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-        align-items: center;
-        flex: 1;
-        min-width: 180px;
-    }
+    .search-filters { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
     .filter-select {
-        padding: 0.55rem 0.75rem;
-        background: var(--bg-card);
-        border: 1px solid var(--border-light);
+        padding: 0.55rem 0.7rem;
+        border: 1px solid var(--border);
         border-radius: var(--radius-md);
-        color: var(--text-primary);
-        font-size: 0.8rem;
-        transition: border-color 0.2s ease;
+        background: var(--bg-muted);
         font-family: inherit;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-primary);
         min-width: 140px;
     }
 
     .filter-select:focus {
         outline: none;
         border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+        box-shadow: var(--shadow-focus);
     }
 
-    .search-actions {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
+    .search-actions { display: flex; gap: 0.45rem; align-items: center; }
 
     .search-button,
     .reset-button {
-        padding: 0.55rem 1.25rem;
-        border-radius: var(--radius-md);
-        font-weight: 600;
-        font-size: 0.8rem;
-        cursor: pointer;
-        transition: background 0.2s ease, transform 0.2s ease;
-        border: none;
-        text-decoration: none;
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.35rem;
+        padding: 0.55rem 0.95rem;
+        border-radius: var(--radius-md);
+        font-weight: 700;
+        font-size: 0.78rem;
+        font-family: inherit;
+        cursor: pointer;
+        text-decoration: none;
+        border: 1px solid transparent;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
 
     .search-button {
         background: var(--primary);
-        color: white;
+        color: #fff;
+        border: none;
     }
-
-    .search-button:hover {
-        background: var(--primary-dark);
-        transform: translateY(-1px);
-    }
+    .search-button:hover { background: var(--primary-dark); }
 
     .reset-button {
-        background: var(--gray-100);
+        background: transparent;
         color: var(--text-secondary);
-        border: 1px solid var(--border-light);
+        border-color: var(--border);
     }
-
-    [data-theme='dark'] .reset-button {
-        background: rgba(51, 65, 85, 0.6);
-        border-color: rgba(59, 130, 246, 0.1);
-    }
-
     .reset-button:hover {
-        background: #ef4444;
-        color: white;
-        border-color: #ef4444;
-        transform: translateY(-1px);
+        background: var(--bg-muted);
+        color: var(--danger);
+        border-color: var(--danger);
     }
 
-    /* Таблица - упрощенная */
+    .pagination-info {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.75rem;
+        padding: 0.6rem 0.85rem;
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        font-weight: 600;
+    }
+
+    .pagination {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .pagination a,
+    .pagination span {
+        padding: 0.4rem 0.75rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        background: var(--bg-card-solid);
+        color: var(--text-secondary);
+    }
+
+    .pagination a:hover {
+        border-color: var(--primary);
+        color: var(--primary-dark);
+        background: var(--primary-bg);
+    }
+
+    .pagination span {
+        opacity: 0.45;
+        cursor: default;
+    }
+
     .schools-table-container {
-        background: var(--bg-card);
+        background: var(--bg-card-solid);
         border-radius: var(--radius-lg);
-        border: 1px solid var(--border-light);
+        border: 1px solid var(--border);
         overflow: hidden;
-        box-shadow: 0 1px 8px rgba(59, 130, 246, 0.03);
-    }
-
-    [data-theme='dark'] .schools-table-container {
-        background: var(--bg-card);
+        box-shadow: var(--shadow-sm);
     }
 
     .table-header {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        padding: 1rem 1.5rem;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 1rem 1.25rem;
         border-bottom: 1px solid var(--border-light);
-        flex-wrap: wrap;
-        gap: 1rem;
+        background: linear-gradient(180deg, var(--mist-50), var(--bg-card-solid));
+    }
+
+    [data-theme='dark'] .table-header {
+        background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent);
     }
 
     .table-header h2 {
         font-size: 1rem;
-        font-weight: 700;
+        font-weight: 800;
+        letter-spacing: -0.02em;
         color: var(--text-primary);
         margin: 0;
         display: flex;
@@ -709,480 +553,218 @@
     }
 
     .table-header h2 svg {
-        width: 20px;
-        height: 20px;
-        stroke: var(--primary);
+        width: 18px; height: 18px; stroke: var(--primary);
     }
 
     .schools-badge {
         background: var(--primary-bg);
-        color: var(--primary);
-        padding: 0.25rem 0.75rem;
-        border-radius: 12px;
-        font-size: 0.7rem;
-        font-weight: 600;
+        color: var(--primary-dark);
+        padding: 0.3rem 0.65rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.72rem;
+        font-weight: 750;
+        border: 1px solid rgba(91, 159, 212, 0.18);
     }
 
-    .table-wrapper {
-        overflow-x: auto;
-    }
+    [data-theme='dark'] .schools-badge { color: var(--primary-light); }
+
+    .table-wrapper { overflow-x: auto; }
 
     .schools-table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 500px;
+        min-width: 560px;
     }
 
     .schools-table th {
-        padding: 0.7rem 1.25rem;
+        padding: 0.7rem 1.1rem;
         text-align: left;
         font-size: 0.65rem;
-        font-weight: 600;
+        font-weight: 750;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-secondary);
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        background: var(--bg-muted);
         border-bottom: 1px solid var(--border-light);
-        background: var(--gray-50);
-    }
-
-    [data-theme='dark'] .schools-table th {
-        background: rgba(30, 41, 59, 0.4);
+        white-space: nowrap;
     }
 
     .schools-table td {
-        padding: 0.7rem 1.25rem;
+        padding: 0.85rem 1.1rem;
         border-bottom: 1px solid var(--border-light);
-        color: var(--text-primary);
-        font-size: 0.8rem;
+        font-size: 0.84rem;
+        vertical-align: middle;
     }
 
     .schools-table tbody tr {
-        transition: background 0.15s ease;
+        transition: background 0.12s ease;
     }
 
-    .schools-table tbody tr:hover {
-        background: var(--gray-50);
-    }
-
-    [data-theme='dark'] .schools-table tbody tr:hover {
-        background: rgba(30, 41, 59, 0.4);
-    }
+    .schools-table tbody tr:hover { background: var(--primary-bg); }
 
     .school-name {
-        font-weight: 600;
-        color: var(--text-primary);
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.55rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: -0.01em;
     }
 
-    .school-name .school-icon {
+    .school-icon {
+        width: 30px; height: 30px;
+        border-radius: var(--radius-sm);
+        background: var(--primary-bg);
+        border: 1px solid rgba(91, 159, 212, 0.15);
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 24px;
-        height: 24px;
-        background: var(--primary-bg);
-        border-radius: 6px;
         flex-shrink: 0;
     }
 
-    .school-name .school-icon svg {
-        width: 12px;
-        height: 12px;
-        stroke: var(--primary);
+    .school-icon svg {
+        width: 14px; height: 14px; stroke: var(--primary);
     }
 
     .district-badge {
-        background: var(--primary-bg);
-        color: var(--primary);
-        padding: 0.2rem 0.6rem;
-        border-radius: 12px;
-        font-size: 0.65rem;
-        font-weight: 500;
         display: inline-block;
+        padding: 0.2rem 0.5rem;
+        background: var(--bg-muted);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        font-size: 0.72rem;
+        font-weight: 650;
+        color: var(--text-secondary);
     }
 
     .food-type {
         display: inline-block;
-        padding: 0.2rem 0.6rem;
-        border-radius: 12px;
+        padding: 0.2rem 0.5rem;
+        border-radius: var(--radius-sm);
         font-size: 0.7rem;
-        font-weight: 500;
-        background: var(--gray-100);
+        font-weight: 700;
+        background: var(--mist-100);
         color: var(--text-secondary);
+        border: 1px solid var(--border-light);
     }
 
     .food-type.hot {
-        background: rgba(239, 68, 68, 0.08);
-        color: #dc2626;
+        background: rgba(194, 65, 12, 0.08);
+        color: #9a3412;
+        border-color: rgba(194, 65, 12, 0.2);
     }
-
     .food-type.cold {
-        background: rgba(59, 130, 246, 0.08);
-        color: #2563eb;
+        background: rgba(91, 159, 212, 0.08);
+        color: #3d7eb8;
+        border-color: rgba(91, 159, 212, 0.2);
     }
-
     .food-type.both {
-        background: rgba(139, 92, 246, 0.08);
-        color: #7c3aed;
-    }
-
-    [data-theme='dark'] .food-type {
-        background: rgba(51, 65, 85, 0.6);
-    }
-
-    [data-theme='dark'] .food-type.hot {
-        background: rgba(239, 68, 68, 0.15);
-        color: #f87171;
-    }
-
-    [data-theme='dark'] .food-type.cold {
-        background: rgba(59, 130, 246, 0.15);
-        color: #60a5fa;
-    }
-
-    [data-theme='dark'] .food-type.both {
-        background: rgba(139, 92, 246, 0.15);
-        color: #a78bfa;
+        background: rgba(21, 128, 61, 0.08);
+        color: #166534;
+        border-color: rgba(21, 128, 61, 0.2);
     }
 
     .robot-link {
-        background: var(--gray-100);
-        padding: 0.2rem 0.5rem;
+        font-family: var(--font-mono, ui-monospace, monospace);
+        font-size: 0.72rem;
+        background: var(--bg-muted);
+        padding: 0.2rem 0.45rem;
         border-radius: var(--radius-sm);
-        font-family: 'Courier New', monospace;
-        font-size: 0.7rem;
-        font-weight: 500;
-        color: var(--primary);
+        color: var(--text-muted);
         border: 1px solid var(--border-light);
-        display: inline-block;
-    }
-
-    [data-theme='dark'] .robot-link {
-        background: rgba(51, 65, 85, 0.6);
-        border-color: rgba(59, 130, 246, 0.1);
     }
 
     .manage-button {
         display: inline-flex;
         align-items: center;
         gap: 0.3rem;
-        background: var(--primary-bg);
-        color: var(--primary);
-        text-decoration: none;
-        padding: 0.35rem 0.7rem;
+        padding: 0.4rem 0.75rem;
+        background: var(--primary);
+        color: #fff;
         border-radius: var(--radius-md);
+        text-decoration: none;
         font-size: 0.7rem;
-        font-weight: 600;
-        transition: background 0.2s ease;
-        border: 1px solid transparent;
+        font-weight: 700;
+        transition: background 0.15s ease, transform 0.15s ease;
     }
 
     .manage-button:hover {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
+        background: var(--primary-dark);
+        transform: translateY(-1px);
     }
 
-    .manage-button svg {
-        width: 12px;
-        height: 12px;
-    }
+    .manage-button svg { width: 12px; height: 12px; }
 
-    /* Дополнительная информация для мобильных */
     .mobile-row-details {
         display: none;
-        background: var(--gray-50);
-        padding: 0.5rem 1rem;
-        font-size: 0.7rem;
-        color: var(--text-secondary);
-        border-bottom: 1px solid var(--border-light);
-    }
-
-    [data-theme='dark'] .mobile-row-details {
-        background: rgba(30, 41, 59, 0.4);
-    }
-
-    .mobile-row-details.show {
-        display: table-row;
-    }
-
-    .mobile-row-details td {
-        padding: 0.5rem 1rem;
+        background: var(--bg-muted);
     }
 
     .mobile-detail-item {
-        display: inline-block;
-        margin-right: 0.75rem;
-        margin-bottom: 0.25rem;
-    }
-
-    .mobile-detail-item strong {
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-
-    /* Пагинация */
-    .pagination-info {
-        text-align: center;
-        font-size: 0.75rem;
+        padding: 0.25rem 0;
+        font-size: 0.78rem;
         color: var(--text-secondary);
-        margin: 1rem 0;
     }
 
-    .pagination {
-        display: flex;
-        justify-content: center;
-        gap: 0.5rem;
-        margin-bottom: 1.5rem;
-        flex-wrap: wrap;
-    }
-
-    .pagination a,
-    .pagination span {
-        padding: 0.35rem 0.75rem;
-        border-radius: var(--radius-md);
-        font-size: 0.75rem;
-        font-weight: 500;
-        text-decoration: none;
-        transition: background 0.2s ease;
-    }
-
-    .pagination a {
-        background: var(--gray-100);
-        color: var(--primary);
-        border: 1px solid var(--border-light);
-    }
-
-    [data-theme='dark'] .pagination a {
-        background: rgba(51, 65, 85, 0.6);
-        border-color: rgba(59, 130, 246, 0.1);
-    }
-
-    .pagination a:hover {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
-    }
-
-    .pagination span {
-        background: var(--primary-bg);
-        color: var(--primary);
-        border: 1px solid var(--border-light);
-    }
-
-    /* Пустое состояние */
     .empty-state {
         text-align: center;
-        padding: 2rem 1.5rem;
+        padding: 3.5rem 1.5rem;
     }
 
     .empty-state-icon {
-        width: 40px;
-        height: 40px;
-        margin: 0 auto 0.75rem;
-        stroke: var(--text-secondary);
+        width: 44px; height: 44px;
+        margin: 0 auto 0.85rem;
+        stroke: var(--text-muted);
+        opacity: 0.45;
     }
 
     .empty-state-text {
-        font-size: 0.85rem;
-        font-weight: 500;
-        color: var(--text-primary);
-        margin-bottom: 0.25rem;
+        font-size: 1rem;
+        font-weight: 750;
+        color: var(--text-secondary);
+        margin-bottom: 0.3rem;
     }
 
     .empty-state-subtext {
-        font-size: 0.75rem;
-        color: var(--text-secondary);
+        font-size: 0.8rem;
+        color: var(--text-muted);
     }
 
-    /* Уведомления — исправлено: выше z-index и отступ сверху */
     .notification {
         position: fixed;
-        top: 4rem; /* смещаем ниже верхнего бара */
-        right: 2rem;
-        padding: 0.75rem 1.25rem;
+        top: 84px;
+        right: 20px;
+        z-index: 2000;
+        max-width: 360px;
+        padding: 0.85rem 1rem;
         border-radius: var(--radius-md);
-        background: var(--primary);
-        color: white;
-        font-weight: 500;
-        font-size: 0.8rem;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-        z-index: 9999 !important; /* выше любого бара */
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-lg);
+        font-size: 0.82rem;
+        font-weight: 650;
         transform: translateX(120%);
-        transition: transform 0.3s ease;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    .notification.show {
-        transform: translateX(0);
-    }
+    .notification.show { transform: translateX(0); }
+    .notification.success { border-left: 3px solid var(--success); }
+    .notification.error { border-left: 3px solid var(--danger); }
+    .notification.warning { border-left: 3px solid var(--warning); }
 
-    .notification.error {
-        background: #ef4444;
-    }
-
-    .notification.warning {
-        background: #f59e0b;
-    }
-
-    /* Анимации */
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(15px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .fade-in-up {
-        animation: fadeInUp 0.3s ease-out forwards;
-    }
-
-    .loading {
-        display: inline-block;
-        width: 16px;
-        height: 16px;
-        border: 2px solid transparent;
-        border-top: 2px solid white;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    /* Адаптивность */
     @media (max-width: 768px) {
-        .admin-layout {
-            padding: 1rem;
-        }
-
-        .admin-layout::before {
-            width: 200px;
-            height: 200px;
-            top: -60px;
-            right: -40px;
-        }
-
-        .admin-layout::after {
-            width: 150px;
-            height: 150px;
-            bottom: -30px;
-            left: -30px;
-        }
-
-        .admin-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .admin-sidebar {
-            position: static;
-        }
-
-        .search-form {
-            flex-direction: column;
-        }
-
-        .search-input-wrapper {
-            min-width: 100%;
-        }
-
-        .search-filters {
-            width: 100%;
-            flex-direction: column;
-        }
-
-        .filter-select {
-            width: 100%;
-            min-width: unset;
-        }
-
-        .search-actions {
-            width: 100%;
-            flex-direction: row;
-        }
-
-        .search-button,
-        .reset-button {
-            flex: 1;
-            justify-content: center;
-        }
-
-        .schools-checkbox-grid,
-        .months-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .delete-options {
-            grid-template-columns: 1fr;
-        }
-
-        .table-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .schools-table th,
-        .schools-table td {
-            padding: 0.5rem 0.75rem;
-            font-size: 0.75rem;
-        }
-
+        .admin-layout { padding: 1rem 0.75rem 2.5rem; }
+        .admin-sidebar { position: static; }
+        .search-form { flex-direction: column; align-items: stretch; }
+        .search-input-wrapper { min-width: 0; }
+        .search-filters { width: 100%; }
+        .filter-select { flex: 1; min-width: 0; }
+        .search-actions { width: 100%; }
+        .search-button, .reset-button { flex: 1; justify-content: center; }
         .schools-table th:nth-child(3),
-        .schools-table td:nth-child(3) {
-            display: none;
-        }
-
-        .notification {
-            top: 1rem;
-            right: 1rem;
-            left: 1rem;
-            text-align: center;
-        }
-
-        .manage-button {
-            padding: 0.4rem 0.7rem;
-            font-size: 0.65rem;
-        }
-
-        .robot-link {
-            font-size: 0.6rem;
-            padding: 0.15rem 0.4rem;
-        }
-
-        .district-badge {
-            font-size: 0.6rem;
-            padding: 0.15rem 0.5rem;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .schools-table th,
-        .schools-table td {
-            padding: 0.4rem 0.5rem;
-        }
-
-        .school-name {
-            font-size: 0.7rem;
-        }
-
-        .pagination a,
-        .pagination span {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.65rem;
-        }
-
-        .search-actions {
-            flex-direction: column;
-        }
+        .schools-table td:nth-child(3),
+        .schools-table th:nth-child(4),
+        .schools-table td:nth-child(4) { display: none; }
     }
 </style>
 
@@ -1287,11 +869,12 @@
                             <div class="schools-count" id="selected-schools-count">Выбрано: 0 из {{ schools|length }}
                             </div>
 
-                            <div class="schools-checkbox-grid">
+                            <div class="schools-checkbox-grid" id="delete-schools-grid">
                                 {% for school in schools %}
                                 <div class="school-checkbox">
                                     <input type="checkbox" name="school_ids" value="{{ school.id }}"
-                                           id="school-{{ school.id }}" onchange="updateSelectedCount()">
+                                           id="school-{{ school.id }}" class="school-select-checkbox"
+                                           onchange="updateSelectedCount()">
                                     <label for="school-{{ school.id }}">{{ school.unit_name }} ({{ school.district
                                         }})</label>
                                 </div>
@@ -1473,9 +1056,10 @@
 
             <!-- Пагинация -->
             <div class="pagination-info">
-                Показано <strong>{{ per_page }}</strong> из <strong>{{ total_count }}</strong> записей.
-                Страница <strong>{{ current_page }}</strong> из <strong>{{ (total_count + per_page - 1) // per_page
-                }}</strong>
+                Найдено <strong>{{ total_count }}</strong> из <strong>{{ unfiltered_total }}</strong> учреждений.
+                На странице: <strong>{{ schools|length }}</strong>
+                · страница <strong>{{ current_page }}</strong>
+                из <strong>{{ ((total_count + per_page - 1) // per_page) if total_count > 0 else 1 }}</strong>
             </div>
 
             <div class="pagination">
@@ -1504,7 +1088,7 @@
                         </svg>
                         Учреждения питания
                     </h2>
-                    <span class="schools-badge">Найдено: {{ schools|length }}</span>
+                    <span class="schools-badge">Найдено: {{ total_count }}{% if unfiltered_total and unfiltered_total != total_count %} из {{ unfiltered_total }}{% endif %}</span>
                 </div>
 
                 <div class="table-wrapper">
@@ -1637,8 +1221,7 @@
 
     // Функции для выбора школ
     function selectAllSchools(select) {
-        const schoolCheckboxes = document.querySelectorAll('input[name="school_ids"]');
-        schoolCheckboxes.forEach(checkbox => {
+        document.querySelectorAll('.school-select-checkbox').forEach(checkbox => {
             checkbox.checked = select;
         });
         updateSelectedCount();
@@ -1672,8 +1255,8 @@
     }
 
     function updateSelectedCount() {
-        const selectedCount = document.querySelectorAll('input[name="school_ids"]:checked').length;
-        const totalCount = document.querySelectorAll('input[name="school_ids"]').length;
+        const selectedCount = document.querySelectorAll('.school-select-checkbox:checked').length;
+        const totalCount = document.querySelectorAll('.school-select-checkbox').length;
         const counterElement = document.getElementById('selected-schools-count');
 
         if (counterElement) {
@@ -1816,10 +1399,11 @@
         form.addEventListener('submit', function (e) {
             e.preventDefault();
 
-            // Получаем выбранные чекбоксы с именем "school_ids" (они есть в таблице)
-            const checked = document.querySelectorAll('input[name="school_ids"]:checked');
+            // Уникальные ID из формы выбора школ (без дублей второй формы)
+            const checked = document.querySelectorAll('.school-select-checkbox:checked');
+            const uniqueIds = [...new Set(Array.from(checked).map(cb => cb.value))];
 
-            if (checked.length === 0) {
+            if (uniqueIds.length === 0) {
                 showNotification('Выберите хотя бы одну школу для рассылки!', 'warning');
                 return;
             }
@@ -1828,11 +1412,11 @@
             form.querySelectorAll('input[name="school_ids"]').forEach(el => el.remove());
 
             // Добавляем скрытые поля для каждой выбранной школы
-            checked.forEach(cb => {
+            uniqueIds.forEach(id => {
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = 'school_ids';
-                input.value = cb.value;
+                input.value = id;
                 form.appendChild(input);
             });
 
@@ -1922,6 +1506,15 @@
         initMobileRowClick();
         setupBulkUploadForm();
         showMessageFromUrl();
+
+        // Автоотправка фильтров
+        const searchForm = document.getElementById('searchForm');
+        ['foodTypeFilter', 'districtFilter'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el && searchForm) {
+                el.addEventListener('change', () => searchForm.submit());
+            }
+        });
 
         window.addEventListener('resize', function () {
             if (window.innerWidth > 768) {

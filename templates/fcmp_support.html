@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    
 
     .fcmp-container {
         max-width: 1200px;
@@ -288,7 +288,7 @@
     .btn-submit {
         width: 100%;
         padding: 1rem;
-        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        background: var(--primary);
         color: white;
         border: none;
         border-radius: 60px;
@@ -348,7 +348,7 @@
 
     .admin-login-btn {
         padding: 0.875rem 1.5rem;
-        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        background: var(--primary);
         color: white;
         border: none;
         border-radius: 14px;
@@ -487,11 +487,11 @@
 
     .action-btn.reply {
         background: rgba(59, 130, 246, 0.2);
-        color: #3b82f6;
+        color: var(--primary);
     }
 
     .action-btn.reply:hover {
-        background: #3b82f6;
+        background: var(--primary);
         color: white;
     }
 

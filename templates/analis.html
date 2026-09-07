@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Анализ статистики — ЕЦМ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/app.css">
     <style>
         /* ------------------------------
            Глобальные переменные (бизнес-стиль)
@@ -23,19 +27,19 @@
             --slate-800: #1e293b;
             --slate-900: #0f172a;
             
-            --primary: #1a4c8c;
-            --primary-dark: #0e3a6b;
-            --primary-light: #2c6eb0;
-            --primary-bg: rgba(26, 76, 140, 0.05);
+            --primary: #5b9fd4;
+            --primary-dark: #3d7eb8;
+            --primary-light: #8bbfe6;
+            --primary-bg: rgba(91, 159, 212, 0.09);
             --accent: #d97706;
             --accent-dark: #b45309;
             --success: #059669;
             --danger: #dc2626;
             --warning: #d97706;
             
-            --bg-main: #ffffff;
+            --bg-main: #eef4fa;
             --bg-card: #ffffff;
-            --border-light: #e9eef3;
+            --border-light: rgba(15, 23, 42, 0.08);
             --text-primary: #0f172a;
             --text-secondary: #475569;
             --text-muted: #64748b;
@@ -54,16 +58,16 @@
         }
 
         [data-theme='dark'] {
-            --bg-main: #0f172a;
-            --bg-card: #1e293b;
-            --border-light: #334155;
-            --text-primary: #f1f5f9;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            --primary: #3b82f6;
-            --primary-dark: #2563eb;
-            --primary-light: #60a5fa;
-            --primary-bg: rgba(59, 130, 246, 0.08);
+            --bg-main: #0f1729;
+            --bg-card: #162033;
+            --border-light: #334866;
+            --text-primary: #eaf1f8;
+            --text-secondary: #b8cde3;
+            --text-muted: #7f9bb8;
+            --primary: #7eb8e8;
+            --primary-dark: #8bbfe6;
+            --primary-light: #a8d4f5;
+            --primary-bg: rgba(126, 184, 232, 0.12);
             --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
@@ -76,7 +80,7 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            font-family: var(--font-sans);
             background: var(--bg-main);
             color: var(--text-primary);
             line-height: 1.5;
@@ -869,7 +873,7 @@
                 <html>
                 <head><meta charset="UTF-8"><title>Анализ соответствия ТМ</title>
                 <style>
-                    body { font-family: 'Inter', Arial, sans-serif; margin: 40px; background: #f9fafb; }
+                    body { font-family: var(--font-sans); margin: 40px; background: #f9fafb; }
                     .container { max-width: 1200px; margin: 0 auto; }
                     h1 { color: #1a4c8c; font-weight: 600; }
                     table { border-collapse: collapse; width: 100%; margin: 20px 0; font-size: 0.85rem; }

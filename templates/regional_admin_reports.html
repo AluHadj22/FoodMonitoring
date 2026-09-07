@@ -7,7 +7,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
             <div>
                 <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
-                    <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #2563eb, #3b82f6); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <div style="width: 44px; height: 44px; background: var(--primary); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8">
                             <path d="M4 4h16v16H4z"/>
                             <path d="M8 8h8M8 12h6M8 16h4"/>
@@ -80,7 +80,7 @@
                         </select>
                     </div>
                     <div style="display: flex; gap: 0.5rem;">
-                        <button type="submit" style="padding: 0.5rem 1rem; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
+                        <button type="submit" style="padding: 0.5rem 1rem; background: var(--primary); color: white; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                             Применить
                         </button>
@@ -146,7 +146,7 @@
                             </td>
                             <td style="padding: 1rem; font-size: 0.875rem; color: var(--slate-500);">{{ report.created_at.strftime('%d.%m.%Y') if report.created_at else '—' }}</td>
                             <td style="padding: 1rem;">
-                                <a href="/regional-admin/report/{{ report.id }}" style="color: #2563eb; text-decoration: none; font-size: 0.875rem; font-weight: 500; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                <a href="/regional-admin/report/{{ report.id }}" style="color: var(--primary); text-decoration: none; font-size: 0.875rem; font-weight: 500; display: inline-flex; align-items: center; gap: 0.25rem;">
                                     Просмотр
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                                 </a>
@@ -171,7 +171,7 @@
                         Предыдущая
                     </a>
                     {% endif %}
-                    <span style="padding: 0.5rem 0.875rem; background: #2563eb; color: white; border-radius: 6px; font-size: 0.875rem; font-weight: 500;">{{ page }}</span>
+                    <span style="padding: 0.5rem 0.875rem; background: var(--primary); color: white; border-radius: 6px; font-size: 0.875rem; font-weight: 500;">{{ page }}</span>
                     {% if page * per_page < total %}
                     <a href="?page={{ page+1 }}&category_id={{ selected_category }}&year={{ selected_year }}&status={{ selected_status }}&search={{ search }}" 
                        style="padding: 0.5rem 0.875rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--slate-600); font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.25rem;">

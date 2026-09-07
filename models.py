@@ -1,4 +1,7 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, BigInteger
+from sqlalchemy import (
+    Column, Integer, String, Boolean, DateTime, Text, ForeignKey, BigInteger,
+    Date, Float, UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
@@ -302,3 +305,44 @@ class ReportComment(Base):
     
     # Связи
     report = relationship("Report", back_populates="comments")
+
+
+class FcmpSchoolMatch(Base):
+    """Сопоставление школы с пищеблоком ФЦМПО (Чеченская Республика)."""
+    __tablename__ = "fcmp_school_matches"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False, index=True)
+    foodblock_id = Column(Integer, nullable=False, index=True)
+    foodblock_label = Column(String(500), nullable=True)
+    foodblock_rayon = Column(String(200), nullable=True)
+    match_score = Column(Float, nullable=True)
+    matched_at = Column(DateTime, default=datetime.utcnow)
+    last_synced_at = Column(DateTime, nullable=True)
+
+    user = relationship("User")
+    daily_stats = relationship("FcmpDailyStat", back_populates="match", cascade="all, delete-orphan")
+
+
+class FcmpDailyStat(Base):
+    """Дневная статистика ФЦМПО по школе."""
+    __tablename__ = "fcmp_daily_stats"
+    __table_args__ = (
+        UniqueConstraint("user_id", "stat_date", name="uq_fcmp_daily_user_date"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    match_id = Column(Integer, ForeignKey("fcmp_school_matches.id", ondelete="SET NULL"), nullable=True, index=True)
+    stat_date = Column(Date, nullable=False, index=True)
+    day_number = Column(Integer, nullable=True)
+    file_downloaded = Column(Boolean, nullable=True)
+    file_processed = Column(Boolean, nullable=True)
+    deadline_ok = Column(Boolean, nullable=True)
+    sanpin_errors = Column(Integer, nullable=True)
+    tm_compliance_pct = Column(Float, nullable=True)
+    raw_json = Column(Text, nullable=True)
+    synced_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")
+    match = relationship("FcmpSchoolMatch", back_populates="daily_stats")
