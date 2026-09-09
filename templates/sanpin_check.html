@@ -1,0 +1,937 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    .sp-page {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 1.75rem 1.25rem 3.5rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .sp-hero {
+        margin-bottom: 1.5rem;
+        padding: 1.5rem 1.6rem;
+        border-radius: var(--radius-xl);
+        background:
+            linear-gradient(135deg, rgba(91, 159, 212, 0.12) 0%, rgba(61, 154, 120, 0.08) 55%, rgba(255,255,255,0.9) 100%),
+            var(--bg-card);
+        border: 1px solid var(--border-light);
+        box-shadow: var(--shadow-sm);
+    }
+
+    [data-theme='dark'] .sp-hero {
+        background:
+            linear-gradient(135deg, rgba(91, 159, 212, 0.14) 0%, rgba(61, 154, 120, 0.08) 50%, rgba(26, 39, 64, 0.4) 100%);
+    }
+
+    .sp-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--primary-dark);
+        margin-bottom: 0.55rem;
+    }
+
+    .sp-hero h1 {
+        margin: 0 0 0.45rem;
+        font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: var(--text-primary);
+        line-height: 1.2;
+    }
+
+    .sp-hero p {
+        margin: 0;
+        max-width: 46rem;
+        color: var(--text-secondary);
+        font-size: 0.92rem;
+        line-height: 1.5;
+    }
+
+    .sp-steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.65rem;
+        margin-top: 1.15rem;
+    }
+
+    .sp-step {
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: 0.7rem 0.8rem;
+    }
+
+    [data-theme='dark'] .sp-step {
+        background: rgba(15, 23, 41, 0.35);
+    }
+
+    .sp-step b {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--text-primary);
+        margin-bottom: 0.15rem;
+    }
+
+    .sp-step span {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        line-height: 1.35;
+    }
+
+    .sp-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        margin-top: 0.9rem;
+    }
+
+    .sp-chip {
+        font-size: 0.74rem;
+        color: var(--text-secondary);
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: 999px;
+        padding: 0.28rem 0.7rem;
+    }
+
+    .sp-panel {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+    }
+
+    .sp-panel-head {
+        padding: 0.95rem 1.2rem;
+        border-bottom: 1px solid var(--border-light);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .sp-panel-head h2 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 750;
+        color: var(--text-primary);
+    }
+
+    .sp-panel-body { padding: 1.15rem 1.2rem 1.25rem; }
+
+    .sp-drop {
+        border: 1.5px dashed var(--border);
+        border-radius: var(--radius-lg);
+        background:
+            radial-gradient(circle at 20% 20%, rgba(91, 159, 212, 0.06), transparent 45%),
+            var(--bg-muted);
+        padding: 2.1rem 1.25rem;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.18s, transform 0.18s, background 0.18s;
+    }
+
+    .sp-drop:hover,
+    .sp-drop.dragover {
+        border-color: var(--primary);
+        background:
+            radial-gradient(circle at 20% 20%, rgba(91, 159, 212, 0.12), transparent 50%),
+            var(--primary-bg);
+        transform: translateY(-1px);
+    }
+
+    .sp-drop-icon {
+        width: 52px;
+        height: 52px;
+        margin: 0 auto 0.75rem;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        color: var(--primary-dark);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .sp-drop h3 {
+        margin: 0 0 0.3rem;
+        font-size: 1.02rem;
+        color: var(--text-primary);
+    }
+
+    .sp-drop p {
+        margin: 0;
+        font-size: 0.84rem;
+        color: var(--text-muted);
+    }
+
+    .sp-drop input { display: none; }
+
+    .sp-files {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-top: 0.9rem;
+    }
+
+    .sp-file {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.6rem 0.75rem;
+        border-radius: var(--radius-md);
+        background: var(--bg-muted);
+        border: 1px solid transparent;
+        font-size: 0.86rem;
+        color: var(--text-primary);
+    }
+
+    .sp-file-name {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        min-width: 0;
+    }
+
+    .sp-file-name span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .sp-file-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--success);
+        flex-shrink: 0;
+    }
+
+    .sp-file button {
+        border: none;
+        background: transparent;
+        color: var(--danger);
+        font-size: 0.78rem;
+        font-weight: 650;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .sp-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.6rem;
+        margin-top: 1rem;
+    }
+
+    .sp-btn {
+        appearance: none;
+        border: none;
+        border-radius: var(--radius-md);
+        font-family: inherit;
+        font-weight: 700;
+        font-size: 0.9rem;
+        padding: 0.72rem 1.15rem;
+        cursor: pointer;
+        transition: opacity 0.15s, transform 0.15s;
+    }
+
+    .sp-btn:active { transform: translateY(1px); }
+    .sp-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .sp-btn-primary {
+        background: linear-gradient(180deg, #4aa585 0%, var(--success) 100%);
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(61, 154, 120, 0.22);
+    }
+
+    .sp-btn-ghost {
+        background: var(--bg-card);
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .sp-status {
+        margin-top: 0.85rem;
+        min-height: 1.25rem;
+        font-size: 0.86rem;
+        color: var(--text-secondary);
+    }
+
+    .sp-status.busy {
+        color: var(--primary-dark);
+        font-weight: 600;
+    }
+
+    .sp-summary {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.7rem;
+        margin-bottom: 1.1rem;
+    }
+
+    .sp-stat {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 0.85rem 0.95rem;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .sp-stat .lbl {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-weight: 650;
+        margin-bottom: 0.25rem;
+    }
+
+    .sp-stat .val {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1;
+    }
+
+    .sp-stat.warn .val { color: var(--danger); }
+    .sp-stat.good .val { color: var(--success); }
+
+    .sp-result {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-xl);
+        margin-bottom: 0.85rem;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .sp-result[open] { box-shadow: var(--shadow-md); }
+
+    .sp-result-summary {
+        list-style: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.95rem 1.1rem;
+        background: var(--bg-muted);
+        border-bottom: 1px solid transparent;
+    }
+
+    .sp-result[open] > .sp-result-summary {
+        border-bottom-color: var(--border-light);
+    }
+
+    .sp-result-summary::-webkit-details-marker { display: none; }
+
+    .sp-result-left {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .sp-result-left strong {
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .sp-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .sp-tag {
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 0.22rem 0.55rem;
+        border-radius: 999px;
+    }
+
+    .sp-tag-ok { background: rgba(61, 154, 120, 0.12); color: var(--success); }
+    .sp-tag-err { background: rgba(212, 101, 101, 0.12); color: var(--danger); }
+    .sp-tag-muted { background: var(--primary-bg); color: var(--primary-dark); }
+
+    .sp-result-body { padding: 0.35rem 0; }
+
+    .sp-ok-banner {
+        margin: 0.9rem 1.1rem;
+        padding: 0.85rem 1rem;
+        border-radius: var(--radius-md);
+        background: rgba(61, 154, 120, 0.08);
+        color: var(--success);
+        font-weight: 650;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+    }
+
+    .sp-err-banner {
+        margin: 0.9rem 1.1rem;
+        padding: 0.85rem 1rem;
+        border-radius: var(--radius-md);
+        background: rgba(212, 101, 101, 0.08);
+        color: var(--danger);
+        font-size: 0.88rem;
+    }
+
+    .sp-issue {
+        padding: 1rem 1.15rem;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .sp-issue:first-child { border-top: none; }
+
+    .sp-issue-top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.5rem 1rem;
+        margin-bottom: 0.55rem;
+    }
+
+    .sp-issue-title {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.35;
+    }
+
+    .sp-issue-id {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        background: var(--bg-muted);
+        border-radius: 999px;
+        padding: 0.2rem 0.55rem;
+        white-space: nowrap;
+    }
+
+    .sp-issue-meta {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 0.7rem;
+        line-height: 1.4;
+    }
+
+    .sp-compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.55rem;
+        margin-bottom: 0.65rem;
+    }
+
+    .sp-compare-box {
+        border-radius: var(--radius-md);
+        padding: 0.65rem 0.75rem;
+        border: 1px solid var(--border-light);
+    }
+
+    .sp-compare-box .cap {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        margin-bottom: 0.2rem;
+    }
+
+    .sp-compare-box .num {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 1.05rem;
+        font-weight: 700;
+    }
+
+    .sp-compare-box.now {
+        background: rgba(212, 101, 101, 0.06);
+        border-color: rgba(212, 101, 101, 0.18);
+    }
+    .sp-compare-box.now .cap,
+    .sp-compare-box.now .num { color: var(--danger); }
+
+    .sp-compare-box.fix {
+        background: rgba(61, 154, 120, 0.06);
+        border-color: rgba(61, 154, 120, 0.18);
+    }
+    .sp-compare-box.fix .cap,
+    .sp-compare-box.fix .num { color: var(--success); }
+
+    .sp-hint {
+        font-size: 0.86rem;
+        color: var(--text-secondary);
+        line-height: 1.45;
+    }
+
+    .sp-kbju {
+        margin-top: 0.6rem;
+        padding: 0.6rem 0.75rem;
+        border-radius: var(--radius-md);
+        background: rgba(91, 159, 212, 0.07);
+        border: 1px solid rgba(91, 159, 212, 0.14);
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .sp-kbju strong { color: var(--primary-dark); }
+
+    .sp-rules {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-xl);
+        padding: 0.2rem 1.1rem 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .sp-rules summary {
+        cursor: pointer;
+        font-weight: 700;
+        color: var(--text-primary);
+        padding: 0.85rem 0;
+        font-size: 0.92rem;
+    }
+
+    .sp-rules table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+    }
+
+    .sp-rules th,
+    .sp-rules td {
+        text-align: left;
+        padding: 0.45rem 0.4rem;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-secondary);
+    }
+
+    .sp-rules th {
+        color: var(--text-muted);
+        font-weight: 650;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .sp-empty {
+        text-align: center;
+        padding: 1.5rem 1rem;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 760px) {
+        .sp-steps,
+        .sp-summary,
+        .sp-compare { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 520px) {
+        .sp-steps,
+        .sp-summary { grid-template-columns: 1fr; }
+        .sp-compare { grid-template-columns: 1fr; }
+        .sp-page { padding: 1.1rem 0.9rem 2.5rem; }
+    }
+</style>
+
+<div class="sp-page">
+    <section class="sp-hero">
+        <div class="sp-kicker">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            Проверка меню
+        </div>
+        <h1>Проверка файлов на ошибки СанПиН</h1>
+        <p>
+            Загрузите ежедневное или типовое меню (.xlsx). Система сверит граммовку и КБЖУ
+            с эталонными меню школ и подскажет, что исправить.
+        </p>
+        <div class="sp-steps">
+            <div class="sp-step">
+                <b>1. Загрузите файлы</b>
+                <span>Можно сразу несколько Excel-файлов</span>
+            </div>
+            <div class="sp-step">
+                <b>2. Нажмите «Проверить»</b>
+                <span>Сначала эталон из /food, затем СанПиН</span>
+            </div>
+            <div class="sp-step">
+                <b>3. Смотрите отчёт</b>
+                <span>Строка, поле, текущее и рекомендуемое</span>
+            </div>
+        </div>
+        <div class="sp-meta" id="rulesMeta">
+            {% if practical %}
+            <span class="sp-chip">Эталон: {{ practical.schools_scanned }} школ</span>
+            <span class="sp-chip">{{ practical.files_scanned }} файлов</span>
+            <span class="sp-chip">{{ practical.sections_count }} разделов</span>
+            <span class="sp-chip">обновлён {{ practical.built_at }}</span>
+            {% else %}
+            <span class="sp-chip">Эталон построится при первой проверке</span>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="sp-panel">
+        <div class="sp-panel-head">
+            <h2>Файлы для проверки</h2>
+            <span class="sp-chip">без входа в кабинет</span>
+        </div>
+        <div class="sp-panel-body">
+            <form id="sanpinForm" enctype="multipart/form-data">
+                <div class="sp-drop" id="dropzone" role="button" tabindex="0" aria-label="Выбрать файлы меню">
+                    <div class="sp-drop-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                    </div>
+                    <h3>Перетащите Excel сюда</h3>
+                    <p>или нажмите, чтобы выбрать · формат .xlsx · несколько файлов сразу</p>
+                    <input type="file" id="filesInput" name="files" accept=".xlsx,.xls" multiple>
+                </div>
+
+                <div class="sp-files" id="fileList"></div>
+
+                <div class="sp-actions">
+                    <button type="submit" class="sp-btn sp-btn-primary" id="checkBtn" disabled>Проверить файлы</button>
+                    <button type="button" class="sp-btn sp-btn-ghost" id="rebuildBtn">Обновить эталон</button>
+                    <a class="sp-btn sp-btn-ghost" href="/util">К утилитам</a>
+                </div>
+                <div class="sp-status" id="statusLine"></div>
+            </form>
+        </div>
+    </section>
+
+    <div id="summaryWrap" class="sp-summary" style="display:none;"></div>
+    <div id="resultsWrap"></div>
+
+    <details class="sp-rules" id="rulesPanel" style="display:none;">
+        <summary>Эталонные диапазоны по разделам (из /food)</summary>
+        <div id="rulesTableWrap"></div>
+    </details>
+</div>
+
+<script>
+(function () {
+    const dropzone = document.getElementById('dropzone');
+    const input = document.getElementById('filesInput');
+    const fileList = document.getElementById('fileList');
+    const checkBtn = document.getElementById('checkBtn');
+    const form = document.getElementById('sanpinForm');
+    const statusLine = document.getElementById('statusLine');
+    const summaryWrap = document.getElementById('summaryWrap');
+    const resultsWrap = document.getElementById('resultsWrap');
+    const rulesPanel = document.getElementById('rulesPanel');
+    const rulesTableWrap = document.getElementById('rulesTableWrap');
+    const rebuildBtn = document.getElementById('rebuildBtn');
+
+    let selectedFiles = [];
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[c]);
+    }
+
+    function formatSize(n) {
+        if (n < 1024) return n + ' Б';
+        if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' КБ';
+        return (n / (1024 * 1024)).toFixed(1) + ' МБ';
+    }
+
+    function syncButton() {
+        checkBtn.disabled = selectedFiles.length === 0;
+    }
+
+    function renderFileList() {
+        fileList.innerHTML = '';
+        selectedFiles.forEach((file, idx) => {
+            const row = document.createElement('div');
+            row.className = 'sp-file';
+            row.innerHTML = `
+                <div class="sp-file-name">
+                    <i class="sp-file-dot"></i>
+                    <span title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</span>
+                    <small style="color:var(--text-muted)">${formatSize(file.size)}</small>
+                </div>`;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = 'Убрать';
+            btn.addEventListener('click', () => {
+                selectedFiles.splice(idx, 1);
+                renderFileList();
+                syncButton();
+            });
+            row.appendChild(btn);
+            fileList.appendChild(row);
+        });
+        syncButton();
+    }
+
+    function addFiles(list) {
+        Array.from(list || []).forEach(f => {
+            const name = f.name.toLowerCase();
+            if (!name.endsWith('.xlsx') && !name.endsWith('.xls')) return;
+            if (selectedFiles.some(x => x.name === f.name && x.size === f.size)) return;
+            selectedFiles.push(f);
+        });
+        renderFileList();
+    }
+
+    dropzone.addEventListener('click', () => input.click());
+    dropzone.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); }
+    });
+    input.addEventListener('change', () => { addFiles(input.files); input.value = ''; });
+
+    ['dragenter', 'dragover'].forEach(ev => {
+        dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(ev => {
+        dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove('dragover'); });
+    });
+    dropzone.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+
+    /** Схлопываем дубли S6+S7 по одной и той же строке/значению */
+    function groupViolations(list) {
+        const map = new Map();
+        (list || []).forEach(v => {
+            const key = [v.row_number, v.field, v.current_value, v.recommended_value, v.dish_name].join('|');
+            if (!map.has(key)) {
+                map.set(key, { ...v, rule_ids: [v.rule_id] });
+            } else {
+                const g = map.get(key);
+                if (!g.rule_ids.includes(v.rule_id)) g.rule_ids.push(v.rule_id);
+            }
+        });
+        return Array.from(map.values());
+    }
+
+    function updateMeta(pr) {
+        if (!pr) return;
+        document.getElementById('rulesMeta').innerHTML = `
+            <span class="sp-chip">Эталон: ${pr.schools_scanned} школ</span>
+            <span class="sp-chip">${pr.files_scanned} файлов</span>
+            <span class="sp-chip">${pr.sections_count} разделов</span>
+            <span class="sp-chip">обновлён ${escapeHtml(pr.built_at || '')}</span>
+        `;
+        if (pr.sections) {
+            rulesPanel.style.display = 'block';
+            const rows = Object.entries(pr.sections).map(([sec, r]) => `
+                <tr>
+                    <td>${escapeHtml(sec)}</td>
+                    <td>${r.exit_min}–${r.exit_max} г</td>
+                    <td>${r.exit_avg ?? '—'}</td>
+                    <td>${r.cal_avg ?? '—'}</td>
+                    <td>${r.samples}</td>
+                </tr>`).join('');
+            rulesTableWrap.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Раздел</th>
+                            <th>Выход</th>
+                            <th>Средний выход</th>
+                            <th>Средняя ккал</th>
+                            <th>n</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>`;
+        }
+    }
+
+    function renderResults(data) {
+        const s = data.summary || {};
+        const files = data.files || [];
+        let displayViolations = 0;
+        files.forEach(f => {
+            displayViolations += groupViolations(f.violations).length;
+        });
+
+        summaryWrap.style.display = 'grid';
+        summaryWrap.innerHTML = `
+            <div class="sp-stat"><div class="lbl">Файлов</div><div class="val">${s.files || 0}</div></div>
+            <div class="sp-stat"><div class="lbl">Строк</div><div class="val">${s.rows_checked || 0}</div></div>
+            <div class="sp-stat ${displayViolations ? 'warn' : 'good'}"><div class="lbl">Замечаний</div><div class="val">${displayViolations}</div></div>
+            <div class="sp-stat good"><div class="lbl">Без ошибок</div><div class="val">${s.files_ok || 0}</div></div>
+        `;
+
+        resultsWrap.innerHTML = '';
+        if (!files.length) {
+            resultsWrap.innerHTML = `<div class="sp-empty">Результаты появятся после проверки</div>`;
+            return;
+        }
+
+        files.forEach(file => {
+            const issues = groupViolations(file.violations);
+            const typeLabel = file.file_type === 'daily' ? 'Ежедневное'
+                : file.file_type === 'typovoye' ? 'Типовое' : 'Меню';
+            const hasErr = !!(file.error || issues.length);
+            const details = document.createElement('details');
+            details.className = 'sp-result';
+            details.open = hasErr;
+
+            const statusTag = file.error
+                ? `<span class="sp-tag sp-tag-err">Не прочитан</span>`
+                : (issues.length
+                    ? `<span class="sp-tag sp-tag-err">${issues.length} замечаний</span>`
+                    : `<span class="sp-tag sp-tag-ok">Без ошибок</span>`);
+
+            details.innerHTML = `
+                <summary class="sp-result-summary">
+                    <div class="sp-result-left">
+                        <strong>${escapeHtml(file.filename)}</strong>
+                        <div class="sp-tags">
+                            <span class="sp-tag sp-tag-muted">${typeLabel}</span>
+                            ${statusTag}
+                            <span class="sp-tag sp-tag-muted">${file.rows_checked || 0} строк</span>
+                        </div>
+                    </div>
+                </summary>
+                <div class="sp-result-body"></div>
+            `;
+
+            const body = details.querySelector('.sp-result-body');
+            if (file.error) {
+                body.innerHTML = `<div class="sp-err-banner">${escapeHtml(file.error)}</div>`;
+            } else if (!issues.length) {
+                body.innerHTML = `
+                    <div class="sp-ok-banner">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        Нарушений не найдено — файл соответствует эталону
+                    </div>`;
+            } else {
+                issues.forEach(v => {
+                    const item = document.createElement('div');
+                    item.className = 'sp-issue';
+                    const ids = (v.rule_ids || [v.rule_id]).join(', ');
+                    const source = v.rule_source === 'practical' ? 'эталон /food' : 'СанПиН';
+                    let kbju = '';
+                    if (v.kbju_suggestion) {
+                        const parts = Object.entries(v.kbju_suggestion)
+                            .map(([k, val]) => `${escapeHtml(k)}: <strong>${val}</strong>`)
+                            .join(' · ');
+                        kbju = `<div class="sp-kbju">Пересчёт КБЖУ: ${parts}</div>`;
+                    }
+                    let title = v.rule_title || '';
+                    if ((v.rule_ids || []).includes('S6') && (v.rule_ids || []).includes('S7')) {
+                        title = title.replace(/\(сценарий 6\)|\(сценарий 7\)/g, '').trim();
+                        title = title.replace(/:\s*$/, '');
+                        if (!/сценари/.test(title)) title += ' (сценарии 6 и 7)';
+                    }
+                    item.innerHTML = `
+                        <div class="sp-issue-top">
+                            <div class="sp-issue-title">${escapeHtml(title)}</div>
+                            <div class="sp-issue-id">${escapeHtml(ids)}</div>
+                        </div>
+                        <div class="sp-issue-meta">
+                            Строка <b>${v.row_number}</b> · ${escapeHtml(v.dish_name || '—')} ·
+                            раздел «${escapeHtml(v.section || '—')}» · ${escapeHtml(v.meal || '—')} ·
+                            поле «${escapeHtml(v.field)}» · ${source}
+                        </div>
+                        <div class="sp-compare">
+                            <div class="sp-compare-box now">
+                                <div class="cap">Сейчас</div>
+                                <div class="num">${escapeHtml(String(v.current_value))}</div>
+                            </div>
+                            <div class="sp-compare-box fix">
+                                <div class="cap">Рекомендуем</div>
+                                <div class="num">${escapeHtml(String(v.recommended_value))}</div>
+                            </div>
+                        </div>
+                        <div class="sp-hint">${escapeHtml(v.suggestion || '')}</div>
+                        ${kbju}
+                    `;
+                    body.appendChild(item);
+                });
+            }
+            resultsWrap.appendChild(details);
+        });
+
+        updateMeta(data.practical_rules);
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!selectedFiles.length) return;
+        checkBtn.disabled = true;
+        statusLine.className = 'sp-status busy';
+        statusLine.textContent = 'Проверяем файлы…';
+        const fd = new FormData();
+        selectedFiles.forEach(f => fd.append('files', f));
+        try {
+            const resp = await fetch('/sanpin-check/api', { method: 'POST', body: fd });
+            const data = await resp.json();
+            if (!resp.ok || data.ok === false) {
+                statusLine.className = 'sp-status';
+                statusLine.textContent = data.detail || data.error || 'Ошибка проверки';
+                return;
+            }
+            const grouped = (data.files || []).reduce((n, f) => n + groupViolations(f.violations).length, 0);
+            statusLine.className = 'sp-status';
+            statusLine.textContent = grouped
+                ? `Готово: ${grouped} замечаний в ${data.summary.files} файл(ах)`
+                : `Готово: замечаний нет (${data.summary.files} файл(ов))`;
+            renderResults(data);
+        } catch (err) {
+            statusLine.className = 'sp-status';
+            statusLine.textContent = 'Не удалось выполнить проверку: ' + err.message;
+        } finally {
+            syncButton();
+        }
+    });
+
+    rebuildBtn.addEventListener('click', async () => {
+        rebuildBtn.disabled = true;
+        statusLine.className = 'sp-status busy';
+        statusLine.textContent = 'Обновляем эталон из /food… обычно около минуты';
+        try {
+            const resp = await fetch('/sanpin-check/rebuild-rules', { method: 'POST' });
+            const data = await resp.json();
+            if (!resp.ok || data.ok === false) {
+                statusLine.textContent = data.detail || data.error || 'Не удалось обновить эталон';
+                return;
+            }
+            statusLine.className = 'sp-status';
+            statusLine.textContent = `Эталон обновлён: ${data.practical_rules.sections_count} разделов`;
+            updateMeta(data.practical_rules);
+        } catch (err) {
+            statusLine.className = 'sp-status';
+            statusLine.textContent = 'Ошибка: ' + err.message;
+        } finally {
+            rebuildBtn.disabled = false;
+        }
+    });
+})();
+</script>
+{% endblock %}

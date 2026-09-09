@@ -50,6 +50,7 @@ from database import engine, Base, get_db
 import models
 from models import User
 import fcmp_service
+import dashboard_service
 
 # Аутентификация и безопасность
 from jose import JWTError, jwt
@@ -3427,57 +3428,52 @@ async def get_performance_stats(request: Request):
 # --- ДАШБОРДЫ ---
 @app.get("/dashboards")
 async def dashboards_list(request: Request, db: Session = Depends(get_db)):
-    """Список всех дашбордов"""
+    """Список дашбордов: админ видит все, остальные — только опубликованные."""
     try:
-        # Для админа показываем все дашборды, для обычных пользователей только опубликованные
-        is_admin = request.session.get("dashboard_admin", False)
+        is_admin = bool(request.session.get("dashboard_admin", False))
 
-        if is_admin:
-            dashboards = await run_in_threadpool(
-                lambda: db.query(models.Dashboard).order_by(models.Dashboard.updated_at.desc()).all()
-            )
-        else:
-            dashboards = await run_in_threadpool(
-                lambda: db.query(models.Dashboard).filter(models.Dashboard.is_published == True).order_by(
-                    models.Dashboard.updated_at.desc()).all()
-            )
+        def _load():
+            q = db.query(models.Dashboard)
+            if not is_admin:
+                q = q.filter(models.Dashboard.is_published == True)
+            items = q.order_by(models.Dashboard.updated_at.desc()).all()
+            for dashboard in items:
+                dashboard.elements = (
+                    db.query(models.DashboardElement)
+                    .filter(models.DashboardElement.dashboard_id == dashboard.id)
+                    .all()
+                )
+            return items
 
-        # Загружаем элементы для каждого дашборда
-        for dashboard in dashboards:
-            elements = await run_in_threadpool(
-                lambda: db.query(models.DashboardElement).filter(
-                    models.DashboardElement.dashboard_id == dashboard.id
-                ).all()
-            )
-            dashboard.elements = elements
-
+        dashboards = await run_in_threadpool(_load)
         return templates.TemplateResponse("dashboards_list.html", {
             "request": request,
             "dashboards": dashboards,
-            "session": request.session
+            "session": request.session,
+            "is_admin": is_admin,
         })
     except Exception as e:
-        print(f"Ошибка в dashboards_list: {e}")
+        logger.exception("Ошибка в dashboards_list: %s", e)
         return templates.TemplateResponse("dashboards_list.html", {
             "request": request,
             "dashboards": [],
-            "session": request.session
+            "session": request.session,
+            "is_admin": bool(request.session.get("dashboard_admin", False)),
         })
 
 
 @app.get("/dashboard-admin/login", response_class=HTMLResponse)
 async def dashboard_login_page(request: Request):
-    """Страница входа в админку дашбордов"""
+    if request.session.get("dashboard_admin"):
+        return RedirectResponse("/dashboards", status_code=303)
     return templates.TemplateResponse("dashboard_login.html", {"request": request})
 
 
 @app.post("/dashboard-admin/login")
 async def dashboard_login(request: Request, access_code: str = Form(...)):
-    """Вход в админку дашбордов"""
     if access_code == DASHBOARD_ADMIN_CODE:
         request.session["dashboard_admin"] = True
         return RedirectResponse("/dashboards", status_code=303)
-
     return templates.TemplateResponse("dashboard_login.html", {
         "request": request,
         "error": "Неверный код доступа"
@@ -3486,17 +3482,14 @@ async def dashboard_login(request: Request, access_code: str = Form(...)):
 
 @app.get("/dashboard-admin/logout")
 async def dashboard_logout(request: Request):
-    """Выход из админки дашбордов"""
     request.session.pop("dashboard_admin", None)
     return RedirectResponse("/dashboards", status_code=303)
 
 
 @app.get("/dashboard-admin/create")
 async def create_dashboard_page(request: Request, db: Session = Depends(get_db)):
-    """Страница создания нового дашборда"""
     if not request.session.get("dashboard_admin"):
         return RedirectResponse("/dashboard-admin/login", status_code=303)
-
     return templates.TemplateResponse("dashboard_editor.html", {
         "request": request,
         "dashboard": None
@@ -3505,132 +3498,89 @@ async def create_dashboard_page(request: Request, db: Session = Depends(get_db))
 
 @app.post("/dashboard-admin/save")
 async def save_dashboard(request: Request, db: Session = Depends(get_db)):
-    """Сохранение дашборда (автоматически публикуется)"""
+    """Сохранение черновика или публикации дашборда."""
     if not request.session.get("dashboard_admin"):
         raise HTTPException(status_code=403, detail="Доступ запрещен")
 
     try:
         data = await request.json()
-        print(f"Сохраняем дашборд: {data.get('title')}")
-
-        # Генерация slug из названия
-        if data.get('id'):
-            dashboard = await run_in_threadpool(
-                lambda: db.query(models.Dashboard).filter(models.Dashboard.id == data['id']).first()
-            )
-            if not dashboard:
-                raise HTTPException(status_code=404, detail="Дашборд не найден")
-
-            dashboard.title = data['title']
-            dashboard.description = data.get('description', '')
-            dashboard.updated_at = datetime.utcnow()
-            dashboard.layout_data = json.dumps(data.get('layout', {}))
-            dashboard.is_published = True  # Автоматически публикуем при сохранении
-
-            # Удаляем старые элементы
-            await run_in_threadpool(
-                lambda: db.query(models.DashboardElement).filter(
-                    models.DashboardElement.dashboard_id == dashboard.id).delete()
-            )
-        else:
-            # Создаем новый дашборд
-            slug_base = data['title'].lower().replace(' ', '-')
-            # Удаляем специальные символы
-            slug_base = re.sub(r'[^a-z0-9-]', '', slug_base)
-            if not slug_base:
-                slug_base = 'dashboard'
-
-            slug = slug_base
-            counter = 1
-
-            while await run_in_threadpool(
-                    lambda: db.query(models.Dashboard).filter(models.Dashboard.slug == slug).first()
-            ):
-                slug = f"{slug_base}-{counter}"
-                counter += 1
-
-            dashboard = models.Dashboard(
-                title=data['title'],
-                description=data.get('description', ''),
-                slug=slug,
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow(),
-                layout_data=json.dumps(data.get('layout', {})),
-                is_published=True  # Автоматически публикуем при создании
-            )
-            db.add(dashboard)
-            await run_in_threadpool(db.flush)
-            print(f"Создан новый дашборд с ID: {dashboard.id}")
-
-        # Сохраняем элементы
-        elements_count = 0
-        for idx, element_data in enumerate(data.get('elements', [])):
-            element = models.DashboardElement(
-                dashboard_id=dashboard.id,
-                element_type=element_data['type'],
-                chart_type=element_data.get('chartType'),
-                title=element_data.get('title', ''),
-                content=json.dumps(element_data.get('content', {}), ensure_ascii=False),
-                settings=json.dumps(element_data.get('settings', {}), ensure_ascii=False),
-                position_x=element_data.get('position', {}).get('x', 0),
-                position_y=element_data.get('position', {}).get('y', 0),
-                width=element_data.get('size', {}).get('w', 4),
-                height=element_data.get('size', {}).get('h', 4),
-                order_index=idx
-            )
-            db.add(element)
-            elements_count += 1
-
-        await run_in_threadpool(db.commit)
-        print(f"Сохранено {elements_count} элементов для дашборда {dashboard.id}")
-
-        return {"status": "success", "id": dashboard.id, "slug": dashboard.slug, "published": True}
-
+        dashboard = await run_in_threadpool(
+            lambda: dashboard_service.save_dashboard_payload(db, data)
+        )
+        return {
+            "status": "success",
+            "success": True,
+            "id": dashboard.id,
+            "slug": dashboard.slug,
+            "published": bool(dashboard.is_published),
+            "is_published": bool(dashboard.is_published),
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        print(f"Ошибка при сохранении дашборда: {e}")
+        logger.exception("Ошибка при сохранении дашборда: %s", e)
         await run_in_threadpool(db.rollback)
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/dashboard-admin/edit/{dashboard_id}")
-async def edit_dashboard(request: Request, dashboard_id: int, db: Session = Depends(get_db)):
-    """Редактирование дашборда"""
+@app.post("/dashboard-admin/publish/{dashboard_id}")
+async def toggle_dashboard_publish(
+    request: Request,
+    dashboard_id: int,
+    db: Session = Depends(get_db),
+):
+    """Переключение публикации без пересохранения виджетов."""
     if not request.session.get("dashboard_admin"):
-        return RedirectResponse("/dashboard-admin/login", status_code=303)
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
 
     dashboard = await run_in_threadpool(
         lambda: db.query(models.Dashboard).filter(models.Dashboard.id == dashboard_id).first()
     )
-
     if not dashboard:
         raise HTTPException(status_code=404, detail="Дашборд не найден")
 
-    # Загружаем элементы
-    elements = await run_in_threadpool(
-        lambda: db.query(models.DashboardElement).filter(models.DashboardElement.dashboard_id == dashboard_id).order_by(
-            models.DashboardElement.order_index).all()
-    )
+    try:
+        payload = await request.json()
+        if isinstance(payload, dict) and "is_published" in payload:
+            dashboard.is_published = bool(payload["is_published"])
+        else:
+            dashboard.is_published = not bool(dashboard.is_published)
+    except Exception:
+        dashboard.is_published = not bool(dashboard.is_published)
 
-    dashboard_data = {
+    dashboard.updated_at = datetime.utcnow()
+    await run_in_threadpool(db.commit)
+    return {
+        "status": "success",
+        "success": True,
         "id": dashboard.id,
-        "title": dashboard.title,
-        "description": dashboard.description,
         "slug": dashboard.slug,
-        "is_published": dashboard.is_published,  # Добавляем поле публикации
-        "elements": []
+        "is_published": bool(dashboard.is_published),
     }
 
-    for element in elements:
-        dashboard_data["elements"].append({
-            "id": element.id,
-            "type": element.element_type,
-            "chartType": element.chart_type,
-            "title": element.title,
-            "content": json.loads(element.content) if element.content else {},
-            "settings": json.loads(element.settings) if element.settings else {},
-            "position": {"x": element.position_x, "y": element.position_y},
-            "size": {"w": element.width, "h": element.height}
-        })
+
+@app.get("/dashboard-admin/edit/{dashboard_id}")
+async def edit_dashboard(request: Request, dashboard_id: int, db: Session = Depends(get_db)):
+    if not request.session.get("dashboard_admin"):
+        return RedirectResponse("/dashboard-admin/login", status_code=303)
+
+    def _load():
+        dashboard = db.query(models.Dashboard).filter(models.Dashboard.id == dashboard_id).first()
+        if not dashboard:
+            return None
+        elements = (
+            db.query(models.DashboardElement)
+            .filter(models.DashboardElement.dashboard_id == dashboard_id)
+            .order_by(models.DashboardElement.order_index)
+            .all()
+        )
+        return dashboard_service.serialize_dashboard(dashboard, elements)
+
+    dashboard_data = await run_in_threadpool(_load)
+    if not dashboard_data:
+        raise HTTPException(status_code=404, detail="Дашборд не найден")
 
     return templates.TemplateResponse("dashboard_editor.html", {
         "request": request,
@@ -3640,66 +3590,73 @@ async def edit_dashboard(request: Request, dashboard_id: int, db: Session = Depe
 
 @app.post("/dashboard-admin/delete/{dashboard_id}")
 async def delete_dashboard(request: Request, dashboard_id: int, db: Session = Depends(get_db)):
-    """Удаление дашборда"""
     if not request.session.get("dashboard_admin"):
         raise HTTPException(status_code=403, detail="Доступ запрещен")
 
-    dashboard = await run_in_threadpool(
-        lambda: db.query(models.Dashboard).filter(models.Dashboard.id == dashboard_id).first()
-    )
+    def _delete():
+        dashboard = db.query(models.Dashboard).filter(models.Dashboard.id == dashboard_id).first()
+        if not dashboard:
+            return False
+        db.delete(dashboard)
+        db.commit()
+        return True
 
-    if dashboard:
-        await run_in_threadpool(lambda: db.delete(dashboard))
-        await run_in_threadpool(db.commit)
-
-    return {"status": "success"}
+    deleted = await run_in_threadpool(_delete)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Дашборд не найден")
+    return {"status": "success", "success": True}
 
 
 @app.get("/dashboard/{slug}")
 async def view_dashboard(request: Request, slug: str, db: Session = Depends(get_db)):
-    """Просмотр дашборда"""
-    # Пробуем найти по slug или по id
-    if slug.isdigit():
-        dashboard = await run_in_threadpool(
-            lambda: db.query(models.Dashboard).filter(models.Dashboard.id == int(slug)).first()
-        )
-    else:
-        dashboard = await run_in_threadpool(
-            lambda: db.query(models.Dashboard).filter(models.Dashboard.slug == slug).first()
-        )
+    """Публичный (или админский черновик) просмотр дашборда."""
+    is_admin = bool(request.session.get("dashboard_admin"))
 
+    def _load():
+        if slug.isdigit():
+            dashboard = db.query(models.Dashboard).filter(models.Dashboard.id == int(slug)).first()
+        else:
+            dashboard = db.query(models.Dashboard).filter(models.Dashboard.slug == slug).first()
+        if not dashboard:
+            return None
+        if not dashboard.is_published and not is_admin:
+            return None
+        elements = (
+            db.query(models.DashboardElement)
+            .filter(models.DashboardElement.dashboard_id == dashboard.id)
+            .order_by(models.DashboardElement.order_index)
+            .all()
+        )
+        for element in elements:
+            dashboard_service.parse_element_json_fields(element)
+        dashboard.elements = elements
+        return dashboard
+
+    dashboard = await run_in_threadpool(_load)
     if not dashboard:
         raise HTTPException(status_code=404, detail="Дашборд не найден")
 
-    # Проверяем доступ (если не опубликован, только админ может видеть)
-    if not dashboard.is_published and not request.session.get("dashboard_admin"):
-        raise HTTPException(status_code=404, detail="Дашборд не найден")
-
-    # Загружаем элементы
-    elements = await run_in_threadpool(
-        lambda: db.query(models.DashboardElement).filter(models.DashboardElement.dashboard_id == dashboard.id).order_by(
-            models.DashboardElement.order_index).all()
-    )
-
-    # Парсим JSON поля
-    for element in elements:
-        if element.content:
-            try:
-                element.content = json.loads(element.content)
-            except:
-                element.content = {}
-        if element.settings:
-            try:
-                element.settings = json.loads(element.settings)
-            except:
-                element.settings = {}
-
-    dashboard.elements = elements
+    elements_payload = [
+        {
+            "id": el.id,
+            "type": el.element_type,
+            "chartType": el.chart_type,
+            "title": el.title or "",
+            "content": el.content if isinstance(el.content, dict) else {},
+            "settings": el.settings if isinstance(el.settings, dict) else {},
+            "options": (el.settings or {}).get("options") if isinstance(el.settings, dict) else None,
+            "position": {"x": el.position_x or 0, "y": el.position_y or 0},
+            "size": {"w": el.width or 4, "h": el.height or 3},
+        }
+        for el in dashboard.elements
+    ]
 
     return templates.TemplateResponse("dashboard_view.html", {
         "request": request,
         "dashboard": dashboard,
-        "session": request.session
+        "session": request.session,
+        "is_admin": is_admin,
+        "elements_json": elements_payload,
     })
 
 

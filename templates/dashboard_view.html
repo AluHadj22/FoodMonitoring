@@ -1,1262 +1,157 @@
 {% extends "layout.html" %}
 
 {% block styles %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="/static/css/dashboard-builder.css">
+<style>
+  .dv-page { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+  .dv-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-radius: 24px; padding: 1.75rem 2rem; margin-bottom: 1.25rem;
+    color: #fff; position: relative; overflow: hidden;
+  }
+  .dv-hero::after {
+    content: ''; position: absolute; right: -40px; top: -60px; width: 220px; height: 220px;
+    border-radius: 50%; background: radial-gradient(circle, rgba(16,185,129,0.25), transparent 70%);
+  }
+  .dv-hero-inner { position: relative; z-index: 1; }
+  .dv-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: rgba(16,185,129,0.2); color: #34d399; border-radius: 999px;
+    padding: 0.25rem 0.7rem; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.75rem;
+  }
+  .dv-badge.draft { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+  .dv-hero h1 { margin: 0 0 0.4rem; font-size: 1.85rem; font-weight: 750; letter-spacing: -0.02em; }
+  .dv-desc { margin: 0 0 0.75rem; color: rgba(255,255,255,0.72); max-width: 640px; font-size: 0.95rem; }
+  .dv-meta { display: flex; flex-wrap: wrap; gap: 0.85rem; color: rgba(255,255,255,0.5); font-size: 0.8rem; }
+  .dv-grid {
+    display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-rows: 80px;
+    gap: 12px; margin-bottom: 1.25rem;
+  }
+  .dv-card {
+    background: var(--bg-card, #fff); border: 1px solid var(--border, #e2e8f0);
+    border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; min-height: 0;
+  }
+  .dv-card-head {
+    padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--border, #e2e8f0);
+    background: var(--surface, #f8fafc);
+  }
+  .dv-card-head h3 { margin: 0; font-size: 0.85rem; font-weight: 650; color: var(--text-primary, #0f172a); }
+  .dv-card-body { padding: 0.85rem; flex: 1; min-height: 0; overflow: auto; }
+  .dv-actions {
+    display: flex; flex-wrap: wrap; gap: 0.65rem; justify-content: center;
+    padding-top: 0.5rem; border-top: 1px solid var(--border, #e2e8f0);
+  }
+  .dv-btn {
+    display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1rem;
+    border-radius: 999px; border: 1px solid var(--border, #e2e8f0);
+    background: var(--surface, #f8fafc); color: var(--text-secondary, #475569);
+    text-decoration: none; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+  }
+  .dv-btn:hover { border-color: var(--primary, #10b981); color: var(--primary, #10b981); }
+  @media (max-width: 900px) {
+    .dv-grid { grid-template-columns: repeat(6, 1fr); }
+    .dv-card { grid-column: 1 / -1 !important; grid-row: auto !important; min-height: 220px; }
+  }
+  @media (max-width: 560px) {
+    .dv-page { padding: 1rem; }
+    .dv-hero { padding: 1.25rem; }
+    .dv-hero h1 { font-size: 1.4rem; }
+    .dv-grid { grid-template-columns: 1fr; }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-<style>
-    
-
-    .dashboard-container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 2rem;
-    }
-
-    /* Hero секция */
-    .dashboard-hero {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        border-radius: 32px;
-        padding: 2rem 2.5rem;
-        margin-bottom: 2rem;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .dashboard-hero::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -20%;
-        width: 400px;
-        height: 400px;
-        background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
-        border-radius: 50%;
-    }
-
-    .dashboard-hero::after {
-        content: '';
-        position: absolute;
-        bottom: -30%;
-        left: -10%;
-        width: 300px;
-        height: 300px;
-        background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
-        border-radius: 50%;
-    }
-
-    .dashboard-hero-content {
-        position: relative;
-        z-index: 1;
-    }
-
-    .dashboard-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: rgba(16, 185, 129, 0.2);
-        padding: 6px 14px;
-        border-radius: 100px;
-        font-size: 0.75rem;
-        font-weight: 500;
-        color: #10b981;
-        margin-bottom: 1rem;
-    }
-
-    .dashboard-hero h1 {
-        font-size: 2rem;
-        font-weight: 700;
-        color: white;
-        margin-bottom: 0.5rem;
-        letter-spacing: -0.02em;
-    }
-
-    .dashboard-description {
-        font-size: 0.95rem;
-        color: rgba(255, 255, 255, 0.7);
-        max-width: 600px;
-        margin-bottom: 1rem;
-    }
-
-    .dashboard-meta {
-        display: flex;
-        gap: 1rem;
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 0.8rem;
-    }
-
-    /* Сетка дашборда */
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: repeat(12, 1fr);
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    /* Карточка элемента */
-    .dashboard-card {
-        background: var(--bg-card);
-        border-radius: 24px;
-        border: 1px solid var(--border);
-        overflow: hidden;
-        transition: var(--transition);
-        display: flex;
-        flex-direction: column;
-    }
-
-    .dashboard-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
-    }
-
-    .card-header {
-        padding: 1rem 1.25rem;
-        border-bottom: 1px solid var(--border);
-        background: var(--surface);
-    }
-
-    .card-header h3 {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin: 0;
-    }
-
-    .card-content {
-        padding: 1.25rem;
-        flex: 1;
-        overflow: auto;
-        min-height: 200px;
-    }
-
-    /* Стили для различных типов элементов */
-    .chart-container {
-        width: 100%;
-        height: 100%;
-        min-height: 250px;
-        position: relative;
-    }
-
-    .text-element {
-        font-size: 0.9rem;
-        color: var(--text-secondary);
-        line-height: 1.6;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-    }
-
-    .list-element ul,
-    .list-element ol {
-        margin: 0;
-        padding-left: 1.25rem;
-    }
-
-    .list-element li {
-        color: var(--text-secondary);
-        margin-bottom: 0.25rem;
-        font-size: 0.85rem;
-    }
-
-    /* Таблица */
-    .table-wrapper {
-        overflow-x: auto;
-    }
-
-    .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.8rem;
-    }
-
-    .data-table th {
-        background: var(--surface);
-        color: var(--text-primary);
-        font-weight: 600;
-        padding: 0.6rem 0.75rem;
-        border: 1px solid var(--border);
-        text-align: left;
-    }
-
-    .data-table td {
-        padding: 0.6rem 0.75rem;
-        border: 1px solid var(--border);
-        color: var(--text-secondary);
-    }
-
-    .data-table tr:hover {
-        background: var(--surface);
-    }
-
-    /* Gauge */
-    .gauge-component {
-        text-align: center;
-    }
-
-    .gauge-value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--primary);
-        line-height: 1.2;
-    }
-
-    .gauge-label {
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-        margin-bottom: 0.75rem;
-    }
-
-    .gauge-bar {
-        width: 100%;
-        height: 8px;
-        background: var(--surface);
-        border-radius: 4px;
-        overflow: hidden;
-    }
-
-    .gauge-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--primary), var(--primary-light));
-        border-radius: 4px;
-        transition: width 0.3s ease;
-    }
-
-    /* Progress */
-    .progress-component {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .progress-item {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-
-    .progress-header {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.75rem;
-    }
-
-    .progress-label {
-        color: var(--text-secondary);
-    }
-
-    .progress-percent {
-        color: var(--primary);
-        font-weight: 600;
-    }
-
-    .progress-bar {
-        width: 100%;
-        height: 6px;
-        background: var(--surface);
-        border-radius: 3px;
-        overflow: hidden;
-    }
-
-    .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--primary), var(--primary-light));
-        border-radius: 3px;
-    }
-
-    /* Sparkline */
-    .sparkline-component {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .sparkline-svg {
-        width: 100%;
-        height: 80px;
-    }
-
-    .sparkline-values {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.65rem;
-        color: var(--text-secondary);
-    }
-
-    /* Slicer */
-    .slicer-buttons {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-
-    .slicer-btn {
-        padding: 0.25rem 0.75rem;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        font-size: 0.75rem;
-        cursor: default;
-        color: var(--text-secondary);
-    }
-
-    .slicer-btn.active {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
-    }
-
-    /* Matrix */
-    .matrix-component {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .matrix-brackets {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .matrix-left-bracket,
-    .matrix-right-bracket {
-        font-size: 1.5rem;
-        font-weight: 300;
-        color: var(--text-secondary);
-    }
-
-    .matrix-table {
-        border-collapse: collapse;
-    }
-
-    .matrix-table td {
-        padding: 0.25rem 0.5rem;
-        text-align: center;
-        border: 1px solid var(--border);
-        min-width: 40px;
-        color: var(--text-primary);
-        font-size: 0.8rem;
-    }
-
-    /* Formula */
-    .formula-component {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .formula-display {
-        font-size: 1rem;
-        text-align: center;
-        padding: 0.75rem;
-        background: var(--surface);
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        color: var(--text-primary);
-        font-family: monospace;
-        overflow-x: auto;
-        white-space: nowrap;
-    }
-
-    .formula-variables {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .variable-item {
-        font-size: 0.7rem;
-        padding: 0.2rem 0.6rem;
-        background: var(--primary-bg);
-        border-radius: 12px;
-        color: var(--primary);
-        font-family: monospace;
-    }
-
-    /* Statistics */
-    .statistics-component {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .stats-input {
-        font-size: 0.75rem;
-        padding: 0.5rem;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        color: var(--text-secondary);
-        font-family: monospace;
-        word-break: break-all;
-    }
-
-    .stats-results {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.5rem;
-    }
-
-    .stat-item {
-        padding: 0.5rem;
-        background: var(--surface);
-        border-radius: 10px;
-        border: 1px solid var(--border);
-        text-align: center;
-    }
-
-    .stat-label {
-        font-size: 0.6rem;
-        color: var(--text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        margin-bottom: 0.2rem;
-    }
-
-    .stat-value {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--primary);
-    }
-
-    /* Percentage */
-    .percentage-component {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .percentage-calculator {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .percentage-row {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .percentage-label {
-        min-width: 50px;
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-    }
-
-    .percentage-value {
-        flex: 1;
-        padding: 0.25rem 0.5rem;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        color: var(--primary);
-        font-weight: 500;
-        text-align: center;
-        font-size: 0.8rem;
-    }
-
-    .percentage-result {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: var(--primary);
-        text-align: center;
-        padding: 0.5rem;
-        background: var(--surface);
-        border-radius: 10px;
-        border: 1px solid var(--border);
-    }
-
-    /* Ratio */
-    .ratio-component {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .ratio-inputs {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-
-    .ratio-field {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.1rem;
-    }
-
-    .ratio-field span {
-        font-size: 0.9rem;
-        color: var(--text-primary);
-    }
-
-    .ratio-field label {
-        font-size: 0.6rem;
-        color: var(--text-secondary);
-    }
-
-    .ratio-equals {
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-    }
-
-    .ratio-result {
-        font-size: 0.8rem;
-        font-weight: 600;
-        text-align: center;
-        padding: 0.5rem;
-        background: var(--surface);
-        border-radius: 10px;
-        border: 1px solid var(--border);
-    }
-
-    .ratio-result.correct {
-        color: var(--success);
-    }
-
-    .ratio-result.incorrect {
-        color: var(--error);
-    }
-
-    /* Function plot */
-    .function-plot-component {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .function-expression {
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        color: var(--primary);
-        font-family: monospace;
-        text-align: center;
-    }
-
-    .function-canvas {
-        width: 100%;
-        height: 120px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-    }
-
-    /* Comparison */
-    .comparison-component {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .comparison-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .comparison-label {
-        width: 60px;
-        font-size: 0.7rem;
-        color: var(--text-secondary);
-    }
-
-    .comparison-bars {
-        flex: 1;
-        display: flex;
-        gap: 2px;
-        height: 20px;
-    }
-
-    .comparison-bar {
-        height: 100%;
-        background: linear-gradient(90deg, var(--primary), var(--primary-light));
-        border-radius: 3px;
-    }
-
-    .comparison-bar.secondary {
-        background: linear-gradient(90deg, #f59e0b, #fbbf24);
-    }
-
-    .comparison-value {
-        width: 50px;
-        font-size: 0.7rem;
-        color: var(--text-secondary);
-        text-align: right;
-    }
-
-    /* Timeline */
-    .timeline-component {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .timeline-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .timeline-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: var(--primary);
-    }
-
-    .timeline-line {
-        flex: 1;
-        height: 2px;
-        background: linear-gradient(90deg, var(--primary), var(--primary-light));
-        border-radius: 1px;
-    }
-
-    .timeline-label {
-        font-size: 0.7rem;
-        color: var(--text-secondary);
-        min-width: 40px;
-    }
-
-    /* Icon */
-    .icon-component {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-    }
-
-    /* Badge */
-    .badge-component {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-    }
-
-    .badge {
-        display: inline-block;
-        padding: 0.3rem 0.8rem;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.75rem;
-    }
-
-    .badge.primary {
-        background: var(--primary);
-        color: white;
-    }
-
-    .badge.success {
-        background: #10b981;
-        color: white;
-    }
-
-    .badge.warning {
-        background: #f59e0b;
-        color: white;
-    }
-
-    .badge.danger {
-        background: #ef4444;
-        color: white;
-    }
-
-    .badge.info {
-        background: #8b5cf6;
-        color: white;
-    }
-
-    /* Кнопки */
-    .dashboard-actions {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--border);
-    }
-
-    .action-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.6rem 1.2rem;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 60px;
-        color: var(--text-secondary);
-        font-size: 0.8rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: var(--transition);
-        text-decoration: none;
-    }
-
-    .action-btn:hover {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
-        transform: translateY(-1px);
-    }
-
-    /* Адаптивность */
-    @media (max-width: 1024px) {
-        .dashboard-grid {
-            grid-template-columns: repeat(6, 1fr);
-        }
-    }
-
-    @media (max-width: 768px) {
-        .dashboard-container {
-            padding: 1rem;
-        }
-        
-        .dashboard-hero {
-            padding: 1.5rem;
-        }
-        
-        .dashboard-hero h1 {
-            font-size: 1.5rem;
-        }
-        
-        .dashboard-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-        }
-        
-        .card-content {
-            padding: 1rem;
-        }
-        
-        .stats-results {
-            grid-template-columns: 1fr;
-        }
-        
-        .ratio-inputs {
-            flex-direction: column;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .dashboard-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .dashboard-actions {
-            flex-direction: column;
-        }
-        
-        .action-btn {
-            justify-content: center;
-        }
-    }
-</style>
-
-<div class="dashboard-container">
-    <!-- Hero секция -->
-    <div class="dashboard-hero">
-        <div class="dashboard-hero-content">
-            <div class="dashboard-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <line x1="9" y1="3" x2="9" y2="21"/>
-                    <line x1="15" y1="3" x2="15" y2="21"/>
-                </svg>
-                <span>Дашборд</span>
-            </div>
-            <h1>{{ dashboard.title }}</h1>
-            {% if dashboard.description %}
-            <p class="dashboard-description">{{ dashboard.description }}</p>
-            {% endif %}
-            <div class="dashboard-meta">
-                <span>📅 {{ dashboard.updated_at.strftime('%d.%m.%Y %H:%M') if dashboard.updated_at else '—' }}</span>
-                <span>📊 {{ dashboard.elements|length }} элементов</span>
-            </div>
-        </div>
+<div class="dv-page">
+  <header class="dv-hero">
+    <div class="dv-hero-inner">
+      {% if dashboard.is_published %}
+      <div class="dv-badge"><i class="fas fa-globe"></i> Опубликован</div>
+      {% else %}
+      <div class="dv-badge draft"><i class="fas fa-pencil-alt"></i> Черновик (видно только админу)</div>
+      {% endif %}
+      <h1>{{ dashboard.title }}</h1>
+      {% if dashboard.description %}
+      <p class="dv-desc">{{ dashboard.description }}</p>
+      {% endif %}
+      <div class="dv-meta">
+        <span><i class="far fa-clock"></i> {{ dashboard.updated_at.strftime('%d.%m.%Y %H:%M') if dashboard.updated_at else '—' }}</span>
+        <span><i class="fas fa-th-large"></i> {{ dashboard.elements|length }} виджетов</span>
+        {% if is_admin %}
+        <a href="/dashboard-admin/edit/{{ dashboard.id }}" style="color:#34d399;text-decoration:none;font-weight:600">Редактировать</a>
+        {% endif %}
+      </div>
     </div>
+  </header>
 
-    <!-- Сетка дашборда -->
-    <div class="dashboard-grid" id="dashboardGrid">
-        {% for element in dashboard.elements %}
-        <div class="dashboard-card" style="grid-column: span {{ element.width }}; grid-row: span {{ element.height }};">
-            {% if element.title %}
-            <div class="card-header">
-                <h3>{{ element.title }}</h3>
-            </div>
-            {% endif %}
-            
-            <div class="card-content">
-                {% if element.element_type == 'chart' %}
-                <div class="chart-container">
-                    <canvas id="chart-{{ element.id }}"></canvas>
-                </div>
-                
-                {% elif element.element_type == 'text' %}
-                <div class="text-element" style="font-size: {{ element.settings.textSize }}; color: {{ element.settings.textColor }};">
-                    {{ element.content.text | default('') | replace('\n', '<br>') | safe }}
-                </div>
-                
-                {% elif element.element_type == 'list' %}
-                <div class="list-element">
-                    {% set items = element.content.get('items', []) %}
-                    {% if items %}
-                        {% set list_style = element.content.get('listStyle', 'disc') %}
-                        {% if list_style.startswith('decimal') or list_style.startswith('lower') or list_style.startswith('upper') %}
-                        <ol style="list-style-type: {{ list_style }};">
-                        {% else %}
-                        <ul style="list-style-type: {{ list_style }};">
-                        {% endif %}
-                            {% for item in items %}
-                            <li>{{ item.text | default('') }}</li>
-                            {% endfor %}
-                        {% if list_style.startswith('decimal') or list_style.startswith('lower') or list_style.startswith('upper') %}
-                        </ol>
-                        {% else %}
-                        </ul>
-                        {% endif %}
-                    {% endif %}
-                </div>
-                
-                {% elif element.element_type == 'table' %}
-                <div class="table-wrapper">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                {% for header in element.content.get('headers', []) %}
-                                <th>{{ header | default('') }}</th>
-                                {% endfor %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for row in element.content.get('rows', []) %}
-                            <tr>
-                                {% for cell in row %}
-                                <td>{{ cell | default('') }}</td>
-                                {% endfor %}
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+  <div class="dv-grid" id="dashboardViewGrid">
+    {% for element in dashboard.elements %}
+    {% set x = element.position_x or 0 %}
+    {% set y = element.position_y or 0 %}
+    {% set w = element.width or 4 %}
+    {% set h = element.height or 3 %}
+    <article
+      class="dv-card"
+      data-element-id="{{ element.id }}"
+      style="grid-column: {{ x + 1 }} / span {{ w }}; grid-row: {{ y + 1 }} / span {{ h }};"
+    >
+      {% if element.title %}
+      <div class="dv-card-head"><h3>{{ element.title }}</h3></div>
+      {% endif %}
+      <div class="dv-card-body" data-widget-mount></div>
+    </article>
+    {% else %}
+    <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-secondary)">На этом дашборде пока нет виджетов.</div>
+    {% endfor %}
+  </div>
 
-                {% elif element.element_type == 'gauge' %}
-                <div class="gauge-component">
-                    <div class="gauge-value" style="color: {{ element.content.get('color', '#10b981') }};">
-                        {{ element.content.get('value', 0) }}
-                    </div>
-                    <div class="gauge-label">{{ element.content.get('label', 'Прогресс') }}</div>
-                    <div class="gauge-bar">
-                        {% set value = element.content.get('value', 0) | float %}
-                        {% set max_val = element.content.get('max', 100) | float %}
-                        {% set percent = (value / max_val * 100) if max_val > 0 else 0 %}
-                        <div class="gauge-fill" style="width: {{ percent }}%;"></div>
-                    </div>
-                </div>
-
-                {% elif element.element_type == 'progress' %}
-                <div class="progress-component">
-                    {% set items = element.content.get('items', []) %}
-                    {% if items %}
-                        {% for item in items %}
-                        <div class="progress-item">
-                            <div class="progress-header">
-                                <span class="progress-label">{{ item.get('label', '') }}</span>
-                                <span class="progress-percent">{{ item.get('value', 0) }}%</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: {{ item.get('value', 0) }}%;"></div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-
-                {% elif element.element_type == 'sparkline' %}
-                <div class="sparkline-component">
-                    <svg viewBox="0 0 100 50" class="sparkline-svg">
-                        {% set data = element.content.get('data', []) %}
-                        {% if data and data|length > 0 %}
-                            {% set max_val = data|max %}
-                            {% set min_val = data|min %}
-                            {% set range = max_val - min_val if max_val != min_val else 1 %}
-                            {% set points = [] %}
-                            {% for val in data %}
-                                {% set x = (loop.index0 / (data|length - 1)) * 100 %}
-                                {% set y = 50 - ((val - min_val) / range) * 45 %}
-                                {% set _ = points.append(x ~ ',' ~ y) %}
-                            {% endfor %}
-                            {% set points_str = points|join(' ') %}
-                            {% if element.content.get('showArea', false) %}
-                            <polygon points="{{ points_str }} 100,50 0,50" class="sparkline-area" fill="rgba(16, 185, 129, 0.1)" />
-                            {% endif %}
-                            <polyline points="{{ points_str }}" class="sparkline-line" stroke="var(--primary)" fill="none" stroke-width="2" />
-                        {% endif %}
-                    </svg>
-                    {% set labels = element.content.get('labels', []) %}
-                    {% if labels %}
-                    <div class="sparkline-values">
-                        {% for label in labels %}
-                        <span>{{ label }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-
-                {% elif element.element_type == 'slicer' %}
-                <div class="slicer-component">
-                    <div class="slicer-buttons">
-                        {% for val in element.content.get('values', []) %}
-                        <span class="slicer-btn {% if val == element.content.get('activeValue') %}active{% endif %}">{{ val }}</span>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                {% elif element.element_type == 'matrix' %}
-                <div class="matrix-component">
-                    <div class="matrix-brackets">
-                        <span class="matrix-left-bracket">[</span>
-                        <table class="matrix-table">
-                            {% set matrix_data = element.content.get('data', []) %}
-                            {% for row in matrix_data %}
-                            <tr>
-                                {% for cell in row %}
-                                <td>{{ cell }}</td>
-                                {% endfor %}
-                            </tr>
-                            {% endfor %}
-                        </table>
-                        <span class="matrix-right-bracket">]</span>
-                    </div>
-                </div>
-
-                {% elif element.element_type == 'formula' %}
-                <div class="formula-component">
-                    <div class="formula-display">
-                        {{ element.content.get('expression', '') }}
-                    </div>
-                    <div class="formula-variables">
-                        {% for var in element.content.get('variables', []) %}
-                        <span class="variable-item">{{ var }}</span>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                {% elif element.element_type == 'statistics' %}
-                <div class="statistics-component">
-                    {% set data_str = element.content.get('data', '') %}
-                    {% set data = data_str.split(',') | map('trim') | map('float') | select('defined') | list %}
-                    
-                    <div class="stats-input">{{ data_str }}</div>
-                    <div class="stats-results">
-                        {% if data|length > 0 %}
-                            {% set mean = data | sum / data | length %}
-                            <div class="stat-item">
-                                <div class="stat-label">Среднее</div>
-                                <div class="stat-value">{{ "%.2f"|format(mean) }}</div>
-                            </div>
-                            
-                            {% set sorted = data | sort %}
-                            {% if sorted|length % 2 == 0 %}
-                                {% set median = (sorted[sorted|length//2 - 1] + sorted[sorted|length//2]) / 2 %}
-                            {% else %}
-                                {% set median = sorted[sorted|length//2] %}
-                            {% endif %}
-                            <div class="stat-item">
-                                <div class="stat-label">Медиана</div>
-                                <div class="stat-value">{{ "%.2f"|format(median) }}</div>
-                            </div>
-                            
-                            <div class="stat-item">
-                                <div class="stat-label">Минимум</div>
-                                <div class="stat-value">{{ data | min }}</div>
-                            </div>
-                            
-                            <div class="stat-item">
-                                <div class="stat-label">Максимум</div>
-                                <div class="stat-value">{{ data | max }}</div>
-                            </div>
-                            
-                            <div class="stat-item">
-                                <div class="stat-label">Сумма</div>
-                                <div class="stat-value">{{ data | sum }}</div>
-                            </div>
-                            
-                            <div class="stat-item">
-                                <div class="stat-label">Количество</div>
-                                <div class="stat-value">{{ data | length }}</div>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                {% elif element.element_type == 'percentage' %}
-                <div class="percentage-component">
-                    <div class="percentage-calculator">
-                        <div class="percentage-row">
-                            <span class="percentage-label">Число:</span>
-                            <span class="percentage-value">{{ element.content.get('num', 100) }}</span>
-                        </div>
-                        <div class="percentage-row">
-                            <span class="percentage-label">Процент:</span>
-                            <span class="percentage-value">{{ element.content.get('perc', 15) }}%</span>
-                        </div>
-                        <div class="percentage-result">
-                            {{ (element.content.get('num', 100) * element.content.get('perc', 15) / 100) | round(2) }}
-                        </div>
-                    </div>
-                </div>
-
-                {% elif element.element_type == 'ratio' %}
-                <div class="ratio-component">
-                    <div class="ratio-inputs">
-                        <div class="ratio-field">
-                            <span>{{ element.content.get('a', 2) }}</span>
-                            <label>A</label>
-                        </div>
-                        <span class="ratio-equals">:</span>
-                        <div class="ratio-field">
-                            <span>{{ element.content.get('b', 3) }}</span>
-                            <label>B</label>
-                        </div>
-                        <span class="ratio-equals">=</span>
-                        <div class="ratio-field">
-                            <span>{{ element.content.get('c', 4) }}</span>
-                            <label>C</label>
-                        </div>
-                        <span class="ratio-equals">:</span>
-                        <div class="ratio-field">
-                            <span>{{ element.content.get('d', 6) }}</span>
-                            <label>D</label>
-                        </div>
-                    </div>
-                    <div class="ratio-result {% if element.content.get('a',2)*element.content.get('d',6) == element.content.get('b',3)*element.content.get('c',4) %}correct{% else %}incorrect{% endif %}">
-                        {% if element.content.get('a',2)*element.content.get('d',6) == element.content.get('b',3)*element.content.get('c',4) %}
-                            ✓ Пропорция верна
-                        {% else %}
-                            ✗ Пропорция не верна
-                        {% endif %}
-                    </div>
-                </div>
-
-                {% elif element.element_type == 'function' %}
-                <div class="function-plot-component">
-                    <div class="function-expression">{{ element.content.get('expression', 'sin(x)') }}</div>
-                    <canvas class="function-canvas" id="function-{{ element.id }}" width="300" height="120"></canvas>
-                </div>
-
-                {% elif element.element_type == 'comparison' %}
-                <div class="comparison-component">
-                    {% set comp_items = element.content.get('items', []) %}
-                    {% set max_val = 0 %}
-                    {% for item in comp_items %}
-                        {% set max_val = [max_val, item.value1|default(0), item.value2|default(0)] | max %}
-                    {% endfor %}
-                    
-                    {% for item in comp_items %}
-                    <div class="comparison-item">
-                        <span class="comparison-label">{{ item.label }}</span>
-                        <div class="comparison-bars">
-                            <div class="comparison-bar" style="width: {{ (item.value1|default(0) / max_val * 100) if max_val > 0 else 0 }}%;"></div>
-                            <div class="comparison-bar secondary" style="width: {{ (item.value2|default(0) / max_val * 100) if max_val > 0 else 0 }}%;"></div>
-                        </div>
-                        <span class="comparison-value">{{ item.value1 }}/{{ item.value2 }}</span>
-                    </div>
-                    {% endfor %}
-                </div>
-
-                {% elif element.element_type == 'timeline' %}
-                <div class="timeline-component">
-                    {% set timeline_items = element.content.get('items', []) %}
-                    {% set max_timeline = 0 %}
-                    {% for item in timeline_items %}
-                        {% set max_timeline = [max_timeline, item.value|default(0)] | max %}
-                    {% endfor %}
-                    
-                    {% for item in timeline_items %}
-                    <div class="timeline-item">
-                        <span class="timeline-label">{{ item.label }}</span>
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-line" style="width: {{ (item.value|default(0) / max_timeline * 100) if max_timeline > 0 else 0 }}%;"></div>
-                    </div>
-                    {% endfor %}
-                </div>
-
-                {% elif element.element_type == 'icon' %}
-                <div class="icon-component">
-                    <i class="fas {{ element.content.get('name', 'fa-star') }}" style="font-size: {{ element.content.get('size', 48) }}px; color: {{ element.content.get('color', '#10b981') }};"></i>
-                </div>
-
-                {% elif element.element_type == 'badge' %}
-                <div class="badge-component">
-                    <span class="badge {{ element.content.get('type', 'primary') }}">
-                        {{ element.content.get('text', 'Новинка') }}
-                    </span>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <!-- Кнопки действий -->
-    <div class="dashboard-actions">
-        <button class="action-btn" onclick="copyLink()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-            </svg>
-            Скопировать ссылку
-        </button>
-        <a href="/dashboards" class="action-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 12h2l3-9 4 18 3-9h2"/>
-            </svg>
-            Все дашборды
-        </a>
-    </div>
+  <div class="dv-actions">
+    <button type="button" class="dv-btn" id="btnCopyLink"><i class="fas fa-link"></i> Скопировать ссылку</button>
+    <a class="dv-btn" href="/dashboards"><i class="fas fa-th-large"></i> Все дашборды</a>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="/static/js/dashboard-widgets.js?v=3"></script>
 <script>
-// Создаем объект для хранения графиков
-const charts = {};
+  (function () {
+    const rawElements = {{ elements_json | tojson }}.map(function (el) {
+      if (!el.options) {
+        el.options = (el.settings && el.settings.options) || {
+          showDataLabels: false,
+          dataLabelsColor: '#334155',
+          dataLabelsPosition: 'top'
+        };
+      }
+      return el;
+    });
 
-// Функция для инициализации графиков
-function initCharts() {
-    {% for element in dashboard.elements if element.element_type == 'chart' %}
-    (function() {
-        const canvas = document.getElementById('chart-{{ element.id }}');
-        if (!canvas) return;
-        
-        try {
-            const ctx = canvas.getContext('2d');
-            const chartData = {{ element.content|tojson }};
-            const chartType = '{{ element.chart_type }}';
-            
-            charts['{{ element.id }}'] = new Chart(ctx, {
-                type: chartType,
-                data: chartData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                font: { size: 11 }
-                            }
-                        },
-                        tooltip: {
-                            enabled: true,
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)'
-                        }
-                    },
-                    layout: {
-                        padding: {
-                            top: 20
-                        }
-                    }
-                }
-            });
-        } catch (e) {
-            console.error('Error creating chart {{ element.id }}:', e);
-        }
-    })();
-    {% endfor %}
-    
-    // Инициализация графиков функций
-    {% for element in dashboard.elements if element.element_type == 'function' %}
-    (function() {
-        const canvas = document.getElementById('function-{{ element.id }}');
-        if (!canvas) return;
-        
-        try {
-            const ctx = canvas.getContext('2d');
-            const width = canvas.width;
-            const height = canvas.height;
-            
-            const expr = '{{ element.content.expression|default("sin(x)") }}';
-            const xMin = {{ element.content.xMin|default(-5) }};
-            const xMax = {{ element.content.xMax|default(5) }};
-            const color = '#10b981';
-            
-            // Очищаем canvas
-            ctx.clearRect(0, 0, width, height);
-            
-            // Рисуем оси
-            ctx.beginPath();
-            ctx.strokeStyle = 'var(--border)';
-            ctx.lineWidth = 1;
-            
-            // Ось X
-            ctx.moveTo(0, height/2);
-            ctx.lineTo(width, height/2);
-            
-            // Ось Y
-            ctx.moveTo(width/2, 0);
-            ctx.lineTo(width/2, height);
-            ctx.stroke();
-            
-            // Рисуем функцию
-            ctx.beginPath();
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
-            
-            const steps = 100;
-            let first = true;
-            
-            for (let i = 0; i <= steps; i++) {
-                const x = xMin + (xMax - xMin) * i / steps;
-                let y;
-                
-                try {
-                    let func = expr.replace(/\^/g, '**');
-                    func = func.replace(/sin\(/g, 'Math.sin(')
-                               .replace(/cos\(/g, 'Math.cos(')
-                               .replace(/tan\(/g, 'Math.tan(')
-                               .replace(/sqrt\(/g, 'Math.sqrt(')
-                               .replace(/log\(/g, 'Math.log(')
-                               .replace(/abs\(/g, 'Math.abs(');
-                    y = eval(func);
-                } catch(e) {
-                    continue;
-                }
-                
-                const screenX = (x - xMin) / (xMax - xMin) * width;
-                const screenY = height/2 - y * height/10;
-                
-                if (first) {
-                    ctx.moveTo(screenX, screenY);
-                    first = false;
-                } else {
-                    ctx.lineTo(screenX, screenY);
-                }
-            }
-            
-            ctx.stroke();
-        } catch (e) {
-            console.error('Error creating function plot:', e);
-        }
-    })();
-    {% endfor %}
-}
+    function bindElement(el) {
+      var card = document.querySelector('[data-element-id="' + el.id + '"] [data-widget-mount]');
+      if (!card) return;
+      function onSlicer(_id, value) {
+        el.content.activeValue = value;
+        DashboardWidgets.mountWidget(card, el, { interactiveSlicer: true, onSlicer: onSlicer });
+        DashboardWidgets.applySlicerFilter(rawElements, DashboardWidgets.charts, value);
+      }
+      DashboardWidgets.mountWidget(card, el, {
+        interactiveSlicer: el.type === 'slicer',
+        onSlicer: onSlicer
+      });
+    }
 
-function copyLink() {
-    navigator.clipboard.writeText(window.location.href);
-    alert('Ссылка скопирована в буфер обмена');
-}
+    rawElements.forEach(bindElement);
 
-// Инициализация после загрузки страницы
-document.addEventListener('DOMContentLoaded', function() {
-    initCharts();
-});
+    document.getElementById('btnCopyLink')?.addEventListener('click', async function () {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Ссылка скопирована');
+      } catch (_) {
+        prompt('Скопируйте ссылку:', window.location.href);
+      }
+    });
+  })();
 </script>
 {% endblock %}

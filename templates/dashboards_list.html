@@ -181,6 +181,23 @@
         z-index: 2;
     }
 
+    .draft-badge {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 2;
+    }
+
     .published-badge svg {
         width: 12px;
         height: 12px;
@@ -456,8 +473,8 @@
 <div class="dashboards-page">
     <div class="dashboards-header">
         <div class="header-title">
-            <h1>📊 Дашборды</h1>
-            <p>Просматривайте аналитику и статистику в удобном формате</p>
+            <h1>Дашборды</h1>
+            <p>{% if is_admin %}Управляйте черновиками и публикациями{% else %}Просматривайте опубликованную аналитику{% endif %}</p>
         </div>
         
         <div class="admin-actions-header">
@@ -498,6 +515,9 @@
                     <a href="/dashboard-admin/edit/{{ dashboard.id }}" class="admin-button" title="Редактировать">
                         ✏️
                     </a>
+                    <button onclick="togglePublish({{ dashboard.id }}, {{ 'true' if dashboard.is_published else 'false' }}, event)" class="admin-button" title="{{ 'Снять с публикации' if dashboard.is_published else 'Опубликовать' }}">
+                        {% if dashboard.is_published %}🙈{% else %}🌐{% endif %}
+                    </button>
                     <button onclick="deleteDashboard({{ dashboard.id }}, event)" class="admin-button delete" title="Удалить">
                         🗑️
                     </button>
@@ -527,6 +547,8 @@
                         </svg>
                         Опубликовано
                     </div>
+                    {% elif session and session.get('dashboard_admin') %}
+                    <div class="draft-badge">Черновик</div>
                     {% endif %}
                     <div class="preview-overlay">
                         <span>Открыть дашборд →</span>
@@ -600,21 +622,44 @@
 <script>
 function deleteDashboard(id, event) {
     event.stopPropagation();
-    if (confirm('Вы уверены, что хотите удалить этот дашборд? Это действие нельзя отменить.')) {
-        fetch(`/dashboard-admin/delete/${id}`, { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    alert('Ошибка при удалении: ' + (data.error || 'Неизвестная ошибка'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Произошла ошибка при удалении дашборда');
-            });
-    }
+    if (!confirm('Удалить этот дашборд? Действие нельзя отменить.')) return;
+    fetch(`/dashboard-admin/delete/${id}`, { method: 'POST' })
+        .then((response) => response.json().then((data) => ({ ok: response.ok, data })))
+        .then(({ ok, data }) => {
+            if (ok && (data.success || data.status === 'success')) {
+                window.location.reload();
+            } else {
+                alert('Ошибка при удалении: ' + (data.detail || data.error || 'Неизвестная ошибка'));
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            alert('Произошла ошибка при удалении дашборда');
+        });
+}
+
+function togglePublish(id, isPublished, event) {
+    event.stopPropagation();
+    const next = !isPublished;
+    const msg = next ? 'Опубликовать дашборд?' : 'Снять дашборд с публикации?';
+    if (!confirm(msg)) return;
+    fetch(`/dashboard-admin/publish/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_published: next }),
+    })
+        .then((response) => response.json().then((data) => ({ ok: response.ok, data })))
+        .then(({ ok, data }) => {
+            if (ok && (data.success || data.status === 'success')) {
+                window.location.reload();
+            } else {
+                alert('Не удалось изменить статус публикации');
+            }
+        })
+        .catch((error) => {
+            console.error(error);
+            alert('Ошибка при изменении публикации');
+        });
 }
 </script>
 {% endblock %}
