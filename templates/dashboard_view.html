@@ -59,6 +59,198 @@
     .dv-hero h1 { font-size: 1.4rem; }
     .dv-grid { grid-template-columns: 1fr; }
   }
+
+  /* —— Presentation mode —— */
+  body.dv-presenting {
+    overflow: hidden;
+    background: #070b14;
+  }
+  body.dv-presenting .navbar,
+  body.dv-presenting .theme-toggle,
+  body.dv-presenting .dv-hero,
+  body.dv-presenting .dv-actions {
+    display: none !important;
+  }
+  body.dv-presenting .dv-page {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background: #070b14;
+  }
+  body.dv-presenting .dv-grid {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+    gap: 0;
+    padding: 4.5rem 5.5rem 3.25rem;
+    align-items: stretch;
+    justify-content: center;
+    grid-template-columns: none;
+    grid-auto-rows: auto;
+  }
+  body.dv-presenting .dv-grid > :not(.dv-card),
+  body.dv-presenting .dv-card:not(.is-present-active) {
+    display: none !important;
+  }
+  body.dv-presenting .dv-card.is-present-active {
+    display: flex !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: min(1280px, 100%);
+    height: 100%;
+    max-height: 100%;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.04),
+      0 28px 80px rgba(0, 0, 0, 0.45);
+    animation: dvPresentIn 0.28s ease;
+  }
+  body.dv-presenting .dv-card-head {
+    padding: 1rem 1.35rem;
+    background: rgba(15, 23, 42, 0.04);
+  }
+  body.dv-presenting .dv-card-head h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+  body.dv-presenting .dv-card-body {
+    padding: 1.25rem 1.5rem;
+  }
+  @keyframes dvPresentIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.985); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .dv-present-ui {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 12000;
+    pointer-events: none;
+  }
+  body.dv-presenting .dv-present-ui { display: block; }
+
+  .dv-present-top {
+    pointer-events: auto;
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1.25rem;
+    background: linear-gradient(180deg, rgba(7, 11, 20, 0.92), rgba(7, 11, 20, 0));
+    color: rgba(255, 255, 255, 0.88);
+  }
+  .dv-present-brand {
+    display: flex; align-items: center; gap: 0.65rem;
+    min-width: 0; font-size: 0.9rem; font-weight: 650;
+  }
+  .dv-present-brand span {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .dv-present-brand i { color: #34d399; }
+  .dv-present-top-right {
+    display: flex; align-items: center; gap: 0.55rem; flex-shrink: 0;
+  }
+  .dv-present-counter {
+    font-variant-numeric: tabular-nums;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.55);
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .dv-present-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+    min-width: 2.25rem; height: 2.25rem; padding: 0 0.75rem;
+    border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.88);
+    cursor: pointer; font-size: 0.8rem; font-weight: 600;
+  }
+  .dv-present-btn:hover {
+    background: rgba(52, 211, 153, 0.15);
+    border-color: rgba(52, 211, 153, 0.4);
+    color: #34d399;
+  }
+  .dv-present-btn:disabled {
+    opacity: 0.35; cursor: default; pointer-events: none;
+  }
+
+  .dv-present-nav {
+    pointer-events: auto;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3rem; height: 3rem;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(15, 23, 42, 0.55);
+    color: #fff;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    backdrop-filter: blur(8px);
+    transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  }
+  .dv-present-nav:hover {
+    background: rgba(52, 211, 153, 0.2);
+    border-color: rgba(52, 211, 153, 0.5);
+  }
+  .dv-present-nav:disabled { opacity: 0.25; cursor: default; pointer-events: none; }
+  .dv-present-nav.prev { left: 1rem; }
+  .dv-present-nav.next { right: 1rem; }
+
+  .dv-present-dots {
+    pointer-events: auto;
+    position: absolute;
+    left: 50%; bottom: 1rem;
+    transform: translateX(-50%);
+    display: flex; gap: 0.4rem; align-items: center;
+    padding: 0.35rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(8px);
+  }
+  .dv-present-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    border: none; padding: 0; cursor: pointer;
+    background: rgba(255, 255, 255, 0.28);
+  }
+  .dv-present-dot.is-active {
+    background: #34d399;
+    width: 18px; border-radius: 999px;
+  }
+
+  .dv-present-hint {
+    pointer-events: none;
+    position: absolute;
+    left: 50%; bottom: 3.25rem;
+    transform: translateX(-50%);
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.7);
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.75rem;
+    opacity: 0;
+    transition: opacity 0.4s;
+    white-space: nowrap;
+  }
+  .dv-present-hint.is-visible { opacity: 1; }
+
+  @media (max-width: 720px) {
+    body.dv-presenting .dv-grid { padding: 4rem 0.75rem 3rem; }
+    .dv-present-nav { display: none; }
+    .dv-present-brand span { max-width: 42vw; }
+  }
 </style>
 {% endblock %}
 
@@ -94,6 +286,8 @@
     <article
       class="dv-card"
       data-element-id="{{ element.id }}"
+      data-pos-x="{{ x }}"
+      data-pos-y="{{ y }}"
       style="grid-column: {{ x + 1 }} / span {{ w }}; grid-row: {{ y + 1 }} / span {{ h }};"
     >
       {% if element.title %}
@@ -107,9 +301,35 @@
   </div>
 
   <div class="dv-actions">
+    {% if dashboard.elements %}
+    <button type="button" class="dv-btn" id="btnPresent"><i class="fas fa-expand"></i> Презентация</button>
+    {% endif %}
     <button type="button" class="dv-btn" id="btnCopyLink"><i class="fas fa-link"></i> Скопировать ссылку</button>
     <a class="dv-btn" href="/dashboards"><i class="fas fa-th-large"></i> Все дашборды</a>
   </div>
+</div>
+
+<div class="dv-present-ui" id="dvPresentUi" aria-hidden="true">
+  <div class="dv-present-top">
+    <div class="dv-present-brand">
+      <i class="fas fa-chalkboard"></i>
+      <span id="dvPresentTitle">{{ dashboard.title }}</span>
+    </div>
+    <div class="dv-present-top-right">
+      <span class="dv-present-counter" id="dvPresentCounter">1 / 1</span>
+      <button type="button" class="dv-present-btn" id="dvPresentExit" title="Выйти (Esc)">
+        <i class="fas fa-times"></i> Выйти
+      </button>
+    </div>
+  </div>
+  <button type="button" class="dv-present-nav prev" id="dvPresentPrev" aria-label="Предыдущий слайд">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+  <button type="button" class="dv-present-nav next" id="dvPresentNext" aria-label="Следующий слайд">
+    <i class="fas fa-chevron-right"></i>
+  </button>
+  <div class="dv-present-dots" id="dvPresentDots" hidden></div>
+  <div class="dv-present-hint" id="dvPresentHint">← → листать · Esc выйти</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -151,6 +371,151 @@
       } catch (_) {
         prompt('Скопируйте ссылку:', window.location.href);
       }
+    });
+
+    /* —— Presentation mode —— */
+    var slides = Array.prototype.slice.call(document.querySelectorAll('#dashboardViewGrid > .dv-card'))
+      .sort(function (a, b) {
+        var ay = Number(a.getAttribute('data-pos-y') || 0);
+        var by = Number(b.getAttribute('data-pos-y') || 0);
+        if (ay !== by) return ay - by;
+        return Number(a.getAttribute('data-pos-x') || 0) - Number(b.getAttribute('data-pos-x') || 0);
+      });
+    if (!slides.length) return;
+
+    var presentUi = document.getElementById('dvPresentUi');
+    var counterEl = document.getElementById('dvPresentCounter');
+    var titleEl = document.getElementById('dvPresentTitle');
+    var dotsEl = document.getElementById('dvPresentDots');
+    var hintEl = document.getElementById('dvPresentHint');
+    var btnPrev = document.getElementById('dvPresentPrev');
+    var btnNext = document.getElementById('dvPresentNext');
+    var btnExit = document.getElementById('dvPresentExit');
+    var btnPresent = document.getElementById('btnPresent');
+    var dashboardTitle = {{ dashboard.title | tojson }};
+    var index = 0;
+    var active = false;
+    var hintTimer = null;
+
+    function resizeCharts() {
+      if (!window.DashboardWidgets || !DashboardWidgets.charts) return;
+      requestAnimationFrame(function () {
+        DashboardWidgets.charts.forEach(function (chart) {
+          try { chart.resize(); } catch (_) {}
+        });
+      });
+    }
+
+    function renderDots() {
+      dotsEl.innerHTML = '';
+      if (slides.length < 2) {
+        dotsEl.hidden = true;
+        return;
+      }
+      dotsEl.hidden = false;
+      slides.forEach(function (_slide, i) {
+        var dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'dv-present-dot' + (i === index ? ' is-active' : '');
+        dot.setAttribute('aria-label', 'Слайд ' + (i + 1));
+        dot.addEventListener('click', function () { goTo(i); });
+        dotsEl.appendChild(dot);
+      });
+    }
+
+    function showSlide(i) {
+      index = Math.max(0, Math.min(slides.length - 1, i));
+      slides.forEach(function (card, n) {
+        card.classList.toggle('is-present-active', n === index);
+      });
+      var head = slides[index].querySelector('.dv-card-head h3');
+      titleEl.textContent = head ? head.textContent : dashboardTitle;
+      counterEl.textContent = (index + 1) + ' / ' + slides.length;
+      btnPrev.disabled = index <= 0;
+      btnNext.disabled = index >= slides.length - 1;
+      renderDots();
+      resizeCharts();
+    }
+
+    function goTo(i) {
+      if (!active) return;
+      showSlide(i);
+    }
+
+    function next() { goTo(index + 1); }
+    function prev() { goTo(index - 1); }
+
+    function enterPresent() {
+      if (active) return;
+      active = true;
+      document.body.classList.add('dv-presenting');
+      presentUi.setAttribute('aria-hidden', 'false');
+      showSlide(0);
+      hintEl.classList.add('is-visible');
+      clearTimeout(hintTimer);
+      hintTimer = setTimeout(function () {
+        hintEl.classList.remove('is-visible');
+      }, 3200);
+      var root = document.documentElement;
+      if (root.requestFullscreen) {
+        root.requestFullscreen().catch(function () {});
+      } else if (root.webkitRequestFullscreen) {
+        try { root.webkitRequestFullscreen(); } catch (_) {}
+      }
+      resizeCharts();
+    }
+
+    function exitPresent() {
+      if (!active) return;
+      active = false;
+      document.body.classList.remove('dv-presenting');
+      presentUi.setAttribute('aria-hidden', 'true');
+      slides.forEach(function (card) { card.classList.remove('is-present-active'); });
+      clearTimeout(hintTimer);
+      hintEl.classList.remove('is-visible');
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(function () {});
+      } else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
+        try { document.webkitExitFullscreen(); } catch (_) {}
+      }
+      resizeCharts();
+    }
+
+    btnPresent?.addEventListener('click', enterPresent);
+    btnExit?.addEventListener('click', exitPresent);
+    btnPrev?.addEventListener('click', prev);
+    btnNext?.addEventListener('click', next);
+
+    document.addEventListener('keydown', function (e) {
+      if (!active) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        exitPresent();
+        return;
+      }
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        next();
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
+        e.preventDefault();
+        prev();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        goTo(0);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        goTo(slides.length - 1);
+      }
+    });
+
+    document.addEventListener('fullscreenchange', function () {
+      if (active && !document.fullscreenElement && !document.webkitFullscreenElement) {
+        exitPresent();
+      }
+    });
+
+    window.addEventListener('resize', function () {
+      if (active) resizeCharts();
     });
   })();
 </script>
