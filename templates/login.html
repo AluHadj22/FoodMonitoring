@@ -385,6 +385,27 @@
         stroke: currentColor;
     }
 
+    .auth-appeal {
+        display: flex;
+        justify-content: center;
+        margin-top: 1rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .appeal-link-login {
+        width: 100%;
+        justify-content: center;
+        color: var(--primary);
+        background: rgba(91, 159, 212, 0.06);
+        border-color: rgba(91, 159, 212, 0.12);
+        font-size: 0.88rem;
+    }
+
+    .appeal-link-login:hover {
+        background: rgba(91, 159, 212, 0.1);
+    }
+
     /* Разделитель */
     .auth-divider {
         position: relative;
@@ -699,6 +720,15 @@
             </svg>
             Зарегистрироваться
         </a>
+
+        <div class="auth-appeal">
+            <a href="/appeal" class="auth-link appeal-link-login">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                Обращение к пользователям
+            </a>
+        </div>
     </div>
 </div>
 

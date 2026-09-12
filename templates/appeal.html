@@ -1,0 +1,254 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    .appeal-page {
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 3rem;
+    }
+
+    .appeal-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border-radius: 28px;
+        padding: 2.5rem 2.25rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        color: #fff;
+    }
+
+    .appeal-hero::after {
+        content: '';
+        position: absolute;
+        right: -50px;
+        top: -70px;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.22), transparent 70%);
+    }
+
+    .appeal-hero-inner { position: relative; z-index: 1; }
+
+    .appeal-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(16, 185, 129, 0.2);
+        color: #34d399;
+        border-radius: 999px;
+        padding: 0.3rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 0.85rem;
+    }
+
+    .appeal-hero h1 {
+        margin: 0 0 0.5rem;
+        font-size: 1.85rem;
+        font-weight: 750;
+        letter-spacing: -0.02em;
+    }
+
+    .appeal-hero p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 0.95rem;
+        max-width: 560px;
+        line-height: 1.55;
+    }
+
+    .appeal-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+    }
+
+    .appeal-section {
+        padding: 1.75rem 1.85rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .appeal-section:last-child { border-bottom: none; }
+
+    .appeal-section h2 {
+        margin: 0 0 1rem;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .appeal-section h2 span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.7rem;
+        height: 1.7rem;
+        border-radius: 999px;
+        background: var(--primary-bg, rgba(16, 185, 129, 0.12));
+        color: var(--primary, #10b981);
+        font-size: 0.8rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .appeal-section p {
+        margin: 0 0 0.9rem;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        line-height: 1.7;
+    }
+
+    .appeal-section p:last-child { margin-bottom: 0; }
+
+    .appeal-section .lead {
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    .appeal-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin-top: 0.35rem;
+        color: var(--primary, #10b981);
+        font-weight: 650;
+        text-decoration: none;
+        word-break: break-all;
+    }
+
+    .appeal-link:hover { text-decoration: underline; }
+
+    .appeal-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    .appeal-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.65rem 1.1rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--surface, #f8fafc);
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .appeal-btn.primary {
+        background: var(--primary, #10b981);
+        border-color: transparent;
+        color: #fff;
+    }
+
+    .appeal-btn:hover {
+        border-color: var(--primary, #10b981);
+        color: var(--primary, #10b981);
+    }
+
+    .appeal-btn.primary:hover {
+        filter: brightness(1.05);
+        color: #fff;
+    }
+
+    @media (max-width: 640px) {
+        .appeal-page { padding: 1rem 1rem 2rem; }
+        .appeal-hero { padding: 1.75rem 1.35rem; border-radius: 20px; }
+        .appeal-hero h1 { font-size: 1.45rem; }
+        .appeal-section { padding: 1.35rem; }
+    }
+</style>
+
+<div class="appeal-page">
+    <header class="appeal-hero">
+        <div class="appeal-hero-inner">
+            <div class="appeal-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+                От разработчика
+            </div>
+            <h1>Обращение к пользователям</h1>
+            <p>О проекте, принципах работы и почему платформа предоставляется школам и муниципалитетам бесплатно.</p>
+        </div>
+    </header>
+
+    <article class="appeal-card">
+        <section class="appeal-section">
+            <h2><span>1</span> О проекте</h2>
+            <p>
+                Эта платформа создана мной — <strong>Хаджиевым Алу Ибрагимовичем</strong>.
+                Я разработал её и все программы в разделе «Утилиты».
+            </p>
+            <p>
+                Проект некоммерческий. Весь функционал предоставляется школам и муниципальным образованиям
+                полностью бесплатно, на безвозмездной основе. Это не пробный период, не «бесплатно до определённого момента»
+                и не скрытая монетизация — это осознанное решение.
+            </p>
+            <p class="lead">Что такое мой софт.</p>
+            <p>
+                Все программы, которые я разработал в разделе «Утилиты», — это свободное программное обеспечение
+                с открытым исходным кодом. Они бесплатны, прозрачны и открыты для изучения и использования.
+                В них нет вирусов и скрытых функций: любой желающий может прочитать код и убедиться в этом сам.
+                Единственное исключение — код самой платформы: он остаётся закрытым в целях безопасности.
+                Всё остальное опубликовано в публичных репозиториях и доступно каждому.
+            </p>
+            <p>
+                Ссылка на GitHub:
+                <a class="appeal-link" href="https://github.com/AluHIFree" target="_blank" rel="noopener noreferrer">
+                    https://github.com/AluHIFree
+                </a>
+            </p>
+            <p class="lead">Зачем это сделано.</p>
+            <p>
+                Я руководствовался простым желанием — помочь школам и ответственным сотрудникам муниципалитетов
+                в организации мониторинга питания. Моя цель — снять с них техническую нагрузку и вернуть им главное:
+                время и внимание на содержательную часть работы. Потому что смысл мониторинга питания не в отчётах
+                и таблицах, а в том, чтобы быстро находить проблемные места и оперативно их исправлять.
+                Чтобы дети получали качественное горячее питание в школах.
+            </p>
+            <p>
+                Технологии должны работать на эту цель, а не отвлекать от неё. Это и есть идея платформы.
+            </p>
+        </section>
+
+        <section class="appeal-section">
+            <h2><span>2</span> Обращение к школам и муниципалитетам</h2>
+            <p class="lead">Коллеги.</p>
+            <p>
+                Меня зовут <strong>Алу Ибрагимович Хаджиев</strong>. Я разработал эту платформу и все утилиты в её составе.
+            </p>
+            <p>
+                Я не продаю их. Проект некоммерческий: школы и муниципальные образования получают весь функционал
+                бесплатно и безвозмездно.
+            </p>
+            <p>
+                Я не скрываю, как всё устроено. Все мои программы в разделе «Утилиты» — свободное ПО с открытым
+                исходным кодом. Они прозрачны, бесплатны, без вирусов, и их код может изучить любой желающий.
+                Открыт весь код, кроме самой платформы — это исключение сделано ради безопасности.
+            </p>
+            <p>
+                Я делаю это ради одной цели: снизить техническую нагрузку на ответственных за мониторинг питания.
+                Чтобы вместо борьбы с таблицами, формами и отчётами вы занимались тем, ради чего всё затевалось, —
+                находили проблемы и быстро их решали. Чтобы дети ели качественное горячее питание.
+            </p>
+        </section>
+    </article>
+
+    <div class="appeal-actions">
+        <a class="appeal-btn primary" href="/login">К странице входа</a>
+        <a class="appeal-btn" href="/util">Утилиты ЕЦМП</a>
+        <a class="appeal-btn" href="https://github.com/AluHIFree" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
+</div>
+{% endblock %}

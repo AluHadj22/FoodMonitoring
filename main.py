@@ -441,6 +441,12 @@ async def utilities_page(request: Request):
     return templates.TemplateResponse("util.html", {"request": request})
 
 
+@app.get("/appeal", response_class=HTMLResponse)
+async def appeal_page(request: Request):
+    """Обращение разработчика к пользователям"""
+    return templates.TemplateResponse("appeal.html", {"request": request})
+
+
 # ========== НОВЫЕ СТРАНИЦЫ ==========
 
 # Страница ФЦМПО

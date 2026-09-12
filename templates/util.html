@@ -282,6 +282,10 @@
         animation-delay: 0.25s;
     }
 
+    .utility-card:nth-child(4) {
+        animation-delay: 0.35s;
+    }
+
     .utilities-note {
         margin-top: 1.75rem;
         padding: 1rem 1.25rem;
@@ -293,9 +297,17 @@
         line-height: 1.6;
     }
 
-    .utilities-note strong {
+    .utility-description code {
+        font-size: 0.8em;
+        padding: 0.1em 0.35em;
+        border-radius: 0.35rem;
+        background: rgba(15, 23, 42, 0.06);
         color: var(--text-primary);
-        font-weight: 650;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    [data-theme='dark'] .utility-description code {
+        background: rgba(255, 255, 255, 0.08);
     }
 
     /* Уведомление */
@@ -625,6 +637,65 @@
                 </a>
             </div>
         </div>
+
+        <!-- Утилита 4: Генератор ежедневных меню -->
+        <div class="utility-card">
+            <div class="utility-icon">
+                <div class="icon-container">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                        <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="utility-content">
+                <div class="utility-badge">Ежедневное меню</div>
+                <h2 class="utility-title">Генератор ежедневных меню</h2>
+                <p class="utility-description">
+                    Генератор ЕМ автоматически формирует файлы ежедневных меню на основе
+                    типового (цикличного) меню — файл <code>tm*-sm.xlsx</code> — и календаря
+                    питания <code>kp*.xlsx</code>. Поддерживаются два типа питания: только завтраки
+                    либо завтраки и обеды. Меню для интернатов программа пока формировать не умеет.
+                </p>
+                <ul class="features-list">
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Формирование ЕМ из типового меню и календаря питания</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Поддержка файлов tm*-sm.xlsx и kp*.xlsx</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Типы питания: только завтраки; завтраки и обеды</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Меню для интернатов пока не поддерживается</span>
+                    </li>
+                </ul>
+                <a href="#" class="download-btn" onclick="handleDownload('menu-generator', event)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Скачать программу
+                </a>
+            </div>
+        </div>
     </div>
 
     <div class="utilities-note">
@@ -646,12 +717,14 @@
     // Ссылки на Яндекс.Диск
     const DOWNLOAD_LINKS = {
         'ecmp-editor': 'https://disk.yandex.ru/d/IpaAteMxtmHdGg',
-        'motivation': 'https://disk.yandex.ru/d/AFSuLs6SDCSQ9A'
+        'motivation': 'https://disk.yandex.ru/d/AFSuLs6SDCSQ9A',
+        'menu-generator': 'https://disk.yandex.ru/d/ift8kmkZsZd_-g'
     };
 
     const DOWNLOAD_NAMES = {
         'ecmp-editor': 'ECMP редактор',
-        'motivation': 'Мотивирующий мониторинг (питание)'
+        'motivation': 'Мотивирующий мониторинг (питание)',
+        'menu-generator': 'Генератор ежедневных меню'
     };
 
     let notificationTimeout;
