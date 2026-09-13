@@ -13,7 +13,9 @@ import httpx
 from cachetools import TTLCache
 from dotenv import load_dotenv
 
-load_dotenv()
+# Всегда грузим .env рядом с проектом (не зависеть от cwd systemd)
+_BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(_BASE_DIR / ".env", override=False)
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +33,23 @@ def _api_key() -> str:
 
 def _model() -> str:
     return (os.getenv("OPENROUTER_MODEL") or "openai/gpt-4o-mini").strip()
+
+
+def _site_url() -> str:
+    return (os.getenv("OPENROUTER_SITE_URL") or "https://openrouter.ai").strip()
+
+
+def _site_name() -> str:
+    return (os.getenv("OPENROUTER_SITE_NAME") or "FoodMonitoring").strip()
+
+
+def _http_proxy() -> Optional[str]:
+    return (
+        os.getenv("OPENROUTER_HTTP_PROXY")
+        or os.getenv("HTTPS_PROXY")
+        or os.getenv("HTTP_PROXY")
+        or ""
+    ).strip() or None
 
 
 def is_configured() -> bool:
@@ -109,6 +128,31 @@ def get_document_text(base_dir: Path, relative_path: str, doc_id: int) -> str:
     return text
 
 
+def _format_openrouter_error(status: int, body: str) -> str:
+    hint = ""
+    lower = (body or "").lower()
+    if status == 403:
+        if "security policy" in lower or "cloudflare" in lower or "access denied" in lower:
+            hint = (
+                " Сервер, скорее всего, заблокирован Cloudflare/по региону. "
+                "Проверьте с сервера curl к OpenRouter или задайте OPENROUTER_HTTP_PROXY."
+            )
+        else:
+            hint = (
+                " Проверьте ключ OPENROUTER_API_KEY и баланс на openrouter.ai; "
+                "для продакшена укажите реальный OPENROUTER_SITE_URL (не localhost)."
+            )
+    elif status == 401:
+        hint = " Неверный или отозванный OPENROUTER_API_KEY."
+    elif status == 402:
+        hint = " Недостаточно средств на аккаунте OpenRouter."
+
+    snippet = re.sub(r"\s+", " ", (body or "").strip())[:220]
+    if snippet:
+        return f"OpenRouter вернул ошибку {status}: {snippet}.{hint}"
+    return f"OpenRouter вернул ошибку {status}.{hint}"
+
+
 async def openrouter_chat(
     messages: List[Dict[str, str]],
     *,
@@ -120,11 +164,16 @@ async def openrouter_chat(
     if not key:
         raise RuntimeError("OPENROUTER_API_KEY не задан")
 
+    site_url = _site_url()
+    site_name = _site_name()
     headers = {
         "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": os.getenv("OPENROUTER_SITE_URL", "http://localhost"),
-        "X-Title": os.getenv("OPENROUTER_SITE_NAME", "FoodMonitoring"),
+        "HTTP-Referer": site_url,
+        "Referer": site_url,
+        "X-Title": site_name,
+        "X-OpenRouter-Title": site_name,
+        "User-Agent": f"FoodMonitoring/1.0 ({site_name})",
     }
     payload: Dict[str, Any] = {
         "model": _model(),
@@ -135,12 +184,17 @@ async def openrouter_chat(
     if response_format:
         payload["response_format"] = response_format
 
-    async with httpx.AsyncClient(timeout=90.0) as client:
+    proxy = _http_proxy()
+    client_kwargs: Dict[str, Any] = {"timeout": 90.0}
+    if proxy:
+        client_kwargs["proxy"] = proxy
+
+    async with httpx.AsyncClient(**client_kwargs) as client:
         resp = await client.post(OPENROUTER_URL, headers=headers, json=payload)
         if resp.status_code >= 400:
-            detail = resp.text[:500]
+            detail = resp.text[:800]
             logger.error("OpenRouter error %s: %s", resp.status_code, detail)
-            raise RuntimeError(f"OpenRouter вернул ошибку {resp.status_code}")
+            raise RuntimeError(_format_openrouter_error(resp.status_code, detail))
         data = resp.json()
 
     try:

@@ -106,8 +106,8 @@ except ImportError:
 # Инициализируем БД библиотеки знаний при запуске
 init_kb_db()
 
-# Загрузка переменных из .env
-load_dotenv()
+# Загрузка переменных из .env (абсолютный путь — для systemd)
+load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
 
 # Создаёт таблицы в БД, если их нет
 Base.metadata.create_all(bind=engine)
