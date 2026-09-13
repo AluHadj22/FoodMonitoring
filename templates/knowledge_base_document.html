@@ -2,571 +2,1089 @@
 
 {% block content %}
 <style>
-    /* Базовые переменные для светлой темы */
-    :root {
-        --primary: #0f172a;
-        --primary-dark: #020617;
-        --secondary: #334155;
-        --accent: #5b9fd4;
-        --accent-light: #eff6ff;
-        --success: #10b981;
-        --success-dark: #059669;
-        --warning: #f59e0b;
-        --danger: #ef4444;
-        --text-primary: #0f172a;
-        --text-secondary: #475569;
-        --text-muted: #64748b;
-        --bg-page: #f8fafc;
-        --card-bg: #ffffff;
-        --border-light: #e2e8f0;
-        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-        --radius-md: 0.5rem;
-        --radius-lg: 0.75rem;
+    .doc-page {
+        --doc-sky-a: rgba(91, 159, 212, 0.2);
+        --doc-sky-b: rgba(139, 191, 230, 0.14);
+        position: relative;
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 1.75rem 1.5rem 3.5rem;
+        animation: doc-page-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
     }
 
-    /* Переменные для тёмной темы */
-    [data-theme="dark"] {
-        --primary: #f1f5f9;
-        --primary-dark: #e2e8f0;
-        --secondary: #94a3b8;
-        --accent: #8bbfe6;
-        --accent-light: #1e293b;
-        --success: #34d399;
-        --success-dark: #10b981;
-        --warning: #fbbf24;
-        --danger: #f87171;
-        --text-primary: #f1f5f9;
-        --text-secondary: #cbd5e1;
-        --text-muted: #94a3b8;
-        --bg-page: #0f172a;
-        --card-bg: #1e293b;
-        --border-light: #334155;
-        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
-        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+    .doc-page::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        pointer-events: none;
+        background:
+            radial-gradient(820px 480px at 12% -6%, var(--doc-sky-a), transparent 58%),
+            radial-gradient(680px 420px at 96% 8%, var(--doc-sky-b), transparent 55%),
+            radial-gradient(560px 380px at 48% 100%, rgba(61, 126, 184, 0.07), transparent 60%),
+            var(--bg-main);
     }
 
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
+    .doc-page::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        opacity: 0.4;
+        background-image: radial-gradient(rgba(91, 159, 212, 0.16) 1px, transparent 1px);
+        background-size: 22px 22px;
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.5), transparent 72%);
     }
 
-    body {
-        background: var(--bg-page);
-        font-family: var(--font-sans);
-        color: var(--text-primary);
-        line-height: 1.5;
-        transition: background-color 0.3s ease, color 0.2s ease;
+    [data-theme="dark"] .doc-page::before {
+        --doc-sky-a: rgba(126, 184, 232, 0.14);
+        --doc-sky-b: rgba(91, 159, 212, 0.1);
     }
 
-    .document-container {
-        max-width: 1280px;
-        margin: 2rem auto;
-        padding: 0 1.5rem;
+    @keyframes doc-page-in {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
-    /* Хедер документа */
-    .document-header {
-        background: var(--card-bg);
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-lg);
-        padding: 2rem;
-        margin-bottom: 2rem;
-        box-shadow: var(--shadow-sm);
+    @keyframes doc-cover-in {
+        from {
+            opacity: 0;
+            transform: translateY(8px) scale(0.98);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
     }
 
-    .document-header h1 {
-        font-size: 1.875rem;
-        font-weight: 600;
-        letter-spacing: -0.02em;
-        color: var(--primary);
-        margin-bottom: 1rem;
-        line-height: 1.4;
-    }
-
-    .document-meta-header {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        margin-top: 1rem;
-    }
-
-    .meta-item {
-        background: var(--bg-page);
-        padding: 0.375rem 0.875rem;
-        border-radius: 2rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: var(--text-secondary);
-        border: 1px solid var(--border-light);
+    .doc-back {
         display: inline-flex;
         align-items: center;
-        gap: 0.375rem;
+        gap: 0.35rem;
+        margin-bottom: 1.15rem;
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: color 0.15s ease, transform 0.15s ease;
     }
 
-    /* Двухколоночная сетка */
-    .document-content {
+    .doc-back:hover {
+        color: var(--primary);
+        transform: translateX(-2px);
+    }
+
+    .doc-hero-wrap {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .doc-hero-mesh {
+        position: absolute;
+        inset: -18px -12px -28px;
+        pointer-events: none;
+        z-index: 0;
+        overflow: hidden;
+        border-radius: calc(var(--radius-xl) + 8px);
+    }
+
+    .doc-hero-mesh span {
+        position: absolute;
+        border-radius: 50%;
+    }
+
+    .doc-hero-mesh .mesh-a {
+        width: 280px;
+        height: 280px;
+        left: -60px;
+        top: -80px;
+        background: radial-gradient(circle, rgba(91, 159, 212, 0.28), transparent 68%);
+    }
+
+    .doc-hero-mesh .mesh-b {
+        width: 220px;
+        height: 220px;
+        right: -40px;
+        top: 20%;
+        background: radial-gradient(circle, rgba(139, 191, 230, 0.24), transparent 70%);
+    }
+
+    .doc-hero-mesh .mesh-c {
+        width: 180px;
+        height: 180px;
+        left: 38%;
+        bottom: -70px;
+        background: radial-gradient(circle, rgba(61, 126, 184, 0.14), transparent 72%);
+    }
+
+    .doc-hero {
+        position: relative;
+        z-index: 1;
         display: grid;
-        grid-template-columns: 1fr 320px;
-        gap: 2rem;
-        align-items: start;
-    }
-
-    /* Основной контент */
-    .document-main {
-        background: var(--card-bg);
-        border-radius: var(--radius-lg);
+        grid-template-columns: 240px 1fr;
+        gap: 1.65rem;
+        background:
+            linear-gradient(145deg, rgba(255, 255, 255, 0.94) 0%, rgba(245, 248, 252, 0.9) 100%);
         border: 1px solid var(--border-light);
+        border-radius: var(--radius-xl);
+        padding: 1.4rem;
+        align-items: start;
+        box-shadow: var(--shadow-lg);
         overflow: hidden;
     }
 
-    .document-section {
-        padding: 1.5rem;
+    [data-theme="dark"] .doc-hero {
+        background:
+            linear-gradient(145deg, rgba(22, 32, 51, 0.96) 0%, rgba(26, 39, 64, 0.92) 100%);
+    }
+
+    .doc-cover {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        background: var(--bg-muted);
+        border: 1px solid var(--border-light);
+        box-shadow:
+            0 18px 36px rgba(26, 39, 64, 0.14),
+            0 4px 12px rgba(26, 39, 64, 0.08);
+        animation: doc-cover-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .doc-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .doc-cover:hover img {
+        transform: scale(1.05);
+    }
+
+    .doc-cover-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        background:
+            linear-gradient(155deg, #e8f2fa 0%, #cfe4f5 48%, #a9cce8 100%);
+        color: var(--primary-dark);
+    }
+
+    .doc-cover-placeholder svg {
+        width: 42px;
+        height: 42px;
+        opacity: 0.45;
+    }
+
+    .doc-cover-placeholder span {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        opacity: 0.75;
+    }
+
+    .doc-hero-body {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        padding-top: 0.2rem;
+    }
+
+    .doc-type {
+        display: inline-flex;
+        align-self: flex-start;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.28rem 0.7rem;
+        background: linear-gradient(135deg, var(--primary-bg), rgba(139, 191, 230, 0.18));
+        color: var(--primary-dark);
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(91, 159, 212, 0.22);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .doc-type::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--primary);
+        box-shadow: 0 0 0 3px rgba(91, 159, 212, 0.2);
+    }
+
+    .doc-title {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: 1.7rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.22;
+        color: var(--text-primary);
+    }
+
+    .doc-meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem 0.85rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+    }
+
+    .doc-meta-row span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.28rem 0.55rem;
+        background: var(--bg-muted);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-sm);
+    }
+
+    .doc-meta-row svg {
+        width: 13px;
+        height: 13px;
+        opacity: 0.75;
+        color: var(--primary);
+    }
+
+    .doc-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+        margin-top: 0.35rem;
+    }
+
+    .doc-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.65rem 1.1rem;
+        border-radius: var(--radius-md);
+        font-size: 0.825rem;
+        font-weight: 700;
+        font-family: inherit;
+        text-decoration: none;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .doc-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .doc-btn-primary {
+        background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(91, 159, 212, 0.28);
+    }
+
+    .doc-btn-primary:hover {
+        background: linear-gradient(145deg, var(--primary-light), var(--primary-dark));
+        box-shadow: 0 8px 20px rgba(91, 159, 212, 0.34);
+    }
+
+    .doc-btn-ghost {
+        background: var(--bg-card-solid);
+        border-color: var(--border-light);
+        color: var(--text-secondary);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .doc-btn-ghost:hover {
+        border-color: var(--primary-light);
+        color: var(--primary);
+    }
+
+    .doc-btn-ghost.active {
+        background: #fef3c7;
+        border-color: #f59e0b;
+        color: #b45309;
+    }
+
+    [data-theme="dark"] .doc-btn-ghost.active {
+        background: rgba(245, 158, 11, 0.18);
+        color: #fbbf24;
+    }
+
+    .doc-btn-ai {
+        background: var(--bg-card-solid);
+        border-color: rgba(91, 159, 212, 0.35);
+        color: var(--primary-dark);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .doc-btn-ai:hover {
+        background: var(--primary-bg);
+        border-color: var(--primary);
+        color: var(--primary-dark);
+    }
+
+    .doc-ai-panel {
+        margin-top: 0;
+        margin-bottom: 1.5rem;
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        display: none;
+        box-shadow: var(--shadow-md);
+    }
+
+    .doc-ai-panel.open {
+        display: block;
+        animation: doc-page-in 0.35s ease both;
+    }
+
+    .doc-ai-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.9rem 1.15rem;
+        border-bottom: 1px solid var(--border-light);
+        background:
+            linear-gradient(180deg, rgba(91, 159, 212, 0.12) 0%, transparent 100%),
+            var(--bg-muted);
+    }
+
+    .doc-ai-head h2 {
+        margin: 0;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .doc-ai-head p {
+        margin: 0.15rem 0 0;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+    }
+
+    .doc-ai-close {
+        width: 2rem;
+        height: 2rem;
+        border: 1px solid var(--border-light);
+        background: var(--bg-card-solid);
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 1.1rem;
+        line-height: 1;
+    }
+
+    .doc-ai-messages {
+        max-height: 360px;
+        overflow-y: auto;
+        padding: 1rem 1.1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
+        background: var(--bg-main);
+    }
+
+    .doc-ai-msg {
+        padding: 0.7rem 0.85rem;
+        border-radius: var(--radius-md);
+        font-size: 0.84rem;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .doc-ai-msg.user {
+        align-self: flex-end;
+        max-width: 90%;
+        background: var(--primary);
+        color: #fff;
+    }
+
+    .doc-ai-msg.assistant {
+        align-self: stretch;
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border-light);
+        color: var(--text-primary);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .doc-ai-typing {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .doc-ai-form {
+        display: flex;
+        gap: 0.5rem;
+        padding: 0.85rem 1.1rem;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .doc-ai-form input {
+        flex: 1;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        background: var(--bg-muted);
+        color: var(--text-primary);
+        font-size: 0.84rem;
+        font-family: inherit;
+        font-weight: 600;
+    }
+
+    .doc-ai-form input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: var(--shadow-focus);
+    }
+
+    .doc-ai-form button {
+        padding: 0.6rem 1rem;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 700;
+        font-size: 0.8rem;
+        font-family: inherit;
+        cursor: pointer;
+    }
+
+    .doc-ai-form button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .doc-ai-quick {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        padding: 0 1.1rem 0.85rem;
+    }
+
+    .doc-ai-chip {
+        border: 1px solid var(--border-light);
+        background: var(--bg-muted);
+        color: var(--text-secondary);
+        border-radius: var(--radius-sm);
+        padding: 0.3rem 0.7rem;
+        font-size: 0.72rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+    .doc-ai-chip:hover {
+        border-color: var(--primary-light);
+        color: var(--primary);
+        background: var(--primary-bg);
+    }
+
+    .doc-layout {
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    .doc-main,
+    .doc-side-card,
+    .doc-similar {
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .doc-section {
+        padding: 1.25rem 1.35rem;
         border-bottom: 1px solid var(--border-light);
     }
 
-    .document-section:last-child {
+    .doc-section:last-child {
         border-bottom: none;
     }
 
-    .document-section h2 {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: var(--primary);
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+    .doc-section h2 {
+        margin: 0 0 0.85rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--primary-dark);
     }
 
-    .document-description {
-        font-size: 0.95rem;
-        line-height: 1.6;
+    .doc-description {
+        margin: 0;
+        font-size: 0.92rem;
+        line-height: 1.65;
         color: var(--text-secondary);
         white-space: pre-wrap;
     }
 
-    .document-tags {
+    .doc-tags {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.5rem;
+        gap: 0.4rem;
     }
 
-    .tag {
-        background: var(--accent-light);
-        color: var(--accent);
-        padding: 0.25rem 0.75rem;
-        border-radius: 2rem;
-        font-size: 0.75rem;
-        font-weight: 500;
+    .doc-tag {
+        padding: 0.28rem 0.7rem;
+        background: var(--primary-bg);
+        color: var(--primary-dark);
+        border: 1px solid rgba(91, 159, 212, 0.18);
+        border-radius: var(--radius-sm);
+        font-size: 0.72rem;
+        font-weight: 600;
     }
 
-    /* Сайдбар */
-    .document-sidebar {
-        position: sticky;
-        top: 1.5rem;
+    .doc-side {
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
+        gap: 1rem;
+        position: sticky;
+        top: 1.25rem;
     }
 
-    .info-card {
-        background: var(--card-bg);
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-lg);
-        padding: 1.25rem;
+    .doc-side-card {
+        padding: 1.15rem 1.2rem;
+        overflow: hidden;
+        position: relative;
     }
 
-    .info-card h3 {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--primary);
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+    .doc-side-card::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary), var(--primary-light));
     }
 
-    .info-list {
+    .doc-side-card h3 {
+        margin: 0 0 0.85rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--primary-dark);
+    }
+
+    .doc-info-list {
         list-style: none;
+        margin: 0;
+        padding: 0;
     }
 
-    .info-list li {
+    .doc-info-list li {
         display: flex;
         justify-content: space-between;
-        padding: 0.625rem 0;
-        border-bottom: 1px solid var(--border-light);
-        font-size: 0.875rem;
-    }
-
-    .info-list li:last-child {
-        border-bottom: none;
-    }
-
-    .info-label {
-        color: var(--text-muted);
-        font-weight: 500;
-    }
-
-    .info-value {
-        color: var(--text-primary);
-        font-weight: 500;
-    }
-
-    /* Кнопки */
-    .action-buttons {
-        display: flex;
-        flex-direction: column;
         gap: 0.75rem;
+        padding: 0.55rem 0;
+        border-bottom: 1px solid var(--border-light);
+        font-size: 0.82rem;
     }
 
-    .download-btn, .favorite-btn-large {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1rem;
-        border-radius: var(--radius-md);
+    .doc-info-list li:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .doc-info-list .label {
+        color: var(--text-muted);
         font-weight: 600;
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        text-decoration: none;
-        border: 1px solid transparent;
     }
 
-    .download-btn {
-        background: var(--success);
-        color: white;
-        border: none;
+    .doc-info-list .value {
+        color: var(--text-primary);
+        font-weight: 600;
+        text-align: right;
     }
 
-    .download-btn:hover {
-        background: var(--success-dark);
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-md);
-    }
-
-    .favorite-btn-large {
-        background: var(--card-bg);
-        border: 1px solid var(--border-light);
-        color: var(--text-secondary);
-    }
-
-    .favorite-btn-large:hover {
-        border-color: var(--warning);
-        color: var(--warning);
-    }
-
-    .favorite-btn-large.active {
-        background: var(--warning);
-        border-color: var(--warning);
-        color: #0f172a;
-    }
-
-    /* Админ-панель */
-    .admin-actions {
-        background: var(--bg-page);
+    .doc-admin {
+        background:
+            linear-gradient(180deg, rgba(91, 159, 212, 0.08) 0%, transparent 40%),
+            var(--bg-muted);
         border: 1px solid var(--border-light);
         border-radius: var(--radius-lg);
-        padding: 1.25rem;
+        padding: 1.1rem 1.2rem;
+        box-shadow: var(--shadow-sm);
     }
 
-    .admin-actions h4 {
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+    .doc-admin h4 {
+        margin: 0 0 0.75rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-muted);
     }
 
-    .admin-buttons {
+    .doc-admin-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
+        gap: 0.5rem;
+        margin-bottom: 0.65rem;
     }
 
-    .admin-btn {
-        padding: 0.5rem;
-        border-radius: var(--radius-md);
+    .doc-admin-row form {
+        margin: 0;
+    }
+
+    .doc-admin-btn {
+        display: block;
+        width: 100%;
+        padding: 0.55rem;
+        border: none;
+        border-radius: var(--radius-sm);
         font-size: 0.75rem;
-        font-weight: 500;
+        font-weight: 700;
+        font-family: inherit;
         text-align: center;
         text-decoration: none;
         cursor: pointer;
-        border: none;
-        transition: all 0.2s;
     }
 
-    .admin-btn.edit {
-        background: var(--accent);
-        color: white;
+    .doc-admin-btn.edit {
+        background: var(--primary);
+        color: #fff;
     }
 
-    .admin-btn.edit:hover {
-        filter: brightness(0.9);
+    .doc-admin-btn.delete {
+        background: var(--danger, #dc2626);
+        color: #fff;
     }
 
-    .admin-btn.delete {
-        background: var(--danger);
-        color: white;
-    }
-
-    .admin-btn.delete:hover {
-        filter: brightness(0.9);
-    }
-
-    /* Комментарии */
-    .comments-section {
-        margin-top: 1rem;
+    .doc-admin-link {
+        display: block;
+        text-align: center;
+        font-size: 0.75rem;
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 700;
     }
 
     .comment-form {
-        background: var(--bg-page);
+        background: var(--bg-muted);
         border: 1px solid var(--border-light);
         border-radius: var(--radius-md);
-        padding: 1rem;
-        margin-bottom: 1.5rem;
+        padding: 0.9rem;
+        margin-bottom: 1rem;
     }
 
     .comment-form textarea {
         width: 100%;
-        padding: 0.75rem;
+        padding: 0.7rem;
         border: 1px solid var(--border-light);
-        border-radius: var(--radius-md);
+        border-radius: var(--radius-sm);
         font-family: inherit;
-        font-size: 0.875rem;
+        font-size: 0.85rem;
         resize: vertical;
-        margin-bottom: 0.75rem;
-        background: var(--card-bg);
+        margin-bottom: 0.65rem;
+        background: var(--bg-card-solid);
         color: var(--text-primary);
     }
 
     .comment-form textarea:focus {
         outline: none;
-        border-color: var(--accent);
+        border-color: var(--primary);
+        box-shadow: var(--shadow-focus);
     }
 
     .comment-form button {
-        background: var(--accent);
-        color: white;
+        background: var(--primary);
+        color: #fff;
         border: none;
-        padding: 0.5rem 1rem;
-        border-radius: var(--radius-md);
-        font-weight: 500;
+        padding: 0.45rem 0.9rem;
+        border-radius: var(--radius-sm);
+        font-weight: 700;
+        font-size: 0.8rem;
+        font-family: inherit;
         cursor: pointer;
-        transition: all 0.2s;
     }
 
     .comment-form button:hover {
-        filter: brightness(0.9);
+        background: var(--primary-dark);
+    }
+
+    .comment-login {
+        text-align: center;
+        padding: 0.85rem;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .comment-login a {
+        color: var(--primary);
+        font-weight: 700;
+        text-decoration: none;
     }
 
     .comment {
-        background: var(--bg-page);
+        background: var(--bg-muted);
         border: 1px solid var(--border-light);
         border-radius: var(--radius-md);
-        padding: 1rem;
-        margin-bottom: 0.75rem;
+        padding: 0.9rem 1rem;
+        margin-bottom: 0.6rem;
     }
 
     .comment-header {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 0.5rem;
-        font-size: 0.75rem;
+        gap: 0.75rem;
+        margin-bottom: 0.4rem;
+        font-size: 0.72rem;
     }
 
     .comment-author {
-        font-weight: 600;
-        color: var(--primary);
+        font-weight: 700;
+        color: var(--text-primary);
     }
 
     .comment-date {
         color: var(--text-muted);
+        font-weight: 600;
     }
 
     .comment-content {
-        font-size: 0.875rem;
+        font-size: 0.85rem;
         color: var(--text-secondary);
         line-height: 1.5;
     }
 
-    /* Похожие документы */
-    .similar-docs {
-        margin-top: 2rem;
-        background: var(--card-bg);
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-lg);
-        padding: 1.5rem;
+    .comment-empty {
+        text-align: center;
+        padding: 1rem;
+        color: var(--text-muted);
+        font-size: 0.85rem;
     }
 
-    .similar-docs h2 {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: var(--primary);
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+    .doc-similar {
+        margin-top: 1.5rem;
+        padding: 1.25rem 1.35rem;
+    }
+
+    .doc-similar h2 {
+        margin: 0 0 1rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--primary-dark);
     }
 
     .similar-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 0.9rem;
     }
 
     .similar-card {
-        background: var(--bg-page);
+        display: flex;
+        flex-direction: column;
         border: 1px solid var(--border-light);
         border-radius: var(--radius-md);
-        padding: 1rem;
+        overflow: hidden;
         text-decoration: none;
-        transition: all 0.2s;
-        display: block;
+        color: inherit;
+        background: var(--bg-card-solid);
+        box-shadow: var(--shadow-sm);
+        transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
     }
 
     .similar-card:hover {
-        border-color: var(--accent);
-        transform: translateY(-2px);
+        border-color: var(--primary-light);
         box-shadow: var(--shadow-md);
+        transform: translateY(-3px);
+    }
+
+    .similar-cover {
+        aspect-ratio: 16 / 10;
+        background: var(--bg-muted);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .similar-cover::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 0;
+        height: 40%;
+        background: linear-gradient(180deg, transparent, rgba(15, 23, 41, 0.18));
+        pointer-events: none;
+    }
+
+    .similar-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.4s ease;
+    }
+
+    .similar-card:hover .similar-cover img {
+        transform: scale(1.06);
+    }
+
+    .similar-cover-ph {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-dark);
+        background: linear-gradient(155deg, #e8f2fa, #cfe4f5);
+        opacity: 0.85;
+    }
+
+    .similar-cover-ph svg {
+        width: 28px;
+        height: 28px;
+        opacity: 0.5;
+    }
+
+    .similar-body {
+        padding: 0.75rem 0.85rem 0.9rem;
     }
 
     .similar-title {
-        font-weight: 600;
-        color: var(--primary);
-        margin-bottom: 0.5rem;
-        font-size: 0.875rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        margin-bottom: 0.35rem;
     }
 
     .similar-meta {
-        font-size: 0.75rem;
+        font-size: 0.68rem;
         color: var(--text-muted);
-        display: flex;
-        gap: 0.75rem;
+        font-weight: 600;
     }
 
-    /* Ссылка назад */
-    .back-link {
-        display: inline-block;
-        margin-top: 1rem;
-        color: var(--text-muted);
-        font-size: 0.875rem;
-        text-decoration: none;
-    }
-
-    .back-link:hover {
-        color: var(--accent);
-    }
-
-    /* Адаптивность */
-    @media (max-width: 768px) {
-        .document-container {
-            padding: 0 1rem;
-            margin: 1rem auto;
-        }
-
-        .document-content {
+    @media (max-width: 900px) {
+        .doc-layout {
             grid-template-columns: 1fr;
         }
 
-        .document-sidebar {
+        .doc-side {
             position: static;
         }
+    }
 
-        .document-header h1 {
-            font-size: 1.5rem;
+    @media (max-width: 640px) {
+        .doc-page {
+            padding: 1rem 0.85rem 2.5rem;
         }
 
-        .admin-buttons {
+        .doc-hero {
             grid-template-columns: 1fr;
+            gap: 1.1rem;
+            padding: 1.15rem;
+        }
+
+        .doc-cover {
+            max-width: 260px;
+        }
+
+        .doc-title {
+            font-size: 1.35rem;
+        }
+
+        .doc-admin-row {
+            grid-template-columns: 1fr;
+        }
+
+        .doc-hero-mesh {
+            inset: -10px -6px -16px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .doc-page,
+        .doc-cover,
+        .doc-ai-panel.open {
+            animation: none !important;
+        }
+
+        .doc-cover:hover img,
+        .similar-card:hover,
+        .similar-card:hover .similar-cover img,
+        .doc-btn:hover,
+        .doc-back:hover {
+            transform: none;
         }
     }
 </style>
 
-<script>
-    // Функция для определения текущей темы и применения правильных переменных
-    function applyTheme() {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        
-        if (isDark) {
-            document.documentElement.style.setProperty('--primary', '#f1f5f9');
-            document.documentElement.style.setProperty('--text-primary', '#f1f5f9');
-            document.documentElement.style.setProperty('--card-bg', '#1e293b');
-            document.documentElement.style.setProperty('--bg-page', '#0f172a');
-        } else {
-            document.documentElement.style.setProperty('--primary', '#0f172a');
-            document.documentElement.style.setProperty('--text-primary', '#0f172a');
-            document.documentElement.style.setProperty('--card-bg', '#ffffff');
-            document.documentElement.style.setProperty('--bg-page', '#f8fafc');
-        }
-    }
+<div class="doc-page">
+    <a href="/knowledge-base" class="doc-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Все документы
+    </a>
 
-    // Следим за изменением темы на странице
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.attributeName === 'data-theme') {
-                applyTheme();
-            }
-        });
-    });
-
-    observer.observe(document.documentElement, { attributes: true });
-    
-    // Применяем тему при загрузке
-    document.addEventListener('DOMContentLoaded', applyTheme);
-</script>
-
-<div class="document-container">
-    <div class="document-header">
-        <h1>{{ document.title }}</h1>
-        <div class="document-meta-header">
-            <span class="meta-item">{{ document_types[document.document_type] }}</span>
-            <span class="meta-item">📅 {{ document.created_at.strftime('%d.%m.%Y') }}</span>
-            <span class="meta-item">📥 {{ document.downloads_count }} скачиваний</span>
-            <span class="meta-item">👁️ {{ document.views_count }} просмотров</span>
+    <div class="doc-hero-wrap">
+        <div class="doc-hero-mesh" aria-hidden="true">
+            <span class="mesh-a"></span>
+            <span class="mesh-b"></span>
+            <span class="mesh-c"></span>
         </div>
+        <header class="doc-hero">
+            <div class="doc-cover">
+                {% if document.cover_image_path %}
+                <img src="/knowledge-base/cover/{{ document.id }}"
+                     alt="Обложка: {{ document.title }}"
+                     loading="eager"
+                     decoding="async">
+                {% else %}
+                <div class="doc-cover-placeholder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                    <span>{% if document.file_extension %}{{ document.file_extension.replace('.', '')|upper }}{% else %}DOC{% endif %}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="doc-hero-body">
+                <span class="doc-type">{{ document_types[document.document_type] }}</span>
+                <h1 class="doc-title">{{ document.title }}</h1>
+                <div class="doc-meta-row">
+                    <span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        {{ document.created_at.strftime('%d.%m.%Y') }}
+                    </span>
+                    <span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        {{ document.downloads_count }} скачиваний
+                    </span>
+                    <span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        {{ document.views_count }} просмотров
+                    </span>
+                </div>
+                <div class="doc-actions">
+                    <a href="/knowledge-base/download/{{ document.id }}" class="doc-btn doc-btn-primary">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Скачать
+                    </a>
+                    {% if user_email %}
+                    <button type="button"
+                            class="doc-btn doc-btn-ghost {% if is_favorite %}active{% endif %}"
+                            onclick="toggleFavorite({{ document.id }})"
+                            id="fav-large-{{ document.id }}">
+                        <span>{% if is_favorite %}★{% else %}☆{% endif %}</span>
+                        <span>{% if is_favorite %}В избранном{% else %}В избранное{% endif %}</span>
+                    </button>
+                    {% endif %}
+                    <button type="button" class="doc-btn doc-btn-ai" id="docAiOpen">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/>
+                        </svg>
+                        ИИ выжимка
+                    </button>
+                </div>
+            </div>
+        </header>
     </div>
 
-    <div class="document-content">
-        <div class="document-main">
-            {% if document.description %}
-            <div class="document-section">
-                <h2>📄 Описание</h2>
-                <div class="document-description">{{ document.description }}</div>
+    <div class="doc-ai-panel" id="docAiPanel">
+        <div class="doc-ai-head">
+            <div>
+                <h2>ИИ по документу</h2>
+                <p>Выжимка ключевых моментов или ответы на ваши вопросы по этому файлу</p>
             </div>
+            <button type="button" class="doc-ai-close" id="docAiClose" aria-label="Закрыть">×</button>
+        </div>
+        <div class="doc-ai-messages" id="docAiMessages"></div>
+        <div class="doc-ai-quick">
+            <button type="button" class="doc-ai-chip" data-q="">Сделать выжимку</button>
+            <button type="button" class="doc-ai-chip" data-q="Какие основные требования и нормы указаны?">Основные требования</button>
+            <button type="button" class="doc-ai-chip" data-q="На что обратить внимание специалисту на практике?">Практические акценты</button>
+        </div>
+        <form class="doc-ai-form" id="docAiForm">
+            <input type="text" id="docAiInput" placeholder="Спросите что-то по этому документу…" autocomplete="off" maxlength="2000">
+            <button type="submit" id="docAiSend">Спросить</button>
+        </form>
+    </div>
+
+    <div class="doc-layout">
+        <div class="doc-main">
+            {% if document.description %}
+            <section class="doc-section">
+                <h2>Описание</h2>
+                <p class="doc-description">{{ document.description }}</p>
+            </section>
             {% endif %}
 
             {% if document.tags %}
-            <div class="document-section">
-                <h2>🏷️ Теги</h2>
-                <div class="document-tags">
+            <section class="doc-section">
+                <h2>Теги</h2>
+                <div class="doc-tags">
                     {% for tag in document.tags.split(',') %}
-                    <span class="tag">{{ tag.strip() }}</span>
+                    <span class="doc-tag">{{ tag.strip() }}</span>
                     {% endfor %}
                 </div>
-            </div>
+            </section>
             {% endif %}
 
-            <div class="document-section comments-section">
-                <h2>💬 Комментарии</h2>
+            <section class="doc-section">
+                <h2>Комментарии</h2>
 
                 {% if user_email %}
                 <form class="comment-form" method="POST" action="/knowledge-base/comment/{{ document.id }}">
-                    <textarea name="content" rows="3" placeholder="Напишите комментарий..." required></textarea>
+                    <textarea name="content" rows="3" placeholder="Напишите комментарий…" required></textarea>
                     <input type="hidden" name="user_name" value="{{ user_name or 'Пользователь' }}">
                     <button type="submit">Отправить</button>
                 </form>
                 {% else %}
-                <div style="text-align: center; padding: 1rem; color: var(--text-muted); font-size: 0.875rem;">
-                    <a href="/login" style="color: var(--accent);">Войдите</a>, чтобы оставить комментарий
+                <div class="comment-login">
+                    <a href="/login">Войдите</a>, чтобы оставить комментарий
                 </div>
                 {% endif %}
 
@@ -581,129 +1099,209 @@
                     </div>
                     {% endfor %}
                 {% else %}
-                    <div style="text-align: center; padding: 1rem; color: var(--text-muted); font-size: 0.875rem;">
-                        Пока нет комментариев
-                    </div>
+                    <div class="comment-empty">Пока нет комментариев</div>
                 {% endif %}
-            </div>
+            </section>
         </div>
 
-        <div class="document-sidebar">
-            <div class="info-card">
-                <h3>📋 Информация</h3>
-                <ul class="info-list">
+        <aside class="doc-side">
+            <div class="doc-side-card">
+                <h3>Информация</h3>
+                <ul class="doc-info-list">
                     <li>
-                        <span class="info-label">Тип</span>
-                        <span class="info-value">{{ document_types[document.document_type] }}</span>
+                        <span class="label">Тип</span>
+                        <span class="value">{{ document_types[document.document_type] }}</span>
                     </li>
                     <li>
-                        <span class="info-label">Категория</span>
-                        <span class="info-value">
-                            {% if category %}
-                                {{ category.icon }} {{ category.name }}
-                            {% else %}
-                                Без категории
-                            {% endif %}
+                        <span class="label">Категория</span>
+                        <span class="value">
+                            {% if category %}{{ category.name }}{% else %}Без категории{% endif %}
                         </span>
                     </li>
                     <li>
-                        <span class="info-label">Загрузил</span>
-                        <span class="info-value">{{ document.uploaded_by or 'Администратор' }}</span>
+                        <span class="label">Загрузил</span>
+                        <span class="value">{{ document.uploaded_by or 'Администратор' }}</span>
                     </li>
                     <li>
-                        <span class="info-label">Размер</span>
-                        <span class="info-value">{{ (document.file_size / 1024)|round(1) }} КБ</span>
+                        <span class="label">Размер</span>
+                        <span class="value">{{ (document.file_size / 1024)|round(1) }} КБ</span>
+                    </li>
+                    <li>
+                        <span class="label">Формат</span>
+                        <span class="value">{% if document.file_extension %}{{ document.file_extension.replace('.', '')|upper }}{% else %}—{% endif %}</span>
                     </li>
                 </ul>
             </div>
 
-            <div class="action-buttons">
-                <a href="/knowledge-base/download/{{ document.id }}" class="download-btn">
-                    <span>⬇️</span> Скачать документ
-                </a>
-
-                {% if user_email %}
-                <button class="favorite-btn-large {% if is_favorite %}active{% endif %}"
-                        onclick="toggleFavorite({{ document.id }})"
-                        id="fav-large-{{ document.id }}">
-                    <span>{% if is_favorite %}★{% else %}☆{% endif %}</span>
-                    <span>{% if is_favorite %}В избранном{% else %}В избранное{% endif %}</span>
-                </button>
-                {% endif %}
-            </div>
-
             {% if is_admin %}
-            <div class="admin-actions">
-                <h4>⚙️ Управление</h4>
-                <div class="admin-buttons">
-                    <a href="/knowledge-base/admin/edit/{{ document.id }}" class="admin-btn edit">
-                        ✏️ Редактировать
-                    </a>
+            <div class="doc-admin">
+                <h4>Управление</h4>
+                <div class="doc-admin-row">
+                    <a href="/knowledge-base/admin/edit/{{ document.id }}" class="doc-admin-btn edit">Редактировать</a>
                     <form method="POST" action="/knowledge-base/admin/delete/{{ document.id }}"
                           onsubmit="return confirm('Удалить документ? Это действие нельзя отменить.');">
-                        <button type="submit" class="admin-btn delete">
-                            🗑️ Удалить
-                        </button>
+                        <button type="submit" class="doc-admin-btn delete">Удалить</button>
                     </form>
                 </div>
-                <a href="/knowledge-base/admin" style="display: block; text-align: center; font-size: 0.75rem; color: var(--accent);">
-                    ← Панель управления
-                </a>
+                <a href="/knowledge-base/admin" class="doc-admin-link">Панель управления</a>
             </div>
             {% endif %}
-
-            <a href="/knowledge-base" class="back-link">← Все документы</a>
-        </div>
+        </aside>
     </div>
 
     {% if similar_docs %}
-    <div class="similar-docs">
-        <h2>📌 Похожие документы</h2>
+    <section class="doc-similar">
+        <h2>Похожие документы</h2>
         <div class="similar-grid">
             {% for doc in similar_docs %}
             <a href="/knowledge-base/document/{{ doc.id }}" class="similar-card">
-                <div class="similar-title">{{ doc.title }}</div>
-                <div class="similar-meta">
-                    <span>{{ document_types[doc.document_type] }}</span>
-                    <span>📥 {{ doc.downloads_count }}</span>
+                <div class="similar-cover">
+                    {% if doc.cover_image_path %}
+                    <img src="/knowledge-base/cover/{{ doc.id }}" alt="" loading="lazy" decoding="async">
+                    {% else %}
+                    <div class="similar-cover-ph">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="similar-body">
+                    <div class="similar-title">{{ doc.title }}</div>
+                    <div class="similar-meta">{{ document_types[doc.document_type] }} · {{ doc.downloads_count }} скач.</div>
                 </div>
             </a>
             {% endfor %}
         </div>
-    </div>
+    </section>
     {% endif %}
 </div>
 
 <script>
+const DOC_AI_ID = {{ document.id }};
+
 function toggleFavorite(docId) {
-    fetch(`/knowledge-base/favorite/${docId}`, {
-        method: 'POST'
-    })
+    fetch(`/knowledge-base/favorite/${docId}`, { method: 'POST' })
     .then(response => response.json())
     .then(data => {
         const btnLarge = document.getElementById(`fav-large-${docId}`);
-        const btnSmall = document.getElementById(`fav-${docId}`);
-
+        if (!btnLarge) return;
         if (data.action === 'added') {
-            if (btnLarge) {
-                btnLarge.innerHTML = '<span>★</span><span>В избранном</span>';
-                btnLarge.classList.add('active');
-            }
-            if (btnSmall) {
-                btnSmall.innerHTML = '★';
-                btnSmall.classList.add('active');
-            }
+            btnLarge.innerHTML = '<span>★</span><span>В избранном</span>';
+            btnLarge.classList.add('active');
         } else {
-            if (btnLarge) {
-                btnLarge.innerHTML = '<span>☆</span><span>В избранное</span>';
-                btnLarge.classList.remove('active');
-            }
-            if (btnSmall) {
-                btnSmall.innerHTML = '☆';
-                btnSmall.classList.remove('active');
-            }
+            btnLarge.innerHTML = '<span>☆</span><span>В избранное</span>';
+            btnLarge.classList.remove('active');
         }
     });
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const panel = document.getElementById('docAiPanel');
+    const openBtn = document.getElementById('docAiOpen');
+    const closeBtn = document.getElementById('docAiClose');
+    const form = document.getElementById('docAiForm');
+    const input = document.getElementById('docAiInput');
+    const sendBtn = document.getElementById('docAiSend');
+    const messagesEl = document.getElementById('docAiMessages');
+    const history = [];
+    let busy = false;
+    let summaryLoaded = false;
+
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function formatReply(text) {
+        let html = escapeHtml(text);
+        html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/^[-•]\s+(.+)$/gm, '• $1');
+        return html;
+    }
+
+    function addMessage(role, content) {
+        const div = document.createElement('div');
+        div.className = 'doc-ai-msg ' + role;
+        div.innerHTML = formatReply(content);
+        messagesEl.appendChild(div);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    async function ask(question, label) {
+        if (busy) return;
+        busy = true;
+        sendBtn.disabled = true;
+
+        const shown = (label || question || 'Сделать выжимку').trim();
+        if (question) addMessage('user', shown);
+        else if (!summaryLoaded) addMessage('user', 'Сделать выжимку');
+
+        const typing = document.createElement('div');
+        typing.className = 'doc-ai-typing';
+        typing.textContent = question ? 'Читаю документ и готовлю ответ…' : 'Готовлю выжимку…';
+        messagesEl.appendChild(typing);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+
+        try {
+            const res = await fetch(`/knowledge-base/ai/document/${DOC_AI_ID}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    question: question || '',
+                    history
+                })
+            });
+            const data = await res.json().catch(() => ({}));
+            typing.remove();
+            if (!res.ok) {
+                addMessage('assistant', data.detail || 'Не удалось получить ответ ИИ.');
+            } else {
+                const qText = question || 'Сделать краткую выжимку документа';
+                history.push({ role: 'user', content: qText });
+                history.push({ role: 'assistant', content: data.reply || '' });
+                if (history.length > 16) history.splice(0, history.length - 16);
+                addMessage('assistant', data.reply || 'Готово.');
+                if (!question) summaryLoaded = true;
+            }
+        } catch (err) {
+            typing.remove();
+            addMessage('assistant', 'Ошибка сети. Попробуйте ещё раз.');
+        } finally {
+            busy = false;
+            sendBtn.disabled = false;
+        }
+    }
+
+    function openPanel() {
+        panel.classList.add('open');
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if (!summaryLoaded && !busy) ask('');
+        input.focus();
+    }
+
+    openBtn.addEventListener('click', openPanel);
+    closeBtn.addEventListener('click', () => panel.classList.remove('open'));
+
+    document.querySelectorAll('.doc-ai-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            panel.classList.add('open');
+            const q = chip.dataset.q || '';
+            ask(q, chip.textContent.trim());
+        });
+    });
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const q = (input.value || '').trim();
+        if (!q) return;
+        input.value = '';
+        ask(q);
+    });
+});
 </script>
 {% endblock %}

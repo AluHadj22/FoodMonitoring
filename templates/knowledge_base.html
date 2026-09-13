@@ -2,1034 +2,1501 @@
 
 {% block content %}
 <style>
-    
-
-    .kb-container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 2rem 1.5rem;
-    }
-
-    /* Hero секция */
-    .hero-section {
-        background: var(--bg-card);
-        backdrop-filter: var(--glass-blur, blur(16px));
-        -webkit-backdrop-filter: var(--glass-blur, blur(16px));
-        border-radius: var(--radius-xl);
-        padding: 3rem 3rem;
-        margin-bottom: 2rem;
+    .kb-page {
+        --kb-sky-a: rgba(91, 159, 212, 0.22);
+        --kb-sky-b: rgba(139, 191, 230, 0.16);
+        --kb-sky-c: rgba(61, 126, 184, 0.08);
         position: relative;
-        overflow: hidden;
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 1.75rem 1.5rem 3.5rem;
+        animation: kb-page-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .kb-page::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        pointer-events: none;
+        background:
+            radial-gradient(900px 520px at 8% -8%, var(--kb-sky-a), transparent 58%),
+            radial-gradient(720px 480px at 92% 6%, var(--kb-sky-b), transparent 55%),
+            radial-gradient(640px 420px at 50% 100%, var(--kb-sky-c), transparent 60%),
+            var(--bg-main);
+    }
+
+    .kb-page::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        opacity: 0.45;
+        background-image: radial-gradient(rgba(91, 159, 212, 0.18) 1px, transparent 1px);
+        background-size: 22px 22px;
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 78%);
+    }
+
+    [data-theme="dark"] .kb-page::before {
+        --kb-sky-a: rgba(126, 184, 232, 0.16);
+        --kb-sky-b: rgba(91, 159, 212, 0.12);
+        --kb-sky-c: rgba(61, 126, 184, 0.1);
+    }
+
+    @keyframes kb-page-in {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes kb-card-in {
+        from {
+            opacity: 0;
+            transform: translateY(14px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes kb-fab-pulse {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(91, 159, 212, 0.35), var(--shadow-lg);
+        }
+        55% {
+            box-shadow: 0 0 0 12px rgba(91, 159, 212, 0), var(--shadow-lg);
+        }
+    }
+
+    .kb-hero {
+        position: relative;
+        overflow: visible;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1.5rem;
+        margin-bottom: 1.35rem;
+        padding: 1.55rem 1.6rem 1.45rem;
+        background:
+            linear-gradient(145deg, rgba(255, 255, 255, 0.92) 0%, rgba(245, 248, 252, 0.88) 100%);
         border: 1px solid var(--border-light);
+        border-radius: var(--radius-xl);
         box-shadow: var(--shadow-md);
+        flex-wrap: wrap;
+        z-index: 20;
     }
 
-    .hero-section:hover {
-        box-shadow: var(--shadow-lg);
+    [data-theme="dark"] .kb-hero {
+        background:
+            linear-gradient(145deg, rgba(22, 32, 51, 0.95) 0%, rgba(26, 39, 64, 0.9) 100%);
     }
 
-    .hero-section::before {
-        content: '';
+    .kb-hero-deco {
         position: absolute;
-        top: -50%;
-        right: -20%;
-        width: 400px;
-        height: 400px;
-        background: radial-gradient(circle, var(--primary-glow, rgba(26, 76, 140, 0.08)) 0%, transparent 70%);
-        border-radius: 50%;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+        border-radius: inherit;
     }
 
-    .hero-section::after {
-        content: '';
+    .kb-hero-deco span {
         position: absolute;
-        bottom: -30%;
-        left: -10%;
-        width: 300px;
-        height: 300px;
-        background: radial-gradient(circle, var(--primary-glow, rgba(26, 76, 140, 0.05)) 0%, transparent 70%);
         border-radius: 50%;
+        filter: blur(0.5px);
     }
 
-    .hero-content {
+    .kb-hero-deco .blob-a {
+        width: 220px;
+        height: 220px;
+        right: -40px;
+        top: -70px;
+        background: radial-gradient(circle, rgba(91, 159, 212, 0.28), transparent 68%);
+    }
+
+    .kb-hero-deco .blob-b {
+        width: 160px;
+        height: 160px;
+        right: 120px;
+        bottom: -80px;
+        background: radial-gradient(circle, rgba(139, 191, 230, 0.22), transparent 70%);
+    }
+
+    .kb-hero-deco .arc {
+        width: 280px;
+        height: 280px;
+        left: -100px;
+        bottom: -160px;
+        border: 18px solid rgba(91, 159, 212, 0.1);
+        border-radius: 50%;
+        background: none;
+        filter: none;
+    }
+
+    .kb-header-text {
         position: relative;
         z-index: 1;
-        max-width: 70%;
+        flex: 1;
+        min-width: 240px;
     }
 
-    .hero-badge {
+    .kb-kicker {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        background: var(--primary-bg);
-        padding: 0.3rem 0.9rem;
-        border-radius: 100px;
+        gap: 0.45rem;
         font-size: 0.7rem;
         font-weight: 600;
-        color: var(--primary);
-        margin-bottom: 1rem;
-        border: 1px solid var(--border-light);
+        letter-spacing: 0.08em;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        color: var(--primary-dark);
+        margin-bottom: 0.55rem;
     }
 
-    .hero-title {
+    .kb-kicker-mark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.15rem;
+        height: 1.15rem;
+        border-radius: 4px;
+        background: var(--primary);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(91, 159, 212, 0.35);
+    }
+
+    .kb-kicker-mark svg {
+        width: 10px;
+        height: 10px;
+    }
+
+    .kb-title {
+        font-family: var(--font-display);
         font-size: 2rem;
         font-weight: 700;
         color: var(--text-primary);
-        margin-bottom: 1rem;
-        line-height: 1.2;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.035em;
+        line-height: 1.15;
+        margin: 0 0 0.5rem;
     }
 
-    .hero-description {
-        font-size: 0.95rem;
+    .kb-subtitle {
+        margin: 0;
+        font-size: 0.92rem;
         color: var(--text-secondary);
-        line-height: 1.6;
-        max-width: 600px;
+        max-width: 38rem;
+        line-height: 1.55;
     }
 
-    /* Статистика */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-        margin-top: 2rem;
-        max-width: 500px;
-    }
-
-    .stat-block {
-        background: var(--bg-card);
-        backdrop-filter: var(--glass-blur, blur(8px));
-        -webkit-backdrop-filter: var(--glass-blur, blur(8px));
-        border-radius: var(--radius-md);
-        padding: 1rem 1.25rem;
-        text-align: center;
-        border: 1px solid var(--border-light);
-        transition: all 0.2s ease;
-    }
-
-    .stat-block:hover {
-        transform: translateY(-2px);
-        border-color: var(--primary-light);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .stat-value {
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: var(--primary);
-        margin-bottom: 2px;
-    }
-
-    .stat-label {
-        font-size: 0.65rem;
-        color: var(--text-muted);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    /* Кнопка администратора */
-    .admin-button {
-        position: absolute;
-        top: 1.5rem;
-        right: 1.5rem;
+    .kb-header-meta {
+        position: relative;
+        z-index: 1;
         display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        background: var(--bg-card);
-        backdrop-filter: var(--glass-blur, blur(8px));
-        -webkit-backdrop-filter: var(--glass-blur, blur(8px));
-        padding: 0.6rem 1.2rem;
-        border-radius: 100px;
-        border: 1px solid var(--border-light);
-        cursor: pointer;
-        transition: all 0.2s ease;
-        z-index: 10;
-        box-shadow: var(--shadow-sm);
+        gap: 0.65rem;
+        align-items: stretch;
+        flex-wrap: wrap;
     }
 
-    .admin-button:hover {
+    .kb-stat {
+        min-width: 5.5rem;
+        padding: 0.7rem 0.85rem 0.65rem;
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        text-align: left;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .kb-stat::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary), var(--primary-light));
+        opacity: 0.9;
+    }
+
+    .kb-stat:nth-child(2)::before {
+        background: linear-gradient(90deg, var(--primary-dark), var(--primary));
+    }
+
+    .kb-stat:nth-child(3)::before {
+        background: linear-gradient(90deg, #6bb8a0, var(--primary-light));
+    }
+
+    .kb-stat:hover {
         transform: translateY(-2px);
         box-shadow: var(--shadow-md);
-        border-color: var(--primary-light);
     }
 
-    .admin-button svg {
-        width: 18px;
-        height: 18px;
-        stroke: var(--text-secondary);
-    }
-
-    .admin-button span {
-        font-size: 0.8rem;
-        font-weight: 500;
+    .kb-stat-value {
+        font-size: 1.3rem;
+        font-weight: 700;
         color: var(--text-primary);
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
     }
 
-    .admin-menu {
-        position: absolute;
-        top: 5rem;
-        right: 1.5rem;
-        background: var(--bg-card);
-        backdrop-filter: var(--glass-blur, blur(16px));
-        -webkit-backdrop-filter: var(--glass-blur, blur(16px));
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-lg);
+    .kb-stat-label {
+        font-size: 0.68rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-weight: 600;
+        margin-top: 0.2rem;
+    }
+
+    .kb-admin-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        height: 100%;
+        min-height: 3.15rem;
+        padding: 0.55rem 0.95rem;
+        background: var(--bg-card-solid);
         border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+        position: relative;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .kb-admin-btn:hover {
+        border-color: var(--primary-light);
+        color: var(--primary);
+        box-shadow: var(--shadow-md);
+    }
+
+    .kb-admin-btn svg {
+        width: 15px;
+        height: 15px;
+        flex-shrink: 0;
+    }
+
+    .kb-admin-wrap {
+        position: relative;
+        z-index: 30;
+    }
+
+    .kb-admin-menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        min-width: 240px;
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
         overflow: hidden;
-        min-width: 260px;
         opacity: 0;
         visibility: hidden;
-        transform: translateY(-10px) scale(0.98);
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateY(-4px);
+        transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
         z-index: 100;
     }
 
-    .admin-menu.show {
+    .kb-admin-menu.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .kb-admin-menu a,
+    .kb-admin-menu .kb-admin-menu-label {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.7rem 1rem;
+        color: var(--text-primary);
+        text-decoration: none;
+        font-size: 0.82rem;
+        font-weight: 600;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .kb-admin-menu a:last-child {
+        border-bottom: none;
+    }
+
+    .kb-admin-menu a:hover {
+        background: var(--primary-bg);
+        color: var(--primary);
+    }
+
+    .kb-admin-menu a.logout {
+        color: var(--danger, #dc2626);
+    }
+
+    .kb-admin-menu-label {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        background: var(--bg-muted);
+    }
+
+    .kb-toolbar {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.35rem;
+        flex-wrap: wrap;
+    }
+
+    .kb-search {
+        flex: 1;
+        min-width: 220px;
+        display: flex;
+        gap: 0;
+        align-items: stretch;
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md), 0 0 0 1px rgba(91, 159, 212, 0.04);
+        overflow: hidden;
+        transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .kb-search:focus-within {
+        border-color: var(--primary-light);
+        box-shadow: var(--shadow-lg), var(--shadow-focus);
+    }
+
+    .kb-search-field {
+        flex: 1;
+        position: relative;
+    }
+
+    .kb-search-field svg {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--primary);
+        pointer-events: none;
+        opacity: 0.75;
+    }
+
+    .kb-search-field input {
+        width: 100%;
+        padding: 0.85rem 1rem 0.85rem 2.75rem;
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        font-family: inherit;
+        font-weight: 600;
+    }
+
+    .kb-search-field input::placeholder {
+        color: var(--text-muted);
+        font-weight: 600;
+        opacity: 0.8;
+    }
+
+    .kb-search-field input:focus {
+        outline: none;
+    }
+
+    .kb-search button {
+        padding: 0.85rem 1.35rem;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-left: 1px solid rgba(255, 255, 255, 0.12);
+        font-weight: 700;
+        font-size: 0.825rem;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background 0.15s ease;
+        letter-spacing: 0.01em;
+    }
+
+    .kb-search button:hover {
+        background: var(--primary-dark);
+    }
+
+    .kb-admin-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.25rem;
+    }
+
+    .kb-admin-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.45rem 0.85rem;
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.78rem;
+        font-weight: 600;
+        transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .kb-admin-action:hover {
+        border-color: var(--primary-light);
+        color: var(--primary);
+        box-shadow: var(--shadow-md);
+    }
+
+    .kb-layout {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    .kb-sidebar {
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        position: sticky;
+        top: 1.25rem;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .kb-sidebar-head {
+        padding: 0.95rem 1.15rem;
+        border-bottom: 1px solid var(--border-light);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--primary-dark);
+        background:
+            linear-gradient(180deg, rgba(91, 159, 212, 0.12) 0%, transparent 100%),
+            var(--bg-muted);
+    }
+
+    .kb-cat {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.7rem 1.1rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.84rem;
+        font-weight: 600;
+        border-left: 3px solid transparent;
+        transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+    }
+
+    .kb-cat:hover {
+        background: var(--bg-muted);
+        color: var(--text-primary);
+    }
+
+    .kb-cat.active {
+        background: linear-gradient(90deg, var(--primary-bg), transparent 90%);
+        color: var(--primary-dark);
+        border-left-color: var(--primary);
+    }
+
+    .kb-cat-icon {
+        width: 1.1rem;
+        text-align: center;
+        flex-shrink: 0;
+        font-size: 0.9rem;
+        line-height: 1;
+        opacity: 0.85;
+    }
+
+    .kb-cat-count {
+        margin-left: auto;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        font-variant-numeric: tabular-nums;
+        min-width: 1.4rem;
+        text-align: center;
+        padding: 0.1rem 0.35rem;
+        border-radius: var(--radius-sm);
+        background: var(--bg-muted);
+    }
+
+    .kb-cat.active .kb-cat-count {
+        color: var(--primary-dark);
+        background: rgba(91, 159, 212, 0.18);
+    }
+
+    .kb-login-hint {
+        margin: 0.75rem 1.1rem 1.1rem;
+        padding: 0.85rem;
+        background: linear-gradient(160deg, var(--bg-muted), rgba(91, 159, 212, 0.08));
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        line-height: 1.45;
+    }
+
+    .kb-login-hint a {
+        color: var(--primary);
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .kb-main {
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        min-height: 320px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .kb-main-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.95rem 1.25rem;
+        border-bottom: 1px solid var(--border-light);
+        background:
+            linear-gradient(180deg, rgba(91, 159, 212, 0.07) 0%, transparent 100%),
+            var(--bg-card-solid);
+        flex-wrap: wrap;
+    }
+
+    .kb-main-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: -0.015em;
+    }
+
+    .kb-sort {
+        padding: 0.45rem 0.75rem;
+        background: var(--bg-muted);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-size: 0.78rem;
+        font-family: inherit;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .kb-sort:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: var(--shadow-focus);
+    }
+
+    .kb-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1.15rem;
+        padding: 1.2rem;
+    }
+
+    .kb-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        box-shadow: var(--shadow-sm);
+        transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
+        animation: kb-card-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .kb-card:nth-child(1) { animation-delay: 0.02s; }
+    .kb-card:nth-child(2) { animation-delay: 0.06s; }
+    .kb-card:nth-child(3) { animation-delay: 0.1s; }
+    .kb-card:nth-child(4) { animation-delay: 0.14s; }
+    .kb-card:nth-child(5) { animation-delay: 0.18s; }
+    .kb-card:nth-child(6) { animation-delay: 0.22s; }
+    .kb-card:nth-child(7) { animation-delay: 0.26s; }
+    .kb-card:nth-child(8) { animation-delay: 0.3s; }
+    .kb-card:nth-child(9) { animation-delay: 0.34s; }
+    .kb-card:nth-child(10) { animation-delay: 0.38s; }
+    .kb-card:nth-child(11) { animation-delay: 0.42s; }
+    .kb-card:nth-child(12) { animation-delay: 0.46s; }
+
+    .kb-card:hover {
+        border-color: var(--primary-light);
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-4px);
+    }
+
+    .kb-card-cover {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        background: var(--bg-muted);
+        overflow: hidden;
+    }
+
+    .kb-card-cover::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 52%;
+        background: linear-gradient(180deg, transparent 0%, rgba(15, 23, 41, 0.55) 100%);
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .kb-card-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .kb-card:hover .kb-card-cover img {
+        transform: scale(1.07);
+    }
+
+    .kb-card-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        color: var(--primary-dark);
+        background:
+            linear-gradient(155deg, #e8f2fa 0%, #cfe4f5 48%, #b8d5ec 100%);
+    }
+
+    .kb-card:nth-child(3n+2) .kb-card-placeholder {
+        background:
+            linear-gradient(155deg, #eaf6f2 0%, #cfe8e0 48%, #b5d8cc 100%);
+        color: #2f6f5c;
+    }
+
+    .kb-card:nth-child(3n+3) .kb-card-placeholder {
+        background:
+            linear-gradient(155deg, #eef1f8 0%, #d5ddea 48%, #bcc8dc 100%);
+        color: #3d5472;
+    }
+
+    .kb-card:nth-child(4n) .kb-card-placeholder {
+        background:
+            linear-gradient(155deg, #e9f4fb 0%, #d0e6f6 40%, #a8cce8 100%);
+    }
+
+    .kb-card-placeholder svg {
+        width: 36px;
+        height: 36px;
+        opacity: 0.5;
+    }
+
+    .kb-card-placeholder span {
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        opacity: 0.75;
+    }
+
+    .kb-card-type {
+        position: absolute;
+        left: 0.65rem;
+        bottom: 0.65rem;
+        z-index: 2;
+        padding: 0.22rem 0.55rem;
+        background: rgba(255, 255, 255, 0.16);
+        color: #fff;
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        max-width: calc(100% - 1.3rem);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    }
+
+    .kb-card-fav {
+        position: absolute;
+        top: 0.55rem;
+        right: 0.55rem;
+        z-index: 3;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 0.95rem;
+        line-height: 1;
+        padding: 0;
+        box-shadow: var(--shadow-sm);
+        transition: color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+    }
+
+    [data-theme="dark"] .kb-card-fav {
+        background: rgba(22, 32, 51, 0.92);
+    }
+
+    .kb-card-fav:hover {
+        transform: scale(1.06);
+    }
+
+    .kb-card-fav:hover,
+    .kb-card-fav.active {
+        color: #d97706;
+    }
+
+    .kb-card-body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+        padding: 0.95rem 1rem 1.05rem;
+        flex: 1;
+    }
+
+    .kb-card-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.35;
+        letter-spacing: -0.015em;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .kb-card-desc {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        line-height: 1.45;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        flex: 1;
+    }
+
+    .kb-card-meta {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 0.35rem;
+        padding-top: 0.55rem;
+        border-top: 1px solid var(--border-light);
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+    }
+
+    .kb-card-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .kb-card-meta svg {
+        width: 11px;
+        height: 11px;
+        opacity: 0.75;
+    }
+
+    .kb-empty {
+        text-align: center;
+        padding: 3.75rem 1.5rem;
+    }
+
+    .kb-empty svg {
+        width: 48px;
+        height: 48px;
+        color: var(--primary);
+        opacity: 0.35;
+        margin-bottom: 0.85rem;
+    }
+
+    .kb-empty h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 0.35rem;
+    }
+
+    .kb-empty p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .kb-pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.35rem;
+        padding: 0.9rem 1.15rem 1.2rem;
+        flex-wrap: wrap;
+        border-top: 1px solid var(--border-light);
+        background: linear-gradient(180deg, transparent, rgba(91, 159, 212, 0.04));
+    }
+
+    .kb-page-link {
+        min-width: 2rem;
+        height: 2rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 0.55rem;
+        background: var(--bg-muted);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.78rem;
+        font-weight: 600;
+        transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
+    }
+
+    .kb-page-link:hover {
+        transform: translateY(-1px);
+    }
+
+    .kb-page-link:hover,
+    .kb-page-link.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+
+    @media (max-width: 960px) {
+        .kb-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .kb-sidebar {
+            position: static;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .kb-page {
+            padding: 1rem 0.85rem 2.5rem;
+        }
+
+        .kb-hero {
+            padding: 1.2rem 1.1rem 1.15rem;
+        }
+
+        .kb-title {
+            font-size: 1.5rem;
+        }
+
+        .kb-header-meta {
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .kb-stat {
+            flex: 1;
+            min-width: calc(33% - 0.5rem);
+        }
+
+        .kb-search {
+            flex-direction: column;
+            border-radius: var(--radius-md);
+        }
+
+        .kb-search button {
+            width: 100%;
+            border-left: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .kb-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            padding: 0.85rem;
+        }
+
+        .kb-card-desc {
+            display: none;
+        }
+    }
+
+    @media (max-width: 420px) {
+        .kb-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .kb-stat {
+            min-width: calc(50% - 0.4rem);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .kb-page,
+        .kb-card,
+        .kb-ai-fab {
+            animation: none !important;
+        }
+
+        .kb-card:hover,
+        .kb-card:hover .kb-card-cover img {
+            transform: none;
+        }
+    }
+
+    /* ИИ-помощник */
+    .kb-ai-fab {
+        position: fixed;
+        right: 1.35rem;
+        bottom: 5.5rem;
+        z-index: 90;
+        width: 3.35rem;
+        height: 3.35rem;
+        border: none;
+        border-radius: 50%;
+        background: linear-gradient(145deg, var(--primary-light), var(--primary-dark));
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s ease, transform 0.15s ease;
+        animation: kb-fab-pulse 2.8s ease-out infinite;
+    }
+
+    .kb-ai-fab:hover {
+        background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+        transform: translateY(-2px);
+    }
+
+    .kb-ai-fab svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .kb-ai-panel {
+        position: fixed;
+        right: 1.35rem;
+        bottom: 9.4rem;
+        z-index: 91;
+        width: min(400px, calc(100vw - 1.5rem));
+        height: min(560px, calc(100vh - 7rem));
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-xl);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(10px) scale(0.98);
+        transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+    }
+
+    .kb-ai-panel.open {
         opacity: 1;
         visibility: visible;
         transform: translateY(0) scale(1);
     }
 
-    .admin-menu-item {
+    .kb-ai-head {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        padding: 0.75rem 1.25rem;
-        color: var(--text-primary);
-        text-decoration: none;
-        transition: all 0.2s ease;
-        border-bottom: 1px solid var(--border-light);
-        font-size: 0.85rem;
-        font-weight: 500;
-    }
-
-    .admin-menu-item:last-child {
-        border-bottom: none;
-    }
-
-    .admin-menu-item:hover {
-        background: var(--primary-bg);
-        color: var(--primary);
-    }
-
-    .admin-menu-item.logout {
-        color: var(--danger);
-    }
-
-    .admin-menu-item.logout:hover {
-        background: rgba(220, 38, 38, 0.08);
-    }
-
-    /* Поисковая секция */
-    .search-section {
-        background: var(--bg-card);
-        backdrop-filter: var(--glass-blur, blur(16px));
-        -webkit-backdrop-filter: var(--glass-blur, blur(16px));
-        border-radius: var(--radius-lg);
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-        border: 1px solid var(--border-light);
-        box-shadow: var(--shadow-md);
-    }
-
-    .search-section:hover {
-        box-shadow: var(--shadow-lg);
-    }
-
-    .search-form {
-        display: flex;
-        gap: 0.75rem;
-    }
-
-    .search-input-wrapper {
-        flex: 1;
-        position: relative;
-    }
-
-    .search-icon {
-        position: absolute;
-        left: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-muted);
-    }
-
-    .search-input {
-        width: 100%;
-        padding: 0.75rem 1rem 0.75rem 2.75rem;
-        background: var(--bg-main);
-        border: 1.5px solid var(--border-light);
-        border-radius: var(--radius-md);
-        color: var(--text-primary);
-        font-size: 0.9rem;
-        transition: all 0.2s ease;
-        font-family: inherit;
-    }
-
-    .search-input:focus {
-        outline: none;
-        border-color: var(--primary);
-        box-shadow: var(--shadow-focus);
-    }
-
-    .search-button {
-        padding: 0.75rem 2rem;
-        background: var(--primary);
-        color: white;
-        border: none;
-        border-radius: var(--radius-md);
-        font-weight: 600;
-        font-size: 0.85rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .search-button:hover {
-        background: var(--primary-dark);
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-sm);
-    }
-
-    /* Быстрые действия администратора */
-    .admin-actions {
-        display: flex;
-        gap: 0.75rem;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
-    }
-
-    .admin-action-btn {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.6rem 1.2rem;
-        background: var(--bg-card);
-        backdrop-filter: var(--glass-blur, blur(8px));
-        -webkit-backdrop-filter: var(--glass-blur, blur(8px));
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-md);
-        color: var(--text-primary);
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 0.8rem;
-        transition: all 0.2s ease;
-        box-shadow: var(--shadow-sm);
-    }
-
-    .admin-action-btn:hover {
-        border-color: var(--primary-light);
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
-        color: var(--primary);
-    }
-
-    /* Основная сетка */
-    .kb-grid {
-        display: grid;
-        grid-template-columns: 280px 1fr;
-        gap: 2rem;
-    }
-
-    /* Боковая панель */
-    .categories-panel {
-        background: var(--bg-card);
-        backdrop-filter: var(--glass-blur, blur(16px));
-        -webkit-backdrop-filter: var(--glass-blur, blur(16px));
-        border-radius: var(--radius-lg);
-        border: 1px solid var(--border-light);
-        overflow: hidden;
-        position: sticky;
-        top: 1.5rem;
-        height: fit-content;
-        box-shadow: var(--shadow-md);
-    }
-
-    .categories-panel:hover {
-        box-shadow: var(--shadow-lg);
-    }
-
-    .categories-header {
-        padding: 1.25rem 1.5rem;
-        border-bottom: 1px solid var(--border-light);
-        background: var(--primary-bg);
-    }
-
-    .categories-header h3 {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-    }
-
-    .category-list {
-        padding: 0.5rem 0;
-    }
-
-    .category-link {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.7rem 1.5rem;
-        color: var(--text-secondary);
-        text-decoration: none;
-        transition: all 0.2s ease;
-        font-size: 0.85rem;
-        font-weight: 500;
-    }
-
-    .category-link:hover {
-        background: var(--primary-bg);
-        color: var(--primary);
-    }
-
-    .category-link.active {
-        background: var(--primary-bg);
-        color: var(--primary);
-        border-left: 3px solid var(--primary);
-    }
-
-    .category-count {
-        margin-left: auto;
-        background: var(--bg-main);
-        padding: 0.1rem 0.6rem;
-        border-radius: 20px;
-        font-size: 0.65rem;
-        font-weight: 600;
-        color: var(--text-muted);
-    }
-
-    .category-link.active .category-count {
-        background: var(--primary-bg);
-        color: var(--primary);
-    }
-
-    /* Основной контент */
-    .main-panel {
-        background: var(--bg-card);
-        backdrop-filter: var(--glass-blur, blur(16px));
-        -webkit-backdrop-filter: var(--glass-blur, blur(16px));
-        border-radius: var(--radius-lg);
-        border: 1px solid var(--border-light);
-        overflow: hidden;
-        box-shadow: var(--shadow-md);
-    }
-
-    .main-panel:hover {
-        box-shadow: var(--shadow-lg);
-    }
-
-    .panel-header {
-        display: flex;
         justify-content: space-between;
-        align-items: center;
-        padding: 1.25rem 1.5rem;
+        gap: 0.75rem;
+        padding: 0.95rem 1rem;
         border-bottom: 1px solid var(--border-light);
-        flex-wrap: wrap;
-        gap: 1rem;
-        background: var(--primary-bg);
+        background:
+            linear-gradient(180deg, rgba(91, 159, 212, 0.12) 0%, transparent 100%),
+            var(--bg-muted);
     }
 
-    .panel-title {
-        font-size: 1rem;
-        font-weight: 600;
+    .kb-ai-head-title {
+        font-size: 0.9rem;
+        font-weight: 700;
         color: var(--text-primary);
+        letter-spacing: -0.01em;
     }
 
-    .sort-select {
-        padding: 0.5rem 1rem;
-        background: var(--bg-main);
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-md);
-        color: var(--text-primary);
-        font-size: 0.8rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        font-family: inherit;
-    }
-
-    .sort-select:focus {
-        outline: none;
-        border-color: var(--primary);
-        box-shadow: var(--shadow-focus);
-    }
-
-    /* Сетка документов */
-    .documents-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 1.25rem;
-        padding: 1.5rem;
-    }
-
-    .document-card {
-        background: var(--bg-main);
-        border-radius: var(--radius-md);
-        padding: 1.25rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 1px solid var(--border-light);
-        position: relative;
-    }
-
-    .document-card:hover {
-        transform: translateY(-3px);
-        border-color: var(--primary-light);
-        box-shadow: var(--shadow-md);
-    }
-
-    .document-type {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        padding: 0.2rem 0.7rem;
-        background: var(--primary-bg);
-        border-radius: 20px;
-        font-size: 0.65rem;
-        font-weight: 600;
-        color: var(--primary);
-        margin-bottom: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-    }
-
-    .document-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 0.5rem;
-        line-height: 1.4;
-    }
-
-    .document-description {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        line-height: 1.5;
-        margin-bottom: 1rem;
-    }
-
-    .document-meta {
-        display: flex;
-        gap: 1rem;
-        padding-top: 0.75rem;
-        margin-bottom: 1rem;
-        border-top: 1px solid var(--border-light);
+    .kb-ai-head-sub {
         font-size: 0.7rem;
         color: var(--text-muted);
+        margin-top: 0.1rem;
     }
 
-    .document-meta span {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .document-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .view-button {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1.2rem;
-        background: var(--primary);
-        color: white;
-        text-decoration: none;
-        border-radius: var(--radius-md);
-        font-size: 0.8rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
-    }
-
-    .view-button:hover {
-        background: var(--primary-dark);
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .favorite-button {
-        background: none;
-        border: none;
-        font-size: 1.25rem;
+    .kb-ai-close {
+        width: 2rem;
+        height: 2rem;
+        border: 1px solid var(--border-light);
+        background: var(--bg-card-solid);
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
         cursor: pointer;
-        color: var(--text-muted);
-        transition: all 0.2s ease;
-        padding: 0.25rem;
+        font-size: 1.1rem;
         line-height: 1;
     }
 
-    .favorite-button:hover {
-        transform: scale(1.1);
-        color: #fbbf24;
-    }
-
-    .favorite-button.active {
-        color: #fbbf24;
-    }
-
-    /* Пагинация */
-    .pagination {
+    .kb-ai-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
         display: flex;
-        justify-content: center;
-        gap: 0.5rem;
-        padding: 1.25rem 1.5rem;
-        border-top: 1px solid var(--border-light);
-        flex-wrap: wrap;
+        flex-direction: column;
+        gap: 0.75rem;
+        background: var(--bg-main);
     }
 
-    .page-link {
-        padding: 0.5rem 1rem;
-        background: var(--bg-main);
+    .kb-ai-msg {
+        max-width: 95%;
+        padding: 0.7rem 0.85rem;
+        border-radius: var(--radius-md);
+        font-size: 0.82rem;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .kb-ai-msg.user {
+        align-self: flex-end;
+        background: var(--primary);
+        color: #fff;
+    }
+
+    .kb-ai-msg.assistant {
+        align-self: flex-start;
+        background: var(--bg-card-solid);
+        border: 1px solid var(--border-light);
+        color: var(--text-primary);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .kb-ai-msg.assistant a {
+        color: var(--primary);
+        font-weight: 700;
+    }
+
+    .kb-ai-docs {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+        margin-top: 0.65rem;
+    }
+
+    .kb-ai-doc {
+        display: block;
+        padding: 0.55rem 0.7rem;
+        background: var(--bg-muted);
         border: 1px solid var(--border-light);
         border-radius: var(--radius-sm);
-        color: var(--text-secondary);
         text-decoration: none;
-        font-size: 0.8rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
+        color: inherit;
+        transition: border-color 0.15s ease, transform 0.15s ease;
     }
 
-    .page-link:hover,
-    .page-link.active {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
+    .kb-ai-doc:hover {
+        border-color: var(--primary-light);
+        transform: translateX(2px);
     }
 
-    /* Пустое состояние */
-    .empty-state {
-        text-align: center;
-        padding: 3rem 2rem;
-    }
-
-    .empty-icon {
-        width: 64px;
-        height: 64px;
-        margin: 0 auto 1rem;
-        color: var(--text-muted);
-        opacity: 0.4;
-    }
-
-    .empty-state h3 {
-        font-size: 1rem;
-        font-weight: 600;
+    .kb-ai-doc-title {
+        font-size: 0.78rem;
+        font-weight: 700;
         color: var(--text-primary);
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.15rem;
     }
 
-    .empty-state p {
-        font-size: 0.85rem;
+    .kb-ai-doc-reason {
+        font-size: 0.7rem;
         color: var(--text-muted);
+        line-height: 1.4;
     }
 
-    /* Адаптивность */
-    @media (max-width: 1024px) {
-        .kb-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .categories-panel {
-            position: static;
-        }
+    .kb-ai-typing {
+        align-self: flex-start;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        padding: 0.25rem 0.4rem;
     }
 
-    @media (max-width: 768px) {
-        .kb-container {
-            padding: 1rem 0.75rem;
+    .kb-ai-form {
+        display: flex;
+        gap: 0.45rem;
+        padding: 0.75rem;
+        border-top: 1px solid var(--border-light);
+        background: var(--bg-card-solid);
+    }
+
+    .kb-ai-form input {
+        flex: 1;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        background: var(--bg-muted);
+        color: var(--text-primary);
+        font-size: 0.82rem;
+        font-family: inherit;
+        font-weight: 600;
+    }
+
+    .kb-ai-form input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: var(--shadow-focus);
+    }
+
+    .kb-ai-form button {
+        padding: 0.6rem 0.9rem;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 700;
+        font-size: 0.8rem;
+        font-family: inherit;
+        cursor: pointer;
+    }
+
+    .kb-ai-form button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .kb-ai-hints {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        padding: 0 0.75rem 0.65rem;
+        background: var(--bg-card-solid);
+    }
+
+    .kb-ai-hint {
+        border: 1px solid var(--border-light);
+        background: var(--bg-muted);
+        color: var(--text-secondary);
+        border-radius: var(--radius-sm);
+        padding: 0.28rem 0.6rem;
+        font-size: 0.68rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+    .kb-ai-hint:hover {
+        border-color: var(--primary-light);
+        color: var(--primary);
+        background: var(--primary-bg);
+    }
+
+    @media (max-width: 640px) {
+        .kb-ai-fab {
+            right: 1rem;
+            bottom: 5rem;
         }
-        
-        .hero-section {
-            padding: 1.5rem;
-        }
-        
-        .hero-content {
-            max-width: 100%;
-        }
-        
-        .hero-title {
-            font-size: 1.5rem;
-        }
-        
-        .stats-grid {
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
-        }
-        
-        .stat-block {
-            padding: 0.75rem;
-        }
-        
-        .stat-value {
-            font-size: 1.25rem;
-        }
-        
-        .admin-button {
-            position: relative;
-            top: 0;
-            right: 0;
-            margin-top: 1rem;
-            display: inline-flex;
-            width: 100%;
-            justify-content: center;
-        }
-        
-        .admin-menu {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.95);
-            width: 90%;
-            max-width: 320px;
-        }
-        
-        .admin-menu.show {
-            transform: translate(-50%, -50%) scale(1);
-        }
-        
-        .search-form {
-            flex-direction: column;
-        }
-        
-        .search-button {
-            width: 100%;
-        }
-        
-        .documents-grid {
-            grid-template-columns: 1fr;
-            padding: 1rem;
-        }
-        
-        .panel-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        
-        .sort-select {
-            width: 100%;
-        }
-        
-        .admin-actions {
-            flex-direction: column;
+
+        .kb-ai-panel {
+            right: 0.75rem;
+            left: 0.75rem;
+            width: auto;
+            bottom: 8.8rem;
         }
     }
 </style>
 
-<div class="kb-container">
-    <!-- Hero секция -->
-    <div class="hero-section">
-        <div class="hero-content">
-            <div class="hero-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                </svg>
-                <span>Библиотека знаний</span>
+<div class="kb-page">
+    <header class="kb-hero">
+        <div class="kb-hero-deco" aria-hidden="true">
+            <span class="blob-a"></span>
+            <span class="blob-b"></span>
+            <span class="arc"></span>
+        </div>
+        <div class="kb-header-text">
+            <div class="kb-kicker">
+                <span class="kb-kicker-mark">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                    </svg>
+                </span>
+                Справочный центр
             </div>
-            <h1 class="hero-title">Нормативная база<br>и методические материалы</h1>
-            <p class="hero-description">
-                Документы, инструкции, методические рекомендации и полезные материалы 
-                для организации качественного питания в образовательных учреждениях
+            <h1 class="kb-title">Нормативная база и материалы</h1>
+            <p class="kb-subtitle">
+                Документы, инструкции и методические рекомендации для организации питания в образовательных учреждениях
             </p>
         </div>
-        
-        <div class="stats-grid">
-            <div class="stat-block">
-                <div class="stat-value">{{ total }}</div>
-                <div class="stat-label">Документов</div>
+        <div class="kb-header-meta">
+            <div class="kb-stat">
+                <div class="kb-stat-value">{{ total }}</div>
+                <div class="kb-stat-label">Документов</div>
             </div>
-            <div class="stat-block">
-                <div class="stat-value">{{ categories|length }}</div>
-                <div class="stat-label">Категорий</div>
+            <div class="kb-stat">
+                <div class="kb-stat-value">{{ categories|length }}</div>
+                <div class="kb-stat-label">Категорий</div>
             </div>
-            <div class="stat-block">
-                <div class="stat-value">{{ total_downloads if total_downloads else 0 }}</div>
-                <div class="stat-label">Скачиваний</div>
+            <div class="kb-stat">
+                <div class="kb-stat-value">{{ total_downloads if total_downloads else 0 }}</div>
+                <div class="kb-stat-label">Скачиваний</div>
             </div>
-        </div>
-        
-        <!-- Кнопка администратора -->
-        <div class="admin-button" id="adminToggle">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-            </svg>
-            <span>{% if request.session.get('knowledge_base_admin') %}{{ request.session.get('admin_name', 'Администратор') }}{% else %}Вход для администратора{% endif %}</span>
-        </div>
-        
-        <!-- Меню администратора -->
-        <div class="admin-menu" id="adminMenu">
-            {% if request.session.get('knowledge_base_admin') %}
-                <div class="admin-menu-item">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="kb-admin-wrap">
+                <button type="button" class="kb-admin-btn" id="adminToggle" aria-haspopup="true" aria-expanded="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                         <circle cx="12" cy="7" r="4"/>
                     </svg>
-                    <span>{{ request.session.get('admin_name', 'Администратор') }}</span>
+                    {% if request.session.get('knowledge_base_admin') %}
+                        {{ request.session.get('admin_name', 'Админ') }}
+                    {% else %}
+                        Админ
+                    {% endif %}
+                </button>
+                <div class="kb-admin-menu" id="adminMenu" role="menu">
+                    {% if request.session.get('knowledge_base_admin') %}
+                        <div class="kb-admin-menu-label">{{ request.session.get('admin_name', 'Администратор') }}</div>
+                        <a href="/knowledge-base/admin" role="menuitem">Панель управления</a>
+                        <a href="/knowledge-base/admin/upload" role="menuitem">Загрузить документ</a>
+                        <a href="/knowledge-base/admin/categories" role="menuitem">Категории</a>
+                        <a href="/knowledge-base/admin/logout" class="logout" role="menuitem">Выйти</a>
+                    {% else %}
+                        <a href="/knowledge-base/admin/login" role="menuitem">Войти как администратор</a>
+                    {% endif %}
                 </div>
-                <a href="/knowledge-base/admin" class="admin-menu-item">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                        <circle cx="12" cy="12" r="3"/>
-                    </svg>
-                    <span>Панель управления</span>
-                </a>
-                <a href="/knowledge-base/admin/upload" class="admin-menu-item">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="17 8 12 3 7 8"/>
-                        <line x1="12" y1="3" x2="12" y2="15"/>
-                    </svg>
-                    <span>Загрузить документ</span>
-                </a>
-                <a href="/knowledge-base/admin/categories" class="admin-menu-item">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 4h16v16H4z"/>
-                        <line x1="8" y1="8" x2="16" y2="8"/>
-                        <line x1="8" y1="12" x2="12" y2="12"/>
-                    </svg>
-                    <span>Управление категориями</span>
-                </a>
-                <a href="/knowledge-base/admin/logout" class="admin-menu-item logout">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                        <polyline points="16 17 21 12 16 7"/>
-                        <line x1="21" y1="12" x2="9" y2="12"/>
-                    </svg>
-                    <span>Выйти</span>
-                </a>
-            {% else %}
-                <a href="/knowledge-base/admin/login" class="admin-menu-item">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                        <polyline points="10 17 15 12 10 7"/>
-                        <line x1="15" y1="12" x2="3" y2="12"/>
-                    </svg>
-                    <span>Войти как администратор</span>
-                </a>
-            {% endif %}
+            </div>
         </div>
-    </div>
-    
-    <!-- Поисковая секция -->
-    <div class="search-section">
-        <form class="search-form" method="get" action="/knowledge-base">
-            <div class="search-input-wrapper">
-                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    </header>
+
+    <form class="kb-toolbar" method="get" action="/knowledge-base">
+        <div class="kb-search">
+            <div class="kb-search-field">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="11" cy="11" r="8"/>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
-                <input type="text" 
-                       class="search-input" 
-                       name="search" 
-                       placeholder="Поиск документов, инструкций, методических рекомендаций..." 
-                       value="{{ search }}">
+                <input type="text"
+                       name="search"
+                       placeholder="Поиск по названию, описанию, тегам…"
+                       value="{{ search }}"
+                       aria-label="Поиск документов">
             </div>
-            <button type="submit" class="search-button">Найти</button>
-        </form>
-    </div>
-    
-    <!-- Быстрые действия для администратора -->
+            {% if category %}
+            <input type="hidden" name="category" value="{{ category }}">
+            {% endif %}
+            {% if sort %}
+            <input type="hidden" name="sort" value="{{ sort }}">
+            {% endif %}
+            <button type="submit">Найти</button>
+        </div>
+    </form>
+
     {% if request.session.get('knowledge_base_admin') %}
-    <div class="admin-actions">
-        <a href="/knowledge-base/admin" class="admin-action-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                <circle cx="12" cy="12" r="3"/>
-            </svg>
-            Панель управления
-        </a>
-        <a href="/knowledge-base/admin/upload" class="admin-action-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            Загрузить документ
-        </a>
-        <a href="/knowledge-base/admin/categories" class="admin-action-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M4 4h16v16H4z"/>
-                <line x1="8" y1="8" x2="16" y2="8"/>
-                <line x1="8" y1="12" x2="12" y2="12"/>
-            </svg>
-            Управление категориями
-        </a>
+    <div class="kb-admin-actions">
+        <a href="/knowledge-base/admin" class="kb-admin-action">Панель</a>
+        <a href="/knowledge-base/admin/upload" class="kb-admin-action">Загрузить</a>
+        <a href="/knowledge-base/admin/categories" class="kb-admin-action">Категории</a>
     </div>
     {% endif %}
-    
-    <!-- Основная сетка -->
-    <div class="kb-grid">
-        <!-- Боковая панель с категориями -->
-        <div class="categories-panel">
-            <div class="categories-header">
-                <h3>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 4h16v16H4z"/>
-                        <line x1="8" y1="8" x2="16" y2="8"/>
-                        <line x1="8" y1="12" x2="12" y2="12"/>
-                    </svg>
-                    Категории
-                </h3>
-            </div>
-            <div class="category-list">
-                <a href="/knowledge-base" class="category-link {% if not current_category %}active{% endif %}">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 4h16v16H4z"/>
-                    </svg>
+
+    <div class="kb-layout">
+        <aside class="kb-sidebar">
+            <div class="kb-sidebar-head">Категории</div>
+            <nav>
+                <a href="/knowledge-base" class="kb-cat {% if not current_category %}active{% endif %}">
+                    <span class="kb-cat-icon">≡</span>
                     Все документы
-                    <span class="category-count">{{ total }}</span>
+                    <span class="kb-cat-count">{{ total }}</span>
                 </a>
                 {% for cat in categories %}
-                <a href="/knowledge-base?category={{ cat.id }}" 
-                   class="category-link {% if current_category and current_category.id == cat.id %}active{% endif %}">
-                    <span>{{ cat.icon }}</span>
+                <a href="/knowledge-base?category={{ cat.id }}"
+                   class="kb-cat {% if current_category and current_category.id == cat.id %}active{% endif %}">
+                    <span class="kb-cat-icon">{{ cat.icon or '·' }}</span>
                     {{ cat.name }}
-                    <span class="category-count">{{ cat.documents|length }}</span>
+                    <span class="kb-cat-count">{{ cat.documents|length }}</span>
                 </a>
                 {% endfor %}
-            </div>
-            
+            </nav>
             {% if not user_email %}
-            <div style="padding: 1.25rem 1.5rem; border-top: 1px solid var(--border-light); margin-top: 0.5rem;">
-                <div style="background: var(--bg-main); border-radius: var(--radius-md); padding: 1rem; border: 1px solid var(--border-light);">
-                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem;">Чтобы добавлять документы в избранное, войдите в систему</p>
-                    <a href="/login" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.85rem;">Войти →</a>
-                </div>
+            <div class="kb-login-hint">
+                Чтобы сохранять документы в избранное,
+                <a href="/login">войдите в систему</a>
             </div>
             {% endif %}
-        </div>
-        
-        <!-- Основной контент -->
-        <div class="main-panel">
-            <div class="panel-header">
-                <div class="panel-title">
+        </aside>
+
+        <section class="kb-main">
+            <div class="kb-main-bar">
+                <div class="kb-main-title">
                     {% if current_category %}
-                        {{ current_category.icon }} {{ current_category.name }}
+                        {{ current_category.name }}
                     {% elif search %}
-                        Результаты поиска: "{{ search }}"
+                        Результаты: «{{ search }}»
                     {% else %}
                         Все документы
                     {% endif %}
                 </div>
-                
-                <select class="sort-select" onchange="window.location.href=this.value">
-                    <option value="?sort=newest{% if category %}&category={{ category }}{% endif %}{% if search %}&search={{ search }}{% endif %}" 
-                            {% if sort == 'newest' %}selected{% endif %}>
-                        Сначала новые
-                    </option>
+                <select class="kb-sort" onchange="window.location.href=this.value" aria-label="Сортировка">
+                    <option value="?sort=newest{% if category %}&category={{ category }}{% endif %}{% if search %}&search={{ search }}{% endif %}"
+                            {% if sort == 'newest' %}selected{% endif %}>Сначала новые</option>
                     <option value="?sort=popular{% if category %}&category={{ category }}{% endif %}{% if search %}&search={{ search }}{% endif %}"
-                            {% if sort == 'popular' %}selected{% endif %}>
-                        Популярные
-                    </option>
+                            {% if sort == 'popular' %}selected{% endif %}>Популярные</option>
                     <option value="?sort=title{% if category %}&category={{ category }}{% endif %}{% if search %}&search={{ search }}{% endif %}"
-                            {% if sort == 'title' %}selected{% endif %}>
-                        По алфавиту
-                    </option>
+                            {% if sort == 'title' %}selected{% endif %}>По алфавиту</option>
                 </select>
             </div>
-            
+
             {% if documents %}
-            <div class="documents-grid">
+            <div class="kb-grid">
                 {% for doc in documents %}
-                <div class="document-card">
-                    <div class="document-type">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                        </svg>
-                        {{ document_types[doc.document_type] }}
-                    </div>
-                    <div class="document-title">{{ doc.title }}</div>
-                    <div class="document-description">{{ doc.description[:100] }}{% if doc.description|length > 100 %}...{% endif %}</div>
-                    <div class="document-meta">
-                        <span>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                <line x1="16" y1="2" x2="16" y2="6"/>
-                                <line x1="8" y1="2" x2="8" y2="6"/>
-                                <line x1="3" y1="10" x2="21" y2="10"/>
+                <a href="/knowledge-base/document/{{ doc.id }}" class="kb-card">
+                    {% if user_email %}
+                    <button type="button"
+                            class="kb-card-fav {% if doc.id in favorites %}active{% endif %}"
+                            onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ doc.id }})"
+                            id="fav-{{ doc.id }}"
+                            title="{% if doc.id in favorites %}Убрать из избранного{% else %}В избранное{% endif %}"
+                            aria-label="Избранное">
+                        {% if doc.id in favorites %}★{% else %}☆{% endif %}
+                    </button>
+                    {% endif %}
+                    <div class="kb-card-cover">
+                        {% if doc.cover_image_path %}
+                        <img src="/knowledge-base/cover/{{ doc.id }}"
+                             alt=""
+                             loading="lazy"
+                             decoding="async">
+                        {% else %}
+                        <div class="kb-card-placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
                             </svg>
-                            {{ doc.created_at.strftime('%d.%m.%Y') }}
-                        </span>
-                        <span>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="7 10 12 15 17 10"/>
-                                <line x1="12" y1="15" x2="12" y2="3"/>
-                            </svg>
-                            {{ doc.downloads_count }}
-                        </span>
-                        <span>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                <circle cx="12" cy="12" r="3"/>
-                            </svg>
-                            {{ doc.views_count }}
-                        </span>
-                    </div>
-                    <div class="document-footer">
-                        <a href="/knowledge-base/document/{{ doc.id }}" class="view-button">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                <circle cx="12" cy="12" r="3"/>
-                            </svg>
-                            Подробнее
-                        </a>
-                        {% if user_email %}
-                        <button class="favorite-button {% if doc.id in favorites %}active{% endif %}" 
-                                onclick="toggleFavorite({{ doc.id }})"
-                                id="fav-{{ doc.id }}"
-                                title="{% if doc.id in favorites %}Убрать из избранного{% else %}Добавить в избранное{% endif %}">
-                            {% if doc.id in favorites %}★{% else %}☆{% endif %}
-                        </button>
+                            <span>{% if doc.file_extension %}{{ doc.file_extension.replace('.', '')|upper }}{% else %}DOC{% endif %}</span>
+                        </div>
                         {% endif %}
+                        <span class="kb-card-type">{{ document_types[doc.document_type] }}</span>
                     </div>
-                </div>
+                    <div class="kb-card-body">
+                        <div class="kb-card-title">{{ doc.title }}</div>
+                        {% if doc.description %}
+                        <div class="kb-card-desc">{{ doc.description[:120] }}{% if doc.description|length > 120 %}…{% endif %}</div>
+                        {% endif %}
+                        <div class="kb-card-meta">
+                            <span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                {{ doc.created_at.strftime('%d.%m.%Y') }}
+                            </span>
+                            <span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="7 10 12 15 17 10"/>
+                                    <line x1="12" y1="15" x2="12" y2="3"/>
+                                </svg>
+                                {{ doc.downloads_count }}
+                            </span>
+                            <span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                {{ doc.views_count }}
+                            </span>
+                        </div>
+                    </div>
+                </a>
                 {% endfor %}
             </div>
-            
+
             {% if total > per_page %}
-            <div class="pagination">
+            <div class="kb-pagination">
                 {% for p in range(1, total_pages + 1) %}
-                <a href="?page={{ p }}{% if category %}&category={{ category }}{% endif %}{% if search %}&search={{ search }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" 
-                   class="page-link {% if p == page %}active{% endif %}">{{ p }}</a>
+                <a href="?page={{ p }}{% if category %}&category={{ category }}{% endif %}{% if search %}&search={{ search }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+                   class="kb-page-link {% if p == page %}active{% endif %}">{{ p }}</a>
                 {% endfor %}
             </div>
             {% endif %}
-            
+
             {% else %}
-            <div class="empty-state">
-                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M4 4h16v16H4z"/>
-                    <path d="M8 8h8v8H8z"/>
+            <div class="kb-empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
                 </svg>
                 <h3>Документы не найдены</h3>
-                <p>Попробуйте изменить параметры поиска или выберите другую категорию</p>
+                <p>Измените запрос или выберите другую категорию</p>
             </div>
             {% endif %}
-        </div>
+        </section>
     </div>
+</div>
+
+<button type="button" class="kb-ai-fab" id="kbAiFab" title="ИИ-помощник" aria-label="Открыть ИИ-помощника">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/>
+        <path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14z"/>
+        <path d="M5 15l.7 1.8L7.5 17.5 5.7 18.2 5 20l-.7-1.8L2.5 17.5l1.8-.7L5 15z"/>
+    </svg>
+</button>
+
+<div class="kb-ai-panel" id="kbAiPanel" role="dialog" aria-label="ИИ-помощник справочного центра">
+    <div class="kb-ai-head">
+        <div>
+            <div class="kb-ai-head-title">ИИ-помощник</div>
+            <div class="kb-ai-head-sub">Помогу найти нужный документ в справочнике</div>
+        </div>
+        <button type="button" class="kb-ai-close" id="kbAiClose" aria-label="Закрыть">×</button>
+    </div>
+    <div class="kb-ai-messages" id="kbAiMessages"></div>
+    <div class="kb-ai-hints" id="kbAiHints">
+        <button type="button" class="kb-ai-hint" data-q="Нормы питания школьников">Нормы питания</button>
+        <button type="button" class="kb-ai-hint" data-q="Санитарные требования к пищеблоку">СанПиН</button>
+        <button type="button" class="kb-ai-hint" data-q="Меню и технологические карты">Меню</button>
+    </div>
+    <form class="kb-ai-form" id="kbAiForm">
+        <input type="text" id="kbAiInput" placeholder="Какой документ нужно найти?" autocomplete="off" maxlength="2000">
+        <button type="submit" id="kbAiSend">Найти</button>
+    </form>
 </div>
 
 <script>
 function toggleFavorite(docId) {
     fetch(`/knowledge-base/favorite/${docId}`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        }
+        headers: { 'Content-Type': 'application/json' }
     })
     .then(response => response.json())
     .then(data => {
         const btn = document.getElementById(`fav-${docId}`);
+        if (!btn) return;
         if (data.action === 'added') {
             btn.innerHTML = '★';
             btn.classList.add('active');
@@ -1037,34 +1504,136 @@ function toggleFavorite(docId) {
         } else {
             btn.innerHTML = '☆';
             btn.classList.remove('active');
-            btn.title = 'Добавить в избранное';
+            btn.title = 'В избранное';
         }
     });
 }
 
-// Меню администратора
 document.addEventListener('DOMContentLoaded', function() {
     const adminToggle = document.getElementById('adminToggle');
     const adminMenu = document.getElementById('adminMenu');
-    
     if (adminToggle && adminMenu) {
         adminToggle.addEventListener('click', function(e) {
             e.stopPropagation();
-            adminMenu.classList.toggle('show');
+            const open = adminMenu.classList.toggle('show');
+            adminToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
         });
-        
+
         document.addEventListener('click', function(e) {
             if (!adminToggle.contains(e.target) && !adminMenu.contains(e.target)) {
                 adminMenu.classList.remove('show');
+                adminToggle.setAttribute('aria-expanded', 'false');
             }
         });
-        
-        adminMenu.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', function() {
-                adminMenu.classList.remove('show');
-            });
-        });
     }
+
+    const fab = document.getElementById('kbAiFab');
+    const panel = document.getElementById('kbAiPanel');
+    const closeBtn = document.getElementById('kbAiClose');
+    const form = document.getElementById('kbAiForm');
+    const input = document.getElementById('kbAiInput');
+    const sendBtn = document.getElementById('kbAiSend');
+    const messagesEl = document.getElementById('kbAiMessages');
+    const history = [];
+    let busy = false;
+
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function formatReply(text) {
+        let html = escapeHtml(text);
+        html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+        return html;
+    }
+
+    function addMessage(role, content, documents) {
+        const div = document.createElement('div');
+        div.className = 'kb-ai-msg ' + role;
+        div.innerHTML = formatReply(content);
+        if (documents && documents.length) {
+            const wrap = document.createElement('div');
+            wrap.className = 'kb-ai-docs';
+            documents.forEach(doc => {
+                const a = document.createElement('a');
+                a.className = 'kb-ai-doc';
+                a.href = doc.url;
+                a.innerHTML =
+                    '<div class="kb-ai-doc-title">' + escapeHtml(doc.title) + '</div>' +
+                    (doc.reason ? '<div class="kb-ai-doc-reason">' + escapeHtml(doc.reason) + '</div>' : '');
+                wrap.appendChild(a);
+            });
+            div.appendChild(wrap);
+        }
+        messagesEl.appendChild(div);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function setOpen(open) {
+        panel.classList.toggle('open', open);
+        if (open && !messagesEl.dataset.ready) {
+            addMessage('assistant', 'Здравствуйте! Опишите, какой документ или тему ищете — подберу подходящие материалы из справочного центра.');
+            messagesEl.dataset.ready = '1';
+        }
+        if (open) input.focus();
+    }
+
+    fab.addEventListener('click', () => setOpen(!panel.classList.contains('open')));
+    closeBtn.addEventListener('click', () => setOpen(false));
+
+    document.querySelectorAll('.kb-ai-hint').forEach(btn => {
+        btn.addEventListener('click', () => {
+            input.value = btn.dataset.q || '';
+            form.dispatchEvent(new Event('submit', { cancelable: true }));
+        });
+    });
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const message = (input.value || '').trim();
+        if (!message || busy) return;
+
+        busy = true;
+        sendBtn.disabled = true;
+        addMessage('user', message);
+        input.value = '';
+
+        const typing = document.createElement('div');
+        typing.className = 'kb-ai-typing';
+        typing.textContent = 'Ищу по документам…';
+        messagesEl.appendChild(typing);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+
+        try {
+            const res = await fetch('/knowledge-base/ai/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message, history })
+            });
+            const data = await res.json().catch(() => ({}));
+            typing.remove();
+            if (!res.ok) {
+                addMessage('assistant', data.detail || 'Не удалось получить ответ. Попробуйте позже.');
+            } else {
+                history.push({ role: 'user', content: message });
+                history.push({ role: 'assistant', content: data.reply || '' });
+                if (history.length > 12) history.splice(0, history.length - 12);
+                addMessage('assistant', data.reply || 'Готово.', data.documents || []);
+            }
+        } catch (err) {
+            typing.remove();
+            addMessage('assistant', 'Ошибка сети. Проверьте подключение и попробуйте снова.');
+        } finally {
+            busy = false;
+            sendBtn.disabled = false;
+            input.focus();
+        }
+    });
 });
 </script>
 {% endblock %}

@@ -92,6 +92,7 @@ from knowledge_base_db import (
     KnowledgeBaseAdmin,
     init_kb_db  # Правильное название функции
 )
+import kb_ai_service
 
 # НОВЫЙ ИМПОРТ для оптимизации изображений
 try:
@@ -117,6 +118,7 @@ USER_CACHE = TTLCache(maxsize=1000, ttl=180)  # Кеш пользователе�
 FILE_EXISTS_CACHE = TTLCache(maxsize=10000, ttl=60)  # Кеш проверки файлов
 IMAGE_RESPONSE_CACHE = TTLCache(maxsize=200, ttl=3600)  # НОВЫЙ: Кеш для изображений (1 час)
 RESET_ATTEMPTS_CACHE = TTLCache(maxsize=1000, ttl=300)  # 5 минут
+KB_AI_RATE_CACHE = TTLCache(maxsize=2000, ttl=600)  # лимит запросов к ИИ
 
 # ThreadPool для блокирующих операций
 IO_EXECUTOR = ThreadPoolExecutor(max_workers=50)
@@ -3670,15 +3672,15 @@ async def view_dashboard(request: Request, slug: str, db: Session = Depends(get_
 KNOWLEDGE_BASE_ADMIN_CODE = "admin3377%"
 
 DOCUMENT_TYPES = {
-    "document": "📄 Документ",
-    "instruction": "📋 Инструкция",
-    "order": "📌 Приказ",
-    "method": "📚 Методичка",
-    "presentation": "📊 Презентация",
-    "video": "🎥 Видео",
-    "spreadsheet": "📊 Таблица",
-    "image": "🖼️ Изображение",
-    "other": "📁 Другое"
+    "document": "Документ",
+    "instruction": "Инструкция",
+    "order": "Приказ",
+    "method": "Методичка",
+    "presentation": "Презентация",
+    "video": "Видео",
+    "spreadsheet": "Таблица",
+    "image": "Изображение",
+    "other": "Другое"
 }
 
 CATEGORY_ICONS = ["📁", "📊", "📋", "📌", "📚", "🎥", "📝", "⚖️", "🍎", "🥗", "📈", "🔬", "🏫", "👨‍🍳"]
@@ -4231,6 +4233,45 @@ async def download_document(
     )
 
 
+@app.get("/knowledge-base/cover/{doc_id}")
+async def get_document_cover(
+        request: Request,
+        doc_id: int,
+        kb_db: Session = Depends(get_kb_db)
+):
+    """Обложка документа для карточек и страницы просмотра"""
+    document = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseDocument).filter(KnowledgeBaseDocument.id == doc_id).first()
+    )
+
+    if not document or not document.cover_image_path:
+        raise HTTPException(status_code=404, detail="Обложка не найдена")
+
+    if not document.is_published and not request.session.get("knowledge_base_admin"):
+        raise HTTPException(status_code=404, detail="Обложка не найдена")
+
+    BASE_DIR = Path(__file__).resolve().parent
+    cover_path = BASE_DIR / document.cover_image_path
+
+    if not await run_in_threadpool(cover_path.exists):
+        raise HTTPException(status_code=404, detail="Обложка не найдена")
+
+    media_types = {
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".webp": "image/webp",
+        ".gif": "image/gif",
+    }
+    media_type = media_types.get(cover_path.suffix.lower(), "image/jpeg")
+
+    return FileResponse(
+        path=cover_path,
+        media_type=media_type,
+        headers={"Cache-Control": "public, max-age=86400"}
+    )
+
+
 @app.post("/knowledge-base/favorite/{doc_id}")
 async def toggle_favorite(
         request: Request,
@@ -4419,7 +4460,7 @@ async def knowledge_base_search_api(
                 "title": doc.title,
                 "type": DOCUMENT_TYPES.get(doc.document_type, "Документ"),
                 "url": f"/knowledge-base/document/{doc.id}",
-                "icon": "📄"
+                "cover_url": f"/knowledge-base/cover/{doc.id}" if doc.cover_image_path else None,
             }
             for doc in results
         ]
@@ -4462,6 +4503,132 @@ async def knowledge_base_stats(
         "total_downloads": total_downloads,
         "top_categories": top_categories
     })
+
+
+def _kb_ai_client_key(request: Request) -> str:
+    user = request.session.get("user_email") or request.session.get("admin_email")
+    if user:
+        return f"user:{user}"
+    forwarded = request.headers.get("x-forwarded-for", "")
+    ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
+    return f"ip:{ip}"
+
+
+def _kb_ai_rate_limit(request: Request, limit: int = 25) -> None:
+    key = _kb_ai_client_key(request)
+    count = KB_AI_RATE_CACHE.get(key, 0) + 1
+    KB_AI_RATE_CACHE[key] = count
+    if count > limit:
+        raise HTTPException(status_code=429, detail="Слишком много запросов к ИИ. Подождите несколько минут.")
+
+
+@app.post("/knowledge-base/ai/search")
+async def knowledge_base_ai_search(
+        request: Request,
+        kb_db: Session = Depends(get_kb_db)
+):
+    """ИИ-помощник: поиск подходящих документов по запросу пользователя"""
+    if not kb_ai_service.is_configured():
+        raise HTTPException(status_code=503, detail="ИИ-помощник не настроен (нет OPENROUTER_API_KEY)")
+
+    _kb_ai_rate_limit(request)
+
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Некорректный JSON")
+
+    message = (payload.get("message") or "").strip()
+    if len(message) < 2:
+        raise HTTPException(status_code=400, detail="Введите запрос")
+    if len(message) > 2000:
+        raise HTTPException(status_code=400, detail="Слишком длинный запрос")
+
+    history = payload.get("history") or []
+    if not isinstance(history, list):
+        history = []
+
+    documents = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseDocument).filter(
+            KnowledgeBaseDocument.is_published == True
+        ).order_by(KnowledgeBaseDocument.downloads_count.desc()).all()
+    )
+    categories = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseCategory).filter(
+            KnowledgeBaseCategory.is_active == True
+        ).all()
+    )
+    category_map = {c.id: c.name for c in categories}
+    base_dir = Path(__file__).resolve().parent
+
+    try:
+        result = await kb_ai_service.search_documents_with_ai(
+            user_message=message,
+            documents=documents,
+            base_dir=base_dir,
+            document_types=DOCUMENT_TYPES,
+            categories=category_map,
+            history=history,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+    except Exception:
+        logging.exception("KB AI search failed")
+        raise HTTPException(status_code=500, detail="Ошибка ИИ-помощника")
+
+    return result
+
+
+@app.post("/knowledge-base/ai/document/{doc_id}")
+async def knowledge_base_ai_document(
+        request: Request,
+        doc_id: int,
+        kb_db: Session = Depends(get_kb_db)
+):
+    """ИИ-выжимка и ответы по конкретному документу"""
+    if not kb_ai_service.is_configured():
+        raise HTTPException(status_code=503, detail="ИИ-помощник не настроен (нет OPENROUTER_API_KEY)")
+
+    _kb_ai_rate_limit(request)
+
+    document = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseDocument).filter(KnowledgeBaseDocument.id == doc_id).first()
+    )
+    if not document:
+        raise HTTPException(status_code=404, detail="Документ не найден")
+    if not document.is_published and not request.session.get("knowledge_base_admin"):
+        raise HTTPException(status_code=404, detail="Документ не найден")
+
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+
+    question = (payload.get("question") or "").strip()
+    if len(question) > 2000:
+        raise HTTPException(status_code=400, detail="Слишком длинный вопрос")
+
+    history = payload.get("history") or []
+    if not isinstance(history, list):
+        history = []
+
+    base_dir = Path(__file__).resolve().parent
+
+    try:
+        result = await kb_ai_service.ask_about_document(
+            document=document,
+            base_dir=base_dir,
+            document_types=DOCUMENT_TYPES,
+            question=question or None,
+            history=history,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+    except Exception:
+        logging.exception("KB AI document failed")
+        raise HTTPException(status_code=500, detail="Ошибка ИИ-помощника")
+
+    return result
 
 
 # ========== УНИВЕРСАЛЬНАЯ СИСТЕМА УПРАВЛЕНИЯ ОТЧЁТНОСТЬЮ ==========
