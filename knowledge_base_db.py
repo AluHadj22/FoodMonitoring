@@ -9,7 +9,7 @@ load_dotenv()
 # Используем ту же базу данных
 DATABASE_URL = os.getenv(
     "DATABASE_URL", 
-    "postgresql://postgres:Toshiba3377@localhost:5432/food_management"
+    "postgresql://postgres:Toshiba3377@127.0.0.1:5432/food_management"
 )
 
 # Создаем отдельный engine для библиотеки знаний

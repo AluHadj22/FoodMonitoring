@@ -1,734 +1,564 @@
 {% extends "layout.html" %}
+{% block title %}Вход — ЕЦМП{% endblock %}
+{% block meta_description %}Вход в Единый Центр Мониторинга питания. Личный кабинет школы и администратора.{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
 {% block content %}
 <style>
-    .auth-container {
+    body:has(.glass-login) {
+        background: #d4ecf9;
+        color: #1e4f86;
+    }
+
+    body:has(.glass-login) .page-container {
+        min-height: 100vh;
+    }
+
+    body:has(.glass-login)::before,
+    [data-theme='dark'] body:has(.glass-login)::before {
+        background:
+            radial-gradient(ellipse 48% 42% at 12% 18%, rgba(255, 255, 255, 0.9), transparent 62%),
+            radial-gradient(ellipse 36% 32% at 88% 12%, rgba(255, 255, 255, 0.55), transparent 60%),
+            radial-gradient(ellipse 42% 36% at 78% 88%, rgba(255, 255, 255, 0.45), transparent 58%),
+            linear-gradient(155deg, #bfe3f8 0%, #e8f6fd 46%, #cfe8f7 100%);
+    }
+
+    body:has(.glass-login)::after,
+    [data-theme='dark'] body:has(.glass-login)::after {
+        opacity: 1;
+        background-image: none;
+        background:
+            radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.35), transparent 28%);
+        mask-image: none;
+    }
+
+    .glass-login {
+        min-height: 100vh;
         display: flex;
-        justify-content: center;
         align-items: center;
-        min-height: calc(100vh - 73px);
-        padding: 2rem;
+        justify-content: center;
+        padding: 2.5rem 1.5rem;
         position: relative;
         overflow: hidden;
-        background: var(--bg-main);
     }
 
-    /* Фоновые круглые фигуры - статичные для производительности */
-    .auth-container .bg-circles {
+    .glass-watermark {
         position: absolute;
+        right: 4%;
+        bottom: 6%;
+        width: min(420px, 38vw);
+        height: auto;
+        opacity: 0.22;
         pointer-events: none;
-        user-select: none;
-        z-index: 0;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        overflow: hidden;
+        color: #7eb6dc;
     }
 
-    .auth-container .bg-circle {
-        position: absolute;
-        border-radius: 50%;
-        opacity: 0.06;
-        background: var(--primary);
-    }
-
-    .auth-container .bg-circle-1 {
-        width: 400px;
-        height: 400px;
-        top: -150px;
-        right: -120px;
-        opacity: 0.05;
-    }
-
-    .auth-container .bg-circle-2 {
-        width: 280px;
-        height: 280px;
-        bottom: -80px;
-        left: -80px;
-        opacity: 0.04;
-    }
-
-    .auth-container .bg-circle-3 {
-        width: 160px;
-        height: 160px;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        opacity: 0.03;
-    }
-
-    .auth-container .bg-circle-4 {
-        width: 100px;
-        height: 100px;
-        top: 20%;
-        right: 10%;
-        opacity: 0.05;
-    }
-
-    .auth-container .bg-circle-5 {
-        width: 140px;
-        height: 140px;
-        bottom: 25%;
-        left: 5%;
-        opacity: 0.04;
-    }
-
-    /* Широкая прямоугольная карточка */
-    .auth-card {
-        background: var(--bg-card-solid);
-        border-radius: var(--radius-xl);
-        padding: 2.75rem 2.5rem;
-        width: 100%;
-        max-width: 460px;
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow-lg);
-        transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+    .glass-shell {
         position: relative;
         z-index: 1;
+        width: min(980px, 100%);
+        display: grid;
+        grid-template-columns: 1.12fr 0.88fr;
+        border-radius: 32px;
         overflow: hidden;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.58) 0%, rgba(226, 241, 250, 0.42) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.78);
+        box-shadow:
+            0 28px 70px rgba(74, 140, 190, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(22px) saturate(1.35);
+        -webkit-backdrop-filter: blur(22px) saturate(1.35);
     }
 
-    .auth-card::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 4px;
-        background: var(--primary);
+    .glass-visual,
+    .glass-form {
+        padding: 2rem 2.15rem 1.85rem;
     }
 
-    [data-theme='dark'] .auth-card {
-        background: var(--bg-card-solid);
-        border-color: var(--border);
-        box-shadow: var(--shadow-xl);
-    }
-
-    .auth-card:hover {
-        box-shadow: var(--shadow-xl);
-        transform: translateY(-2px);
-        border-color: rgba(91, 159, 212, 0.35);
-    }
-
-    /* Контейнер для картинки кота */
-    .cat-image-wrapper {
+    .glass-visual {
         display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .glass-form {
+        background: linear-gradient(180deg, rgba(196, 226, 244, 0.48) 0%, rgba(154, 204, 234, 0.36) 100%);
+        border-left: 1px solid rgba(255, 255, 255, 0.55);
+        display: flex;
+        flex-direction: column;
         justify-content: center;
+    }
+
+    .brand-pill {
+        display: inline-flex;
         align-items: center;
-        margin: -0.5rem auto 1.5rem;
-        position: relative;
-        z-index: 2;
-    }
-
-    .cat-image-wrapper img {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 4px solid rgba(91, 159, 212, 0.15);
-        box-shadow: 0 8px 32px rgba(91, 159, 212, 0.12);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        display: block;
-        background: #f8fafc;
-    }
-
-    [data-theme='dark'] .cat-image-wrapper img {
-        border-color: rgba(91, 159, 212, 0.2);
-        box-shadow: 0 8px 32px rgba(91, 159, 212, 0.08);
-        background: #1e293b;
-    }
-
-    .cat-image-wrapper img:hover {
-        transform: scale(1.04) rotate(-2deg);
-        box-shadow: 0 12px 40px rgba(91, 159, 212, 0.18);
-    }
-
-    /* Круговой фон за котом */
-    .cat-image-wrapper::before {
-        content: '';
-        position: absolute;
-        width: 140px;
-        height: 140px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(91, 159, 212, 0.06) 0%, transparent 70%);
-        z-index: -1;
-        animation: pulse-glow 3s ease-in-out infinite;
-    }
-
-    @keyframes pulse-glow {
-        0%, 100% { transform: scale(1); opacity: 0.6; }
-        50% { transform: scale(1.08); opacity: 1; }
-    }
-
-    [data-theme='dark'] .cat-image-wrapper::before {
-        background: radial-gradient(circle, rgba(91, 159, 212, 0.04) 0%, transparent 70%);
-    }
-
-    /* Заголовки */
-    .auth-title {
-        text-align: center;
-        font-size: 1.75rem;
+        gap: 0.45rem;
+        margin-bottom: 0.85rem;
+        padding: 0.32rem 0.7rem 0.32rem 0.4rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: 0 6px 16px rgba(80, 140, 190, 0.1);
+        color: #2a6eae;
+        font-size: 0.78rem;
         font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 0.5rem;
-        letter-spacing: -0.5px;
-        position: relative;
-        z-index: 2;
+        letter-spacing: -0.01em;
     }
 
-    .auth-title span {
-        background: var(--primary);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+    .brand-pill svg,
+    .form-mark svg {
+        width: 16px;
+        height: 16px;
     }
 
-    .auth-subtitle {
-        text-align: center;
-        font-size: 0.9rem;
-        color: var(--text-secondary);
-        margin-bottom: 2rem;
-        position: relative;
-        z-index: 2;
-        font-weight: 400;
-        line-height: 1.6;
-        opacity: 0.8;
+    .art-frame {
+        width: 100%;
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 0.35rem 0.55rem 0;
+        box-shadow: 0 10px 28px rgba(70, 130, 180, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.95);
     }
 
-    /* Форма */
+    .art-frame img {
+        display: block;
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+    }
+
+    .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        margin: 1rem 0 1.15rem;
+    }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.28rem 0.65rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.75);
+        color: #4d7ea6;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .chip svg {
+        width: 13px;
+        height: 13px;
+        stroke: #3d86c4;
+    }
+
+    .kicker {
+        margin: 0;
+        color: #3d86c8;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    .glass-visual h1 {
+        margin: 0.35rem 0 0.55rem;
+        color: #1d6cb8;
+        font-size: 1.85rem;
+        line-height: 1.15;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+    }
+
+    .lead {
+        margin: 0;
+        max-width: 26rem;
+        color: #6d90ab;
+        font-size: 0.92rem;
+        line-height: 1.5;
+        font-weight: 500;
+    }
+
+    .form-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        margin-bottom: 0.35rem;
+    }
+
+    .form-mark {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2f86d4;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: 0 8px 18px rgba(70, 140, 190, 0.12);
+        flex-shrink: 0;
+    }
+
+    .form-mark svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .glass-form h2 {
+        margin: 0.1rem 0 0;
+        color: #1d6cb8;
+        font-size: 1.55rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+    }
+
+    .form-sub {
+        margin: 0.15rem 0 1.35rem;
+        color: #7b98b0;
+        font-size: 0.88rem;
+        font-weight: 500;
+    }
+
     .auth-form {
         display: flex;
         flex-direction: column;
-        gap: 1.25rem;
-        position: relative;
-        z-index: 2;
+        gap: 0.85rem;
     }
 
-    .form-group {
-        position: relative;
+    .field label {
+        display: block;
+        margin-bottom: 0.35rem;
+        color: #6e8eaa;
+        font-size: 0.78rem;
+        font-weight: 600;
     }
 
-    .form-group input {
+    .field input {
         width: 100%;
-        padding: 1rem 1.25rem;
-        background: rgba(255, 255, 255, 0.7);
-        border: 2px solid rgba(91, 159, 212, 0.1);
-        border-radius: 16px;
+        height: 46px;
+        padding: 0 0.95rem;
+        border-radius: 14px;
+        border: 1px solid rgba(186, 214, 232, 0.95);
+        background: rgba(255, 255, 255, 0.88);
+        color: #1e4f86;
+        font: inherit;
         font-size: 0.95rem;
-        color: var(--text-primary);
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        font-family: inherit;
-    }
-
-    [data-theme='dark'] .form-group input {
-        background: rgba(30, 41, 59, 0.6);
-        border-color: rgba(91, 159, 212, 0.08);
-        color: #e2e8f0;
-    }
-
-    .form-group input:focus {
+        font-weight: 500;
         outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(91, 159, 212, 0.1);
-        background: rgba(255, 255, 255, 0.85);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
     }
 
-    .form-group input::placeholder {
-        color: var(--text-secondary);
-        font-weight: 400;
-        font-size: 0.9rem;
-        opacity: 0.7;
+    .field input::placeholder {
+        color: #9bb3c6;
+        font-weight: 500;
     }
 
-    /* Чекбокс и кнопка "Показать пароль" */
-    .form-options {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin: 0.25rem 0 0.5rem;
-        font-size: 0.9rem;
+    .field input:focus {
+        border-color: #7eb6e4;
+        box-shadow: 0 0 0 3px rgba(90, 164, 220, 0.18);
+        background: #ffffff;
+    }
+
+    .password-field {
         position: relative;
-        z-index: 2;
     }
 
-    .remember-me {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: var(--text-secondary);
-        cursor: pointer;
-        font-weight: 400;
-        transition: color 0.2s ease;
-    }
-
-    .remember-me:hover {
-        color: var(--text-primary);
-    }
-
-    .remember-me input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        accent-color: var(--primary);
-        cursor: pointer;
-        border-radius: 4px;
-        border: 2px solid rgba(91, 159, 212, 0.2);
-        transition: border-color 0.2s ease;
-    }
-
-    .remember-me input[type="checkbox"]:checked {
-        border-color: var(--primary);
+    .password-field input {
+        padding-right: 2.7rem;
     }
 
     .password-toggle {
-        background: none;
+        position: absolute;
+        right: 0.35rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 34px;
+        height: 34px;
         border: none;
-        cursor: pointer;
-        padding: 0.25rem 0.5rem;
+        background: transparent;
+        color: #8eabc2;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--text-secondary);
-        transition: color 0.2s ease, background 0.2s ease;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        font-weight: 500;
-        gap: 0.5rem;
-        background: rgba(91, 159, 212, 0.04);
-        border: 1px solid rgba(91, 159, 212, 0.04);
+        cursor: pointer;
     }
 
     .password-toggle:hover {
-        color: var(--primary);
-        background: rgba(91, 159, 212, 0.08);
-        border-color: rgba(91, 159, 212, 0.1);
+        color: #2f86d4;
     }
 
     .password-toggle svg {
         width: 18px;
         height: 18px;
-        stroke: currentColor;
     }
 
-    /* Кнопка входа - синий градиент */
-    .submit-btn {
-        width: 100%;
-        padding: 1rem;
-        background: var(--primary);
-        color: white;
-        border: none;
-        border-radius: 16px;
-        font-size: 1rem;
+    .remember-me {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        color: #6e8eaa;
+        font-size: 0.82rem;
         font-weight: 600;
         cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        margin-top: 0.5rem;
+    }
+
+    .remember-me input {
+        width: 15px;
+        height: 15px;
+        accent-color: #2b82d6;
+    }
+
+    .submit-btn {
+        margin-top: 0.25rem;
+        height: 48px;
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        color: #ffffff;
+        font: inherit;
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: 0.01em;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.75rem;
-        position: relative;
-        z-index: 2;
-        box-shadow: 0 6px 24px rgba(91, 159, 212, 0.2);
-        letter-spacing: 0.3px;
+        gap: 0.5rem;
+        background: linear-gradient(180deg, #4aa3f2 0%, #1f74d4 100%);
+        box-shadow: 0 10px 22px rgba(36, 120, 206, 0.32);
+        transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
     }
 
     .submit-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 32px rgba(91, 159, 212, 0.25);
-    }
-
-    .submit-btn:active {
-        transform: translateY(0);
-        box-shadow: 0 4px 16px rgba(91, 159, 212, 0.15);
+        transform: translateY(-1px);
+        filter: brightness(1.03);
+        box-shadow: 0 14px 26px rgba(36, 120, 206, 0.38);
     }
 
     .submit-btn svg {
-        stroke-width: 2.5;
-        transition: transform 0.2s ease;
-    }
-
-    .submit-btn:hover svg {
-        transform: translateX(3px);
-    }
-
-    /* Ссылки */
-    .auth-links {
-        display: flex;
-        justify-content: center;
-        margin-top: 1.25rem;
-        font-size: 0.9rem;
-        position: relative;
-        z-index: 2;
-    }
-
-    .auth-link {
-        color: var(--text-secondary);
-        text-decoration: none;
-        transition: color 0.2s ease, background 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-weight: 500;
-        padding: 0.5rem 1rem;
-        border-radius: 10px;
-        background: rgba(91, 159, 212, 0.02);
-        border: 1px solid transparent;
-    }
-
-    .auth-link:hover {
-        color: var(--primary);
-        background: rgba(91, 159, 212, 0.06);
-        border-color: rgba(91, 159, 212, 0.08);
-    }
-
-    .auth-link svg {
-        width: 16px;
-        height: 16px;
-        stroke: currentColor;
-    }
-
-    .auth-appeal {
-        display: flex;
-        justify-content: center;
-        margin-top: 1rem;
-        position: relative;
-        z-index: 2;
-    }
-
-    .appeal-link-login {
-        width: 100%;
-        justify-content: center;
-        color: var(--primary);
-        background: rgba(91, 159, 212, 0.06);
-        border-color: rgba(91, 159, 212, 0.12);
-        font-size: 0.88rem;
-    }
-
-    .appeal-link-login:hover {
-        background: rgba(91, 159, 212, 0.1);
-    }
-
-    /* Разделитель */
-    .auth-divider {
-        position: relative;
-        text-align: center;
-        margin: 1.75rem 0 1.25rem;
-        z-index: 2;
-    }
-
-    .auth-divider::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(91, 159, 212, 0.1), transparent);
-    }
-
-    .auth-divider span {
-        position: relative;
-        background: var(--bg-card);
-        padding: 0 1.25rem;
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        font-weight: 400;
-        background: rgba(255, 255, 255, 0.8);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    [data-theme='dark'] .auth-divider span {
-        background: rgba(30, 41, 59, 0.8);
-    }
-
-    /* Кнопка регистрации */
-    .register-btn {
-        width: 100%;
-        padding: 1rem;
-        background: transparent;
-        border: 2px solid rgba(91, 159, 212, 0.12);
-        border-radius: 16px;
-        font-size: 0.95rem;
-        font-weight: 500;
-        color: var(--text-primary);
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.75rem;
-        text-decoration: none;
-        position: relative;
-        z-index: 2;
-        background: rgba(91, 159, 212, 0.02);
-    }
-
-    [data-theme='dark'] .register-btn {
-        border-color: rgba(91, 159, 212, 0.08);
-        background: rgba(91, 159, 212, 0.02);
-    }
-
-    .register-btn:hover {
-        border-color: var(--primary);
-        background: rgba(91, 159, 212, 0.05);
-        color: var(--primary);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 16px rgba(91, 159, 212, 0.04);
-    }
-
-    .register-btn svg {
         width: 18px;
         height: 18px;
-        stroke: currentColor;
-        transition: transform 0.2s ease;
     }
 
-    .register-btn:hover svg {
-        transform: scale(1.05);
+    .glass-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.35rem 0.9rem;
+        margin-top: 0.95rem;
     }
 
-    /* Алерты */
+    .glass-links a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        color: #6d90ab;
+        text-decoration: none;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    .glass-links a:hover {
+        color: #1d6cb8;
+    }
+
+    .glass-links svg {
+        width: 13px;
+        height: 13px;
+    }
+
     .alert {
-        padding: 0.875rem 1.25rem;
-        border-radius: 14px;
-        margin-bottom: 1.5rem;
-        font-size: 0.9rem;
-        font-weight: 500;
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        position: relative;
-        z-index: 2;
-        border-left: 4px solid;
-    }
-
-    .alert-error {
-        background: rgba(239, 68, 68, 0.06);
-        border-color: #ef4444;
-        color: #ef4444;
-    }
-
-    .alert-success {
-        background: rgba(16, 185, 129, 0.06);
-        border-color: #10b981;
-        color: #10b981;
+        gap: 0.5rem;
+        margin-bottom: 0.85rem;
+        padding: 0.65rem 0.8rem;
+        border-radius: 12px;
+        font-size: 0.84rem;
+        font-weight: 600;
     }
 
     .alert svg {
-        width: 20px;
-        height: 20px;
+        width: 16px;
+        height: 16px;
         flex-shrink: 0;
-        stroke: currentColor;
     }
 
-    /* Адаптивность */
-    @media (max-width: 640px) {
-        .auth-container {
-            padding: 1rem;
-        }
-        
-        .auth-card {
-            padding: 2.5rem 1.75rem;
-            border-radius: 24px;
-            max-width: 100%;
-        }
-        
-        .auth-title {
-            font-size: 1.5rem;
-        }
-        
-        .cat-image-wrapper img {
-            width: 90px;
-            height: 90px;
-        }
+    .alert-error {
+        color: #c44747;
+        background: rgba(255, 236, 236, 0.85);
+        border: 1px solid rgba(232, 160, 160, 0.7);
+    }
 
-        .cat-image-wrapper::before {
-            width: 110px;
-            height: 110px;
-        }
-        
-        .form-group input {
-            padding: 0.875rem 1rem;
-            font-size: 0.9rem;
-        }
+    .alert-success {
+        color: #1f8a62;
+        background: rgba(232, 248, 241, 0.9);
+        border: 1px solid rgba(150, 214, 186, 0.8);
+    }
 
-        .form-options {
-            flex-direction: column;
-            gap: 0.75rem;
+    @media (max-width: 720px) {
+        .glass-login {
+            padding: 1.25rem 0.85rem 2rem;
             align-items: flex-start;
         }
 
-        .auth-links {
-            justify-content: center;
+        .glass-shell {
+            grid-template-columns: 1fr;
+            border-radius: 24px;
         }
 
-        .auth-container .bg-circle-1 {
-            width: 250px;
-            height: 250px;
-            top: -80px;
-            right: -60px;
+        .glass-form {
+            border-left: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.55);
         }
 
-        .auth-container .bg-circle-2 {
-            width: 180px;
-            height: 180px;
-            bottom: -40px;
-            left: -40px;
+        .glass-visual,
+        .glass-form {
+            padding: 1.35rem 1.15rem 1.25rem;
         }
 
-        .auth-container .bg-circle-3 {
-            width: 120px;
-            height: 120px;
+        .glass-visual h1 {
+            font-size: 1.55rem;
         }
-
-        .auth-container .bg-circle-4 {
-            width: 70px;
-            height: 70px;
-        }
-
-        .auth-container .bg-circle-5 {
-            width: 80px;
-            height: 80px;
-        }
-    }
-
-    /* Тёмная тема */
-    [data-theme='dark'] .auth-card {
-        background: linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
-    }
-
-    [data-theme='dark'] .submit-btn {
-        box-shadow: 0 6px 24px rgba(91, 159, 212, 0.12);
-    }
-
-    [data-theme='dark'] .submit-btn:hover {
-        box-shadow: 0 10px 32px rgba(91, 159, 212, 0.2);
-    }
-
-    [data-theme='dark'] .form-group input:focus {
-        background: rgba(30, 41, 59, 0.8);
-    }
-
-    [data-theme='dark'] .auth-container .bg-circle {
-        opacity: 0.04;
-    }
-
-    [data-theme='dark'] .auth-divider span {
-        background: rgba(30, 41, 59, 0.8);
     }
 </style>
 
-<div class="auth-container">
-    <!-- Фоновые круглые фигуры -->
-    <div class="bg-circles">
-        <div class="bg-circle bg-circle-1"></div>
-        <div class="bg-circle bg-circle-2"></div>
-        <div class="bg-circle bg-circle-3"></div>
-        <div class="bg-circle bg-circle-4"></div>
-        <div class="bg-circle bg-circle-5"></div>
-    </div>
+<div class="glass-login">
+    <svg class="glass-watermark" viewBox="0 0 320 180" fill="none" aria-hidden="true">
+        <path d="M18 150h28V92H18v58zm42 0h28V58H60v92zm42 0h28V78h-28v72zm42 0h28V40h-28v110zm42 0h28V70h-28v80zm42 0h28V28h-28v122zm42 0h28V64h-28v86z" fill="currentColor" opacity="0.55"/>
+        <path d="M24 78c28-18 48-8 70 6 24 16 40 8 62-10 20-16 46-22 70-6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    </svg>
 
-    <div class="auth-card">
-        <!-- Картинка кота из папки static -->
-        <div class="cat-image-wrapper">
-            <img 
-                src="static/app.ico"}"
-                alt="Кот"
-                loading="lazy"
-                width="120"
-                height="120"
-            >
-        </div>
-        
-        <h1 class="auth-title">Добро пожаловать</h1>
-        <p class="auth-subtitle">Войдите в систему мониторинга питания</p>
-        
-        {% if error %}
-        <div class="alert alert-error">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="12"/>
-                <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            <span>{{ error }}</span>
-        </div>
-        {% endif %}
-        
-        {% if success %}
-        <div class="alert alert-success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span>{{ success }}</span>
-        </div>
-        {% endif %}
-        
-        <form action="/login" method="post" class="auth-form">
-            <div class="form-group">
-                <input type="email" name="email" placeholder="Электронная почта" required autocomplete="email">
-            </div>
-            
-            <div class="form-group">
-                <input type="password" name="password" id="password" placeholder="Пароль" required autocomplete="current-password">
+    <div class="glass-shell">
+        <section class="glass-visual">
+            <div class="brand-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19V5M4 19h16"/>
+                    <path d="M8 15v-3M12 15V8M16 15v-5"/>
+                </svg>
+                ЕЦМП
             </div>
 
-            <div class="form-options">
+            <div class="art-frame">
+                <img
+                    src="/static/9762667.png"
+                    alt="Иллюстрация мониторинга питания"
+                    width="720"
+                    height="480"
+                >
+            </div>
+
+            <div class="chip-row">
+                <span class="chip">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                    Режим питания
+                </span>
+                <span class="chip">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c-3 4-6 6-6 10a6 6 0 0 0 12 0c0-4-3-6-6-10z"/></svg>
+                    Рацион
+                </span>
+                <span class="chip">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v5h5"/></svg>
+                    Отчёты
+                </span>
+            </div>
+
+            <p class="kicker">Мониторинг питания</p>
+            <h1>Питание — наглядно<br>и вовремя</h1>
+            <p class="lead">Режим приёмов пищи, состав рациона и отчёты учреждений в одном кабинете.</p>
+        </section>
+
+        <section class="glass-form">
+            <div class="form-brand">
+                <div class="form-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19V5M4 19h16"/>
+                        <path d="M8 15v-3M12 15V8M16 15v-5"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="kicker">Кабинет учреждения</p>
+                    <h2>Вход в систему</h2>
+                </div>
+            </div>
+            <p class="form-sub">ЕЦМП · Единый центр мониторинга питания</p>
+
+            {% if error %}
+            <div class="alert alert-error">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+
+            {% if success %}
+            <div class="alert alert-success">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span>{{ success }}</span>
+            </div>
+            {% endif %}
+
+            <form action="/login" method="post" class="auth-form">
+                <div class="field">
+                    <label for="email">Электронная почта</label>
+                    <input id="email" type="email" name="email" placeholder="name@school.ru" required autocomplete="email">
+                </div>
+
+                <div class="field">
+                    <label for="password">Пароль</label>
+                    <div class="password-field">
+                        <input type="password" name="password" id="password" placeholder="Введите пароль" required autocomplete="current-password">
+                        <button type="button" class="password-toggle" onclick="togglePassword()" aria-label="Показать или скрыть пароль">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
                 <label class="remember-me">
                     <input type="checkbox" name="remember">
                     Запомнить меня
                 </label>
-                <button type="button" class="password-toggle" onclick="togglePassword()" aria-label="Показать/скрыть пароль">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                        <circle cx="12" cy="12" r="3"/>
-                    </svg>
-                    Показать
-                </button>
-            </div>
-            
-            <button type="submit" class="submit-btn">
-                Войти
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
-            </button>
-        </form>
-        
-        <div class="auth-links">
-            <a href="/reset-password-request" class="auth-link">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 8v4l3 3M12 2a10 10 0 1 0 10 10"/>
-                </svg>
-                Забыли пароль?(сбросить по почте)
-            </a>
-            <span style="margin: 0 0.5rem;">|</span>
-            <a href="/reset-password-direct" class="auth-link">
-                <svg>...</svg>
-                Сброс по коду
-            </a>
-        </div>
-        
-        <div class="auth-divider">
-            <span>Нет аккаунта?</span>
-        </div>
-        
-        <a href="/register" class="register-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="8.5" cy="7" r="4"/>
-                <line x1="20" y1="8" x2="20" y2="14"/>
-                <line x1="23" y1="11" x2="17" y2="11"/>
-            </svg>
-            Зарегистрироваться
-        </a>
 
-        <div class="auth-appeal">
-            <a href="/appeal" class="auth-link appeal-link-login">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                </svg>
-                Обращение к пользователям
-            </a>
-        </div>
+                <button type="submit" class="submit-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                        <polyline points="10 17 15 12 10 7"/>
+                        <line x1="15" y1="12" x2="3" y2="12"/>
+                    </svg>
+                    Войти
+                </button>
+            </form>
+
+            <div class="glass-links">
+                <a href="/reset-password-request">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                    Забыли пароль
+                </a>
+                <a href="/reset-password-direct">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                    Сброс по коду
+                </a>
+                <a href="/register">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+                    Регистрация
+                </a>
+                <a href="/appeal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Обращение
+                </a>
+            </div>
+        </section>
     </div>
 </div>
 
@@ -736,43 +566,17 @@
 function togglePassword() {
     const passwordInput = document.getElementById('password');
     const toggleButton = document.querySelector('.password-toggle');
-    
     if (!passwordInput || !toggleButton) return;
-    
+
     const isPassword = passwordInput.type === 'password';
     passwordInput.type = isPassword ? 'text' : 'password';
-    
-    toggleButton.innerHTML = isPassword ? `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-            <line x1="1" y1="1" x2="23" y2="23"/>
-        </svg>
-        Скрыть
-    ` : `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-            <circle cx="12" cy="12" r="3"/>
-        </svg>
-        Показать
-    `;
+    toggleButton.innerHTML = isPassword
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    const passwordInput = document.getElementById('password');
-    if (passwordInput) {
-        passwordInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                const form = this.closest('form');
-                if (form) form.submit();
-            }
-        });
-    }
-});
-
-// Отключаем анимации для слабых ПК
 if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    document.querySelectorAll('.auth-card, .auth-container, .alert').forEach(el => {
-        el.style.animation = 'none';
+    document.querySelectorAll('.submit-btn').forEach(function (el) {
         el.style.transition = 'none';
     });
 }

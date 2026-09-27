@@ -1,1816 +1,13 @@
 {% extends "layout.html" %}
+{% block title %}Кабинет школы — ЕЦМП{% endblock %}
+{% block meta_description %}Личный кабинет школы в ЕЦМП: загрузка меню, контроль сроков, статистика ФЦМПО и специальные файлы.{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+{% block page_styles %}
+<link rel="stylesheet" href="/static/css/school-cabinet.css?v=8">
+{% endblock %}
 {% block content %}
-<style>
-    /* ===== МИНИМАЛИСТИЧНЫЙ СТИЛЬ - БЕЗ АНИМАЦИЙ, ГРАДИЕНТОВ И ЛИШНИХ ЭФФЕКТОВ ===== */
-    :root {
-        --radius-sm: 6px;
-        --radius-md: 10px;
-        --radius-lg: 14px;
-        --shadow-sm: 0 1px 2px rgba(26, 39, 64, 0.05);
-        --shadow-md: 0 4px 14px rgba(26, 39, 64, 0.07);
-        --shadow-lg: 0 12px 28px rgba(26, 39, 64, 0.09);
-        --border-light: rgba(26, 39, 64, 0.1);
-        --gray-100: #f5f8fc;
-        --gray-200: #eaf1f8;
-        --gray-300: #d7e5f2;
-        --text-primary: #1a2740;
-        --text-secondary: #445e7a;
-        --primary-hover: #3d7eb8;
-        --bg-card: #ffffff;
-        --bg-card-solid: #ffffff;
-        --bg-body: transparent;
-        --mist-100: #eaf1f8;
-    }
 
-    [data-theme='dark'] {
-        --border-light: #374151;
-        --gray-100: #1f2937;
-        --gray-200: #374151;
-        --gray-300: #4b5563;
-        --text-primary: #eaf1f8;
-        --text-secondary: #b8cde3;
-        --primary-hover: #8bbfe6;
-        --bg-card: #162033;
-        --bg-card-solid: #1f2937;
-        --bg-body: #111827;
-    }
-
-    * {
-        box-sizing: border-box;
-    }
-
-    .dashboard-layout {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 1.5rem;
-    }
-
-    /* ===== ОБЩИЕ КАРТОЧКИ ===== */
-    .dashboard-header,
-    .file-upload-card,
-    .card,
-    .special-file-section {
-        background: var(--bg-card);
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-lg);
-        margin-bottom: 1.5rem;
-        box-shadow: var(--shadow-sm);
-        overflow: hidden;
-    }
-
-    /* ===== ПРОФИЛЬ ===== */
-    .profile-header {
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-        padding: 1.5rem;
-        flex-wrap: wrap;
-        border-bottom: 1px solid var(--border-light);
-    }
-
-    .school-avatar {
-        position: relative;
-        width: 80px;
-        height: 80px;
-        flex-shrink: 0;
-    }
-
-    .avatar-image {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid var(--primary);
-        background: var(--bg-card);
-    }
-
-    .avatar-placeholder {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        background: var(--primary);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 2px solid var(--primary);
-    }
-
-    .avatar-placeholder svg {
-        width: 40px;
-        height: 40px;
-        color: white;
-    }
-
-    .avatar-upload-btn {
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: var(--primary);
-        border: 2px solid var(--bg-card);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-    }
-
-    .avatar-upload-btn svg {
-        width: 14px;
-        height: 14px;
-        color: white;
-    }
-
-    .avatar-upload-input {
-        display: none;
-    }
-
-    .school-info {
-        flex: 1;
-        min-width: 200px;
-    }
-
-    .school-title-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-        margin-bottom: 0.5rem;
-    }
-
-    .school-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin: 0;
-    }
-
-    .edit-title-btn {
-        background: var(--gray-100);
-        border: 1px solid var(--border-light);
-        padding: 0.2rem 0.6rem;
-        border-radius: 1rem;
-        font-size: 0.65rem;
-        font-weight: 600;
-        cursor: pointer;
-        color: var(--text-secondary);
-    }
-
-    .edit-title-btn:hover {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
-    }
-
-    .school-badges {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-        margin-bottom: 0.5rem;
-    }
-
-    .school-badge {
-        background: var(--gray-100);
-        color: var(--text-secondary);
-        padding: 0.2rem 0.6rem;
-        border-radius: 1rem;
-        font-size: 0.7rem;
-        font-weight: 500;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        border: 1px solid var(--border-light);
-    }
-
-    .school-badge svg {
-        width: 12px;
-        height: 12px;
-        stroke: var(--primary);
-    }
-
-    .school-title-edit-form {
-        display: none;
-        margin: 0.5rem 0;
-        padding: 0.75rem;
-        background: var(--gray-100);
-        border-radius: var(--radius-md);
-        border: 1px solid var(--border-light);
-    }
-
-    .school-title-edit-form input {
-        width: 100%;
-        padding: 0.5rem;
-        margin-bottom: 0.5rem;
-        border-radius: var(--radius-sm);
-        border: 1px solid var(--border-light);
-        background: var(--bg-card);
-        color: var(--text-primary);
-    }
-
-    .form-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .director-section {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-        margin-bottom: 0.5rem;
-    }
-
-    .director-label {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-    }
-
-    .director-name {
-        font-size: 0.85rem;
-        color: var(--text-primary);
-        font-weight: 500;
-    }
-
-    .edit-director-btn {
-        background: none;
-        border: none;
-        color: var(--text-secondary);
-        cursor: pointer;
-        font-size: 0.65rem;
-        padding: 0.1rem 0.4rem;
-        border-radius: var(--radius-sm);
-    }
-
-    .edit-director-btn:hover {
-        background: var(--gray-100);
-        color: var(--primary);
-    }
-
-    .director-form {
-        display: none;
-        width: 100%;
-        margin-top: 0.25rem;
-    }
-
-    .director-form .form-row {
-        display: flex;
-        gap: 0.5rem;
-        align-items: center;
-    }
-
-    .director-form input {
-        flex: 1;
-        padding: 0.4rem;
-        border-radius: var(--radius-sm);
-        border: 1px solid var(--border-light);
-        background: var(--bg-card);
-        color: var(--text-primary);
-    }
-
-    /* НОВЫЙ БЛОК: редактирование типа питания */
-    .food-type-edit-form {
-        display: none;
-        width: 100%;
-        margin-top: 0.25rem;
-    }
-
-    .food-type-edit-form .form-row {
-        display: flex;
-        gap: 0.5rem;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-
-    .food-type-edit-form select {
-        flex: 1;
-        padding: 0.4rem;
-        border-radius: var(--radius-sm);
-        border: 1px solid var(--border-light);
-        background: var(--bg-card);
-        color: var(--text-primary);
-        font-size: 0.85rem;
-        min-width: 150px;
-    }
-
-    .food-type-edit-form .btn-sm {
-        padding: 0.3rem 0.6rem;
-        border: none;
-        border-radius: var(--radius-sm);
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 0.75rem;
-    }
-
-    .food-type-edit-form .btn-save {
-        background: var(--primary);
-        color: white;
-    }
-
-    .food-type-edit-form .btn-save:hover {
-        background: var(--primary-hover);
-    }
-
-    .food-type-edit-form .btn-cancel {
-        background: var(--gray-200);
-        color: var(--text-secondary);
-    }
-
-    .food-type-edit-form .btn-cancel:hover {
-        background: var(--gray-300);
-    }
-
-    .external-path {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.4rem 0.6rem;
-        background: var(--gray-100);
-        border-radius: var(--radius-md);
-        border: 1px solid var(--border-light);
-        margin-top: 0.25rem;
-    }
-
-    .external-path-icon {
-        width: 24px;
-        height: 24px;
-        background: var(--primary);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .external-path-icon svg {
-        width: 12px;
-        height: 12px;
-        color: white;
-    }
-
-    .external-path-label {
-        font-size: 0.55rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        color: var(--text-secondary);
-    }
-
-    .external-path-link {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        flex-wrap: wrap;
-    }
-
-    .external-path-link span {
-        font-size: 0.75rem;
-        font-weight: 500;
-        color: var(--primary);
-        cursor: pointer;
-    }
-
-    .copy-badge {
-        background: var(--gray-200);
-        padding: 0.1rem 0.4rem;
-        border-radius: 1rem;
-        font-size: 0.6rem;
-        font-weight: 600;
-        cursor: pointer;
-        color: var(--text-secondary);
-    }
-
-    .copy-badge:hover {
-        background: var(--primary);
-        color: white;
-    }
-
-    .btn-fcmp-bind {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        margin-left: 0.25rem;
-        padding: 0.2rem 0.55rem;
-        border: 1px solid var(--primary);
-        background: white;
-        color: var(--primary);
-        border-radius: 1rem;
-        font-size: 0.65rem;
-        font-weight: 600;
-        cursor: pointer;
-        white-space: nowrap;
-    }
-
-    .btn-fcmp-bind:hover:not(:disabled) {
-        background: var(--primary);
-        color: white;
-    }
-
-    .btn-fcmp-bind:disabled {
-        opacity: 0.6;
-        cursor: wait;
-    }
-
-    .fcmp-bind-status {
-        font-size: 0.65rem;
-        margin-top: 0.25rem;
-        color: var(--text-secondary);
-    }
-
-    .fcmp-bind-status.ok { color: var(--success, #3d9a78); }
-    .fcmp-bind-status.error { color: var(--danger, #d46565); }
-
-    .btn-external {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        background: var(--primary);
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 1.5rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-decoration: none;
-        flex-shrink: 0;
-    }
-
-    .btn-external:hover {
-        background: var(--primary-hover);
-    }
-
-    /* ===== ССЫЛКИ ШКОЛЫ ===== */
-    .school-links {
-        display: flex;
-        gap: 1rem;
-        padding: 0 1.5rem 1rem 1.5rem;
-        flex-wrap: wrap;
-        border-bottom: 1px solid var(--border-light);
-    }
-
-    .school-link-card {
-        flex: 1;
-        min-width: 180px;
-        background: var(--gray-100);
-        border-radius: var(--radius-md);
-        padding: 0.6rem 0.8rem;
-        border: 1px solid var(--border-light);
-    }
-
-    .school-link-card h4 {
-        font-size: 0.65rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        color: var(--text-secondary);
-        margin-bottom: 0.3rem;
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-    }
-
-    .school-link-card h4 svg {
-        width: 12px;
-        height: 12px;
-        stroke: var(--primary);
-    }
-
-    .school-link-card a {
-        color: var(--primary);
-        text-decoration: none;
-        font-size: 0.75rem;
-        font-weight: 500;
-        word-break: break-all;
-    }
-
-    .school-link-card a:hover {
-        text-decoration: underline;
-    }
-
-    .edit-link-icon {
-        margin-left: 0.3rem;
-        cursor: pointer;
-        font-size: 0.6rem;
-        color: var(--text-secondary);
-        padding: 0.1rem 0.3rem;
-        border-radius: var(--radius-sm);
-    }
-
-    .edit-link-icon:hover {
-        background: var(--gray-200);
-        color: var(--primary);
-    }
-
-    .link-edit-form {
-        display: none;
-        margin-top: 0.3rem;
-    }
-
-    .link-edit-form input {
-        width: 100%;
-        padding: 0.4rem;
-        font-size: 0.75rem;
-        margin-bottom: 0.3rem;
-        border-radius: var(--radius-sm);
-        border: 1px solid var(--border-light);
-        background: var(--bg-card);
-        color: var(--text-primary);
-    }
-
-    .link-edit-actions {
-        display: flex;
-        gap: 0.4rem;
-    }
-
-    .link-save-btn {
-        background: var(--primary);
-        color: white;
-        border: none;
-        padding: 0.2rem 0.6rem;
-        border-radius: var(--radius-sm);
-        font-size: 0.65rem;
-        font-weight: 600;
-        cursor: pointer;
-    }
-
-    .link-save-btn:hover {
-        background: var(--primary-hover);
-    }
-
-    .link-cancel-btn {
-        background: var(--gray-200);
-        color: var(--text-secondary);
-        border: none;
-        padding: 0.2rem 0.6rem;
-        border-radius: var(--radius-sm);
-        font-size: 0.65rem;
-        font-weight: 600;
-        cursor: pointer;
-    }
-
-    /* ===== ПАНЕЛЬ ПЕРИОДА ===== */
-    .period-panel {
-        padding: 1rem 1.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        border-top: 1px solid var(--border-light);
-    }
-
-    .period-badge {
-        background: var(--primary);
-        color: white;
-        padding: 0.4rem 0.8rem;
-        border-radius: 1.5rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        font-weight: 600;
-        font-size: 0.8rem;
-    }
-
-    .period-badge svg {
-        width: 14px;
-        height: 14px;
-    }
-
-    .period-controls {
-        display: flex;
-        gap: 0.5rem;
-        align-items: flex-end;
-        flex-wrap: wrap;
-    }
-
-    .period-field {
-        display: flex;
-        flex-direction: column;
-        gap: 0.15rem;
-    }
-
-    .period-field label {
-        font-size: 0.6rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        color: var(--text-secondary);
-    }
-
-    .period-field input,
-    .period-field select {
-        padding: 0.35rem 0.5rem;
-        border-radius: var(--radius-sm);
-        border: 1px solid var(--border-light);
-        background: var(--bg-card);
-        color: var(--text-primary);
-        font-size: 0.8rem;
-    }
-
-    .period-field input {
-        width: 70px;
-        text-align: center;
-    }
-
-    .apply-btn {
-        background: var(--primary);
-        color: white;
-        border: none;
-        padding: 0.35rem 0.8rem;
-        border-radius: var(--radius-sm);
-        font-weight: 600;
-        font-size: 0.75rem;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-    }
-
-    .apply-btn:hover {
-        background: var(--primary-hover);
-    }
-
-    /* ===== ЗАГРУЗКА ФАЙЛОВ ===== */
-    .file-upload-card {
-        padding: 1.25rem;
-    }
-
-    .file-upload-card h3 {
-        font-size: 0.95rem;
-        font-weight: 700;
-        margin-bottom: 0.75rem;
-        color: var(--text-primary);
-    }
-
-    .file-upload-area {
-        border: 2px dashed var(--border-light);
-        border-radius: var(--radius-md);
-        padding: 1.25rem;
-        text-align: center;
-        margin-bottom: 0.75rem;
-        background: var(--gray-100);
-    }
-
-    .file-upload-area:hover {
-        border-color: var(--primary);
-        background: var(--bg-card);
-    }
-
-    .file-input-wrapper {
-        position: relative;
-    }
-
-    .file-input-wrapper input {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        opacity: 0;
-        cursor: pointer;
-    }
-
-    .file-input-label {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.5rem 0.8rem;
-        background: var(--gray-200);
-        border-radius: var(--radius-md);
-        color: var(--text-secondary);
-        font-weight: 500;
-        font-size: 0.8rem;
-        cursor: pointer;
-    }
-
-    .file-input-label:hover {
-        background: var(--primary);
-        color: white;
-    }
-
-    .btn-primary {
-        background: var(--primary);
-        color: white;
-        border: none;
-        padding: 0.4rem 0.8rem;
-        border-radius: var(--radius-sm);
-        font-weight: 600;
-        font-size: 0.8rem;
-        cursor: pointer;
-        width: 100%;
-    }
-
-    .btn-primary:hover {
-        background: var(--primary-hover);
-    }
-
-    .upload-controls {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 0.75rem;
-        padding-top: 0.75rem;
-        border-top: 1px solid var(--border-light);
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .small-checkbox-label {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        cursor: pointer;
-    }
-
-    .small-checkbox-label input {
-        width: 14px;
-        height: 14px;
-        cursor: pointer;
-        accent-color: var(--primary);
-    }
-
-    .small-action-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        padding: 0.3rem 0.6rem;
-        border-radius: var(--radius-sm);
-        font-size: 0.7rem;
-        font-weight: 600;
-        cursor: pointer;
-        border: 1px solid var(--border-light);
-        background: var(--gray-100);
-        color: var(--text-secondary);
-    }
-
-    .small-download-btn:hover {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
-    }
-
-    .small-delete-btn:hover {
-        background: #ef4444;
-        color: white;
-        border-color: #ef4444;
-    }
-
-    /* ===== СПЕЦИАЛЬНЫЕ ФАЙЛЫ ===== */
-    .special-file-header {
-        padding: 0.6rem 1rem;
-        border-bottom: 1px solid var(--border-light);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: var(--gray-100);
-    }
-
-    .special-file-header svg {
-        width: 16px;
-        height: 16px;
-        stroke: var(--primary);
-    }
-
-    .special-file-header h4 {
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin: 0;
-    }
-
-    .special-file-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-        gap: 0.5rem;
-        padding: 0.75rem;
-    }
-
-    .special-file-card {
-        position: relative;
-        border-left: 3px solid var(--primary);
-    }
-
-    .special-file-card.tm-card {
-        border-left-color: #f59e0b;
-    }
-
-    .special-file-card.kp-card {
-        border-left-color: #8b5cf6;
-    }
-
-    .special-file-card.findex-card {
-        border-left-color: var(--primary);
-    }
-
-    .findex-note {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.2rem;
-        background: #fef3c7;
-        color: #b45309;
-        padding: 0.1rem 0.4rem;
-        border-radius: 1rem;
-        font-size: 0.5rem;
-        font-weight: 600;
-        margin-left: 0.3rem;
-        white-space: nowrap;
-    }
-
-    [data-theme='dark'] .findex-note {
-        background: #422006;
-        color: #fcd34d;
-    }
-
-    .findex-note svg {
-        width: 8px;
-        height: 8px;
-    }
-
-    /* ===== ОБЫЧНЫЕ ФАЙЛЫ ===== */
-    .card {
-        padding: 1.25rem;
-    }
-
-    .card h3 {
-        font-size: 0.95rem;
-        font-weight: 700;
-        margin-bottom: 0.75rem;
-        color: var(--text-primary);
-    }
-
-    .files-stats {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid var(--border-light);
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .stats-info {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .stat-badge {
-        background: var(--gray-100);
-        padding: 0.25rem 0.6rem;
-        border-radius: 1rem;
-        font-size: 0.7rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        border: 1px solid var(--border-light);
-    }
-
-    .stat-badge svg {
-        width: 12px;
-        height: 12px;
-        stroke: var(--primary);
-    }
-
-    .files-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: 0.75rem;
-        max-height: 500px;
-        overflow-y: auto;
-        padding: 0.15rem;
-    }
-
-    .file-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-md);
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .file-card.selected {
-        border-color: var(--primary);
-        background: var(--gray-100);
-    }
-
-    .file-select {
-        position: absolute;
-        top: 0.5rem;
-        left: 0.5rem;
-        z-index: 2;
-    }
-
-    .file-select input {
-        width: 16px;
-        height: 16px;
-        cursor: pointer;
-        accent-color: var(--primary);
-    }
-
-    .file-preview {
-        height: 100px;
-        background: var(--gray-100);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-bottom: 1px solid var(--border-light);
-    }
-
-    .file-info {
-        padding: 0.5rem;
-    }
-
-    .file-name {
-        font-weight: 600;
-        font-size: 0.75rem;
-        color: var(--text-primary);
-        margin-bottom: 0.25rem;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .file-meta {
-        font-size: 0.6rem;
-        color: var(--text-secondary);
-        margin-bottom: 0.4rem;
-        display: flex;
-        gap: 0.4rem;
-        flex-wrap: wrap;
-    }
-
-    .file-meta span {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.15rem;
-    }
-
-    .file-meta svg {
-        width: 10px;
-        height: 10px;
-        stroke: var(--primary);
-    }
-
-    .file-actions {
-        display: flex;
-        gap: 0.4rem;
-        padding-top: 0.4rem;
-        border-top: 1px solid var(--border-light);
-    }
-
-    .file-action-btn {
-        flex: 1;
-        padding: 0.25rem;
-        border-radius: var(--radius-sm);
-        font-size: 0.65rem;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.2rem;
-        text-decoration: none;
-        cursor: pointer;
-        border: 1px solid var(--border-light);
-        background: var(--gray-100);
-        color: var(--text-secondary);
-    }
-
-    .file-action-btn.download:hover {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
-    }
-
-    .file-action-btn.delete:hover {
-        background: #ef4444;
-        color: white;
-        border-color: #ef4444;
-    }
-
-    .file-action-btn svg {
-        width: 10px;
-        height: 10px;
-    }
-
-    /* ===== ПУСТОЕ СОСТОЯНИЕ ===== */
-    .empty-state {
-        text-align: center;
-        padding: 2rem;
-    }
-
-    .empty-state svg {
-        width: 60px;
-        height: 60px;
-        margin-bottom: 0.75rem;
-        stroke: var(--border-light);
-    }
-
-    .empty-state p {
-        color: var(--text-secondary);
-        font-size: 0.85rem;
-    }
-
-    .empty-hint {
-        font-size: 0.7rem;
-        color: var(--text-secondary);
-        margin-top: 0.25rem;
-        opacity: 0.7;
-    }
-
-    /* ===== МОДАЛЬНОЕ ОКНО ===== */
-    .modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.5);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-    }
-
-    .modal-window {
-        background: var(--bg-card);
-        border-radius: var(--radius-lg);
-        padding: 1.25rem;
-        min-width: 280px;
-        max-width: 90%;
-        text-align: center;
-        border: 1px solid var(--border-light);
-        box-shadow: var(--shadow-lg);
-    }
-
-    .modal-window h3 {
-        margin-bottom: 0.5rem;
-        color: var(--text-primary);
-        font-size: 1.1rem;
-    }
-
-    .modal-window p {
-        margin-bottom: 1rem;
-        color: var(--text-secondary);
-        font-size: 0.85rem;
-    }
-
-    .modal-buttons {
-        display: flex;
-        justify-content: center;
-        gap: 0.75rem;
-    }
-
-    .modal-buttons button {
-        padding: 0.4rem 1.2rem;
-        border: none;
-        border-radius: var(--radius-sm);
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 0.8rem;
-    }
-
-    #cancelDelete {
-        background: var(--gray-200);
-        color: var(--text-secondary);
-    }
-
-    #cancelDelete:hover {
-        background: var(--gray-300);
-    }
-
-    #confirmDelete {
-        background: #ef4444;
-        color: white;
-    }
-
-    #confirmDelete:hover {
-        background: #dc2626;
-    }
-
-    /* ===== УВЕДОМЛЕНИЕ ===== */
-    .copy-notification {
-        position: fixed;
-        top: 1rem;
-        right: 1rem;
-        background: var(--bg-card);
-        color: var(--text-primary);
-        padding: 0.4rem 1rem;
-        border-radius: var(--radius-md);
-        font-size: 0.8rem;
-        font-weight: 500;
-        z-index: 1100;
-        opacity: 0;
-        pointer-events: none;
-        border: 1px solid var(--border-light);
-        box-shadow: var(--shadow-md);
-    }
-
-    .copy-notification.show {
-        opacity: 1;
-    }
-
-    /* ===== СКРОЛЛБАР ===== */
-    .files-grid::-webkit-scrollbar {
-        width: 4px;
-    }
-
-    .files-grid::-webkit-scrollbar-track {
-        background: var(--gray-100);
-        border-radius: 2px;
-    }
-
-    .files-grid::-webkit-scrollbar-thumb {
-        background: var(--primary);
-        border-radius: 2px;
-    }
-
-    /* ===== АДАПТИВНОСТЬ ===== */
-    @media (max-width: 768px) {
-        .dashboard-layout {
-            padding: 0.75rem;
-        }
-
-        .profile-header {
-            padding: 1rem;
-            flex-direction: column;
-            text-align: center;
-        }
-
-        .school-avatar {
-            margin: 0 auto;
-        }
-
-        .school-info {
-            text-align: center;
-        }
-
-        .school-title-wrapper {
-            justify-content: center;
-        }
-
-        .school-badges {
-            justify-content: center;
-        }
-
-        .director-section {
-            justify-content: center;
-        }
-
-        .external-path {
-            justify-content: center;
-            width: 100%;
-        }
-
-        .school-links {
-            padding: 0 1rem 0.75rem 1rem;
-        }
-
-        .period-panel {
-            padding: 0.75rem 1rem;
-            flex-direction: column;
-        }
-
-        .period-controls {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .files-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .upload-controls {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .stats-info {
-            justify-content: center;
-        }
-
-        .modal-window {
-            min-width: 240px;
-            margin: 0 1rem;
-        }
-
-        .special-file-grid {
-            grid-template-columns: 1fr;
-            gap: 0.4rem;
-            padding: 0.5rem;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .dashboard-header,
-        .file-upload-card,
-        .card,
-        .special-file-section {
-            border-radius: var(--radius-sm);
-        }
-
-        .profile-header {
-            padding: 0.75rem;
-        }
-
-        .school-title {
-            font-size: 1.2rem;
-        }
-
-        .school-avatar {
-            width: 60px;
-            height: 60px;
-        }
-
-        .file-preview {
-            height: 80px;
-        }
-
-        .file-upload-area {
-            padding: 0.75rem;
-        }
-
-        .file-action-btn {
-            font-size: 0.6rem;
-            padding: 0.2rem;
-        }
-
-        .file-name {
-            font-size: 0.7rem;
-        }
-
-        .file-meta {
-            font-size: 0.55rem;
-        }
-    }
-
-    /* ===== Upload zone + counts ===== */
-    .file-upload-card > h3,
-    .card > h3 {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-    }
-
-    .section-title-left {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .count-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        padding: 0.25rem 0.55rem;
-        border-radius: var(--radius-sm);
-        font-size: 0.68rem;
-        font-weight: 750;
-        background: var(--primary-bg, rgba(91, 159, 212, 0.09));
-        color: var(--primary-dark, #3d7eb8);
-        border: 1px solid rgba(91, 159, 212, 0.18);
-        white-space: nowrap;
-    }
-
-    [data-theme='dark'] .count-chip {
-        color: var(--primary-light, #a8d4f5);
-    }
-
-    .file-upload-area {
-        border: 1.5px dashed var(--gray-300);
-        border-radius: var(--radius-lg);
-        background: var(--gray-100);
-        padding: 1.25rem;
-        transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
-        position: relative;
-        margin-bottom: 0.85rem;
-    }
-
-    .file-upload-area.drag-over {
-        border-color: var(--primary);
-        background: var(--primary-bg, rgba(91, 159, 212, 0.09));
-        box-shadow: var(--shadow-focus, 0 0 0 3px rgba(91, 159, 212, 0.2));
-    }
-
-    .file-upload-area.has-files {
-        border-style: solid;
-        border-color: var(--primary);
-    }
-
-    .upload-selected-list {
-        margin-top: 0.75rem;
-        display: none;
-        text-align: left;
-        max-height: 140px;
-        overflow-y: auto;
-        border-top: 1px solid var(--border-light);
-        padding-top: 0.65rem;
-    }
-
-    .upload-selected-list.show { display: block; }
-
-    .upload-selected-list .upload-picked-title {
-        font-size: 0.7rem;
-        font-weight: 750;
-        color: var(--text-secondary);
-        margin-bottom: 0.4rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-    }
-
-    .upload-picked-item {
-        font-size: 0.75rem;
-        padding: 0.3rem 0.45rem;
-        border-radius: var(--radius-sm);
-        background: var(--bg-card-solid);
-        border: 1px solid var(--border-light);
-        margin-bottom: 0.3rem;
-        color: var(--text-primary);
-        word-break: break-all;
-    }
-
-    /* ===== View toggle ===== */
-    .view-toggle {
-        display: inline-flex;
-        background: var(--gray-100);
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-md);
-        padding: 0.15rem;
-        gap: 0.15rem;
-    }
-
-    .view-toggle button {
-        border: none;
-        background: transparent;
-        padding: 0.4rem 0.7rem;
-        border-radius: var(--radius-sm);
-        font-family: inherit;
-        font-size: 0.72rem;
-        font-weight: 750;
-        color: var(--text-secondary);
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        transition: background 0.15s, color 0.15s;
-    }
-
-    .view-toggle button svg { width: 14px; height: 14px; }
-
-    .view-toggle button.active {
-        background: var(--primary);
-        color: #fff;
-    }
-
-    .view-toggle button:not(.active):hover {
-        background: var(--bg-card-solid);
-        color: var(--primary);
-    }
-
-    /* ===== Calendar ===== */
-    .menu-calendar {
-        display: none;
-        margin-top: 0.5rem;
-    }
-
-    .menu-calendar.active { display: block !important; }
-    .files-grid.view-hidden { display: none !important; }
-
-    .cal-weekdays {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 0.4rem;
-        margin-bottom: 0.4rem;
-    }
-
-    .cal-weekday {
-        text-align: center;
-        font-size: 0.65rem;
-        font-weight: 750;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--text-secondary);
-        padding: 0.35rem 0;
-    }
-
-    .cal-week {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 0.4rem;
-        margin-bottom: 0.4rem;
-    }
-
-    .cal-cell {
-        min-height: 88px;
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-md);
-        background: var(--gray-100);
-        padding: 0.4rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-        transition: border-color 0.15s, background 0.15s, transform 0.15s;
-    }
-
-    .cal-cell.empty {
-        background: transparent;
-        border-color: transparent;
-        min-height: 0;
-    }
-
-    .cal-cell.has-files {
-        background: var(--primary-bg, rgba(91, 159, 212, 0.09));
-        border-color: rgba(91, 159, 212, 0.35);
-    }
-
-    .cal-cell.has-files:hover {
-        border-color: var(--primary);
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .cal-cell.weekend:not(.empty) {
-        background: rgba(26, 39, 64, 0.03);
-    }
-
-    .cal-cell.has-files.weekend {
-        background: var(--primary-bg, rgba(91, 159, 212, 0.09));
-    }
-
-    .cal-day-num {
-        font-size: 0.78rem;
-        font-weight: 800;
-        color: var(--text-primary);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .cal-day-badge {
-        font-size: 0.62rem;
-        font-weight: 800;
-        background: var(--primary);
-        color: #fff;
-        border-radius: var(--radius-sm);
-        min-width: 1.2rem;
-        height: 1.2rem;
-        padding: 0 0.3rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .cal-file-chip {
-        display: block;
-        font-size: 0.62rem;
-        font-weight: 650;
-        color: var(--primary-dark, #3d7eb8);
-        background: var(--bg-card-solid);
-        border: 1px solid rgba(91, 159, 212, 0.15);
-        border-radius: 4px;
-        padding: 0.2rem 0.3rem;
-        text-decoration: none;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        transition: background 0.12s;
-    }
-
-    [data-theme='dark'] .cal-file-chip { color: var(--primary-light, #a8d4f5); }
-
-    .cal-file-chip:hover {
-        background: var(--primary);
-        color: #fff;
-        border-color: var(--primary);
-    }
-
-    .cal-more {
-        font-size: 0.6rem;
-        color: var(--text-secondary);
-        font-weight: 650;
-        padding: 0.1rem 0.2rem;
-    }
-
-    .undated-strip {
-        margin-top: 1rem;
-        padding: 0.85rem;
-        border: 1px dashed var(--border-light);
-        border-radius: var(--radius-md);
-        background: var(--gray-100);
-    }
-
-    .undated-strip h4 {
-        font-size: 0.75rem;
-        font-weight: 750;
-        color: var(--text-secondary);
-        margin-bottom: 0.55rem;
-    }
-
-    .menu-day-tag {
-        display: inline-flex;
-        align-items: center;
-        margin-left: 0.35rem;
-        padding: 0.1rem 0.35rem;
-        border-radius: 4px;
-        font-size: 0.62rem;
-        font-weight: 750;
-        background: var(--primary-bg, rgba(91, 159, 212, 0.09));
-        color: var(--primary-dark, #3d7eb8);
-        border: 1px solid rgba(91, 159, 212, 0.15);
-        vertical-align: middle;
-    }
-
-    @media (max-width: 768px) {
-        .cal-cell { min-height: 64px; padding: 0.3rem; }
-        .cal-file-chip { font-size: 0.55rem; }
-        .cal-weekday { font-size: 0.58rem; }
-        .view-toggle { width: 100%; }
-        .view-toggle button { flex: 1; justify-content: center; }
-    }
-
-
-    .file-upload-area {
-        position: relative;
-        min-height: 120px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 0.65rem;
-        cursor: pointer;
-    }
-
-    .file-input-wrapper {
-        position: relative;
-        width: 100%;
-        text-align: center;
-        z-index: 1;
-        min-height: 48px;
-    }
-
-    .file-input-wrapper input[type="file"] {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        opacity: 0;
-        cursor: pointer;
-        z-index: 2;
-    }
-
-    .upload-zone-stats {
-        position: relative;
-        z-index: 5;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.45rem;
-        justify-content: center;
-        pointer-events: auto;
-    }
-
-    .upload-stat-badge {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        padding: 0.35rem 0.7rem;
-        border-radius: var(--radius-md);
-        font-size: 0.75rem;
-        font-weight: 750;
-        background: var(--bg-card-solid);
-        border: 1px solid var(--border-light);
-        color: var(--text-primary);
-        cursor: default;
-    }
-
-    .upload-stat-badge.pending {
-        background: var(--primary);
-        color: #fff;
-        border-color: var(--primary);
-    }
-
-    .upload-stat-badge.pending[hidden] {
-        display: none !important;
-    }
-
-    .upload-stat-badge .upload-hover-panel {
-        display: none;
-        position: absolute;
-        left: 50%;
-        bottom: calc(100% + 8px);
-        transform: translateX(-50%);
-        min-width: 220px;
-        max-width: 320px;
-        max-height: 220px;
-        overflow-y: auto;
-        background: var(--bg-card-solid);
-        color: var(--text-primary);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        box-shadow: var(--shadow-lg);
-        padding: 0.55rem 0.65rem;
-        z-index: 20;
-        text-align: left;
-    }
-
-    .upload-stat-badge:hover .upload-hover-panel,
-    .upload-stat-badge:focus-within .upload-hover-panel {
-        display: block;
-    }
-
-    .upload-hover-panel strong {
-        display: block;
-        font-size: 0.68rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--text-secondary);
-        margin-bottom: 0.4rem;
-    }
-
-    .upload-hover-panel ul {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-    }
-
-    .upload-hover-panel li {
-        font-size: 0.72rem;
-        font-weight: 600;
-        padding: 0.25rem 0;
-        border-bottom: 1px solid var(--border-light);
-        word-break: break-all;
-    }
-
-    .upload-hover-panel li:last-child { border-bottom: none; }
-
-    .upload-hover-empty {
-        font-size: 0.72rem;
-        color: var(--text-muted, var(--text-secondary));
-        font-weight: 600;
-    }
-
-    #fileDropHint {
-        position: relative;
-        z-index: 1;
-        pointer-events: none;
-    }
-
-    .file-input-label {
-        pointer-events: none;
-        position: relative;
-        z-index: 1;
-    }
-
-
-    /* ===== ФЦМПО СТАТИСТИКА ===== */
-    .fcmp-section {
-        margin: 1.25rem 0 1.75rem;
-        padding: 1.25rem 1.35rem;
-        background: var(--bg-card);
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-sm);
-    }
-    .fcmp-section-head {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-    }
-    .fcmp-section-title {
-        display: flex;
-        flex-direction: column;
-        gap: 0.2rem;
-    }
-    .fcmp-section-title h3 {
-        margin: 0;
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: var(--text-primary);
-    }
-    .fcmp-section-title span {
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-    }
-    .fcmp-refresh-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.45rem;
-        border: none;
-        border-radius: var(--radius-md);
-        padding: 0.65rem 1rem;
-        background: var(--primary, #5b9fd4);
-        color: #fff;
-        font-weight: 650;
-        font-size: 0.875rem;
-        cursor: pointer;
-    }
-    .fcmp-refresh-btn:disabled {
-        opacity: 0.65;
-        cursor: wait;
-    }
-    .fcmp-refresh-btn:hover:not(:disabled) {
-        background: var(--primary-hover, #3d7eb8);
-    }
-    .fcmp-match {
-        font-size: 0.82rem;
-        color: var(--text-secondary);
-        margin-bottom: 0.85rem;
-    }
-    .fcmp-summary {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-    }
-    .fcmp-metric {
-        padding: 0.85rem 0.9rem;
-        border-radius: var(--radius-md);
-        background: var(--gray-100);
-        border: 1px solid var(--border-light);
-    }
-    .fcmp-metric .label {
-        display: block;
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        margin-bottom: 0.25rem;
-    }
-    .fcmp-metric .value {
-        font-size: 1.25rem;
-        font-weight: 750;
-        color: var(--text-primary);
-    }
-    .fcmp-charts {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0.85rem;
-        margin-bottom: 1rem;
-    }
-    .fcmp-chart-box {
-        padding: 0.75rem;
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-md);
-        background: #fff;
-        min-height: 220px;
-    }
-    .fcmp-chart-box h4 {
-        margin: 0 0 0.5rem;
-        font-size: 0.82rem;
-        color: var(--text-secondary);
-        font-weight: 650;
-    }
-    .fcmp-table-wrap {
-        overflow: auto;
-        max-height: 420px;
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-md);
-    }
-    .fcmp-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.82rem;
-    }
-    .fcmp-table th,
-    .fcmp-table td {
-        padding: 0.55rem 0.65rem;
-        border-bottom: 1px solid var(--border-light);
-        text-align: left;
-        white-space: nowrap;
-    }
-    .fcmp-table th {
-        position: sticky;
-        top: 0;
-        background: var(--gray-100);
-        z-index: 1;
-        font-weight: 650;
-        color: var(--text-secondary);
-    }
-    .fcmp-empty {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        padding: 0.5rem 0;
-    }
-    .fcmp-status {
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-        min-height: 1.2em;
-    }
-    .fcmp-status.error { color: var(--danger, #d46565); }
-    .fcmp-status.ok { color: var(--success, #3d9a78); }
-    @media (max-width: 980px) {
-        .fcmp-summary,
-        .fcmp-charts { grid-template-columns: 1fr 1fr; }
-    }
-    @media (max-width: 640px) {
-        .fcmp-summary,
-        .fcmp-charts { grid-template-columns: 1fr; }
-    }
-
-</style>
-
-<div class="dashboard-layout">
+<div class="dashboard-layout school-cabinet">
     <!-- ===== ПРОФИЛЬ + ПЕРИОД ===== -->
     <div class="dashboard-header">
         <div class="profile-header">
@@ -1844,7 +41,13 @@
             <div class="school-info">
                 <div class="school-title-wrapper">
                     <h1 class="school-title" id="schoolTitle">{{ user.unit_name }}</h1>
-                    <button class="edit-title-btn" id="editSchoolTitleBtn">✎ Изменить</button>
+                    <button class="edit-title-btn" id="editSchoolTitleBtn">
+                        <svg class="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                        </svg>
+                        Изменить
+                    </button>
                 </div>
 
                 <div class="school-badges">
@@ -1856,8 +59,10 @@
                         {{ user.district }}
                     </span>
                     <span class="school-badge">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                            <line x1="8" y1="2" x2="8" y2="18"></line>
+                            <line x1="16" y1="6" x2="16" y2="22"></line>
                         </svg>
                         {{ user.region or 'Регион не указан' }}
                     </span>
@@ -1866,7 +71,12 @@
                             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"></path>
                         </svg>
                         {{ user.food_type }}
-                        <button type="button" id="editFoodTypeBtn" class="edit-director-btn" style="font-size:0.65rem; background:none; border:none; cursor:pointer; color:var(--text-secondary);">✎</button>
+                        <button type="button" id="editFoodTypeBtn" class="edit-director-btn" aria-label="Изменить тип питания">
+                            <svg class="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 20h9"></path>
+                                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                            </svg>
+                        </button>
                     </span>
                 </div>
 
@@ -1904,7 +114,12 @@
                 <div class="director-section">
                     <span class="director-label">Директор:</span>
                     <span class="director-name" id="directorNameDisplay">{{ user.director_name or 'Не указано' }}</span>
-                    <button type="button" id="editDirectorBtn" class="edit-director-btn">✎</button>
+                    <button type="button" id="editDirectorBtn" class="edit-director-btn" aria-label="Изменить директора">
+                        <svg class="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                        </svg>
+                    </button>
 
                     <form id="directorForm" class="director-form" action="/profile/update" method="post">
                         <input type="hidden" name="uid" value="{{ user.id }}">
@@ -1969,7 +184,12 @@
                     {% else %}
                     <span style="color: var(--text-secondary);">Не указан</span>
                     {% endif %}
-                    <span class="edit-link-icon" id="editWebsiteBtn" title="Редактировать">✎</span>
+                    <span class="edit-link-icon" id="editWebsiteBtn" title="Редактировать" role="button" tabindex="0">
+                        <svg class="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                        </svg>
+                    </span>
                 </div>
                 <div class="link-edit-form" id="websiteEditForm">
                     <form action="/profile/update-links" method="post">
@@ -1998,7 +218,12 @@
                     {% else %}
                     <span style="color: var(--text-secondary);">Не указан</span>
                     {% endif %}
-                    <span class="edit-link-icon" id="editHotMealBtn" title="Редактировать">✎</span>
+                    <span class="edit-link-icon" id="editHotMealBtn" title="Редактировать" role="button" tabindex="0">
+                        <svg class="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                        </svg>
+                    </span>
                 </div>
                 <div class="link-edit-form" id="hotMealEditForm">
                     <form action="/profile/update-links" method="post">
@@ -2022,6 +247,10 @@
                     <span>Регион: Чеченская Республика · источник мониторингпитания.рф</span>
                 </div>
                 <button type="button" class="fcmp-refresh-btn" id="fcmpRefreshBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
                     Показать статистику ФЦМПО
                 </button>
             </div>
@@ -2118,11 +347,10 @@
                 <div class="file-input-wrapper">
                     <input type="file" name="files" id="fileInput" multiple>
                     <label for="fileInput" class="file-input-label" id="fileInputLabel">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 16V5"></path>
+                            <path d="m8 9 4-4 4 4"></path>
+                            <path d="M4 19h16"></path>
                         </svg>
                         <span id="fileDropHint">Выберите файлы или перетащите их сюда</span>
                     </label>
@@ -2211,18 +439,16 @@
                 </div>
 
                 <div class="file-preview">
-                    <div class="file-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="1.5">
+                    <div class="file-icon {% if file_info.filename.startswith('tm') %}file-icon-tm{% elif file_info.filename.startswith('kp') %}file-icon-kp{% else %}file-icon-xls{% endif %}"
+                         data-label="{% if file_info.filename.startswith('tm') %}TM{% elif file_info.filename.startswith('kp') %}KP{% else %}XLS{% endif %}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                             <polyline points="14 2 14 8 20 8"></polyline>
-                            <text x="8" y="18" font-size="8" fill="currentColor">
-                                {% if file_info.filename.startswith('tm') %}TM
-                                {% elif file_info.filename.startswith('kp') %}KP
-                                {% else %}XLS{% endif %}
-                            </text>
+                            <line x1="8" y1="13" x2="16" y2="13"></line>
+                            <line x1="8" y1="17" x2="13" y2="17"></line>
                         </svg>
                     </div>
+                    <span class="file-preview-hint">Предпросмотр</span>
                 </div>
 
                 <div class="file-info">
@@ -2258,6 +484,14 @@
                         </span>
                     </div>
                     <div class="file-actions">
+                        <button type="button" class="file-action-btn preview"
+                                data-preview-file="{{ file_info.filename }}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            Смотреть
+                        </button>
                         <a href="/{{ user.id }}/food/{{ file_info.filename }}" class="file-action-btn download"
                            download>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2356,10 +590,10 @@
                         {% endif %}
                     </div>
                     {% for file_info in day_files[:3] %}
-                    <a class="cal-file-chip" href="/{{ user.id }}/food/{{ file_info.filename }}"
-                       title="{{ file_info.filename }}" download>
+                    <button type="button" class="cal-file-chip" data-preview-file="{{ file_info.filename }}"
+                       title="Предпросмотр: {{ file_info.filename }}">
                         {{ file_info.filename|truncate(18, true) }}
-                    </a>
+                    </button>
                     {% endfor %}
                     {% if day_files|length > 3 %}
                     <div class="cal-more">+ ещё {{ day_files|length - 3 }}</div>
@@ -2382,6 +616,7 @@
                         <div class="file-info">
                             <div class="file-name" title="{{ file_info.filename }}">{{ file_info.filename|truncate(28, true) }}</div>
                             <div class="file-actions">
+                                <button type="button" class="file-action-btn preview" data-preview-file="{{ file_info.filename }}">Смотреть</button>
                                 <a href="/{{ user.id }}/food/{{ file_info.filename }}" class="file-action-btn download" download>Скачать</a>
                             </div>
                         </div>
@@ -2404,29 +639,24 @@
 
                 <div class="file-preview">
                     {% set file_ext = file_info.filename.split('.')[-1].lower() %}
-                    <div class="file-icon">
-                        {% if file_ext in ['xls', 'xlsx', 'csv'] %}
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="1.5">
+                    <div class="file-icon {% if file_ext in ['xls', 'xlsx', 'csv'] %}file-icon-xls{% elif file_ext == 'pdf' %}file-icon-pdf{% else %}file-icon-file{% endif %}"
+                         data-label="{% if file_ext in ['xls', 'xlsx'] %}XLS{% elif file_ext == 'csv' %}CSV{% elif file_ext == 'pdf' %}PDF{% else %}FILE{% endif %}">
+                        {% if file_ext == 'pdf' %}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                             <polyline points="14 2 14 8 20 8"></polyline>
-                            <text x="8" y="18" font-size="8" fill="currentColor">XLS</text>
-                        </svg>
-                        {% elif file_ext in ['pdf'] %}
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="1.5">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <text x="8" y="18" font-size="8" fill="currentColor">PDF</text>
+                            <path d="M10 18v-6h1.5a1.5 1.5 0 0 1 0 3H10"></path>
                         </svg>
                         {% else %}
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="1.5">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                             <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="8" y1="13" x2="16" y2="13"></line>
+                            <line x1="8" y1="17" x2="13" y2="17"></line>
                         </svg>
                         {% endif %}
                     </div>
+                    <span class="file-preview-hint">Предпросмотр</span>
                 </div>
 
                 <div class="file-info">
@@ -2455,6 +685,14 @@
                         </span>
                     </div>
                     <div class="file-actions">
+                        <button type="button" class="file-action-btn preview"
+                                data-preview-file="{{ file_info.filename }}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            Смотреть
+                        </button>
                         <a href="/{{ user.id }}/food/{{ file_info.filename }}" class="file-action-btn download"
                            download>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2511,6 +749,40 @@
         <div class="modal-buttons">
             <button id="cancelDelete">Отмена</button>
             <button id="confirmDelete">Удалить</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ПРЕДПРОСМОТР ФАЙЛА ===== -->
+<div class="preview-overlay" id="filePreviewOverlay" aria-hidden="true">
+    <div class="preview-shell" role="dialog" aria-modal="true" aria-labelledby="previewTitle">
+        <div class="preview-top">
+            <div>
+                <p class="preview-kicker">Предпросмотр файла</p>
+                <h3 class="preview-title" id="previewTitle">Файл</h3>
+            </div>
+            <div class="preview-top-actions">
+                <a class="preview-icon-btn" id="previewDownloadBtn" href="#" download title="Скачать">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </a>
+                <button type="button" class="preview-icon-btn" id="previewCloseBtn" title="Закрыть" aria-label="Закрыть">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="preview-tabs" id="previewTabs" hidden></div>
+        <div class="preview-body" id="previewBody">
+            <div class="preview-loading">
+                <div class="preview-spinner"></div>
+                <div>Загружаем содержимое…</div>
+            </div>
         </div>
     </div>
 </div>
@@ -3146,7 +1418,7 @@
             if (!grid) return;
             const card = e.target.closest('.file-card');
             if (!card) return;
-            if (e.target.closest('.file-action-btn') || e.target.closest('a')) return;
+            if (e.target.closest('.file-action-btn') || e.target.closest('a') || e.target.closest('[data-preview-file]')) return;
 
             const cb = card.querySelector('.file-checkbox');
             if (cb) {
@@ -3331,6 +1603,190 @@
                 }
             });
         }
+
+        // ===== ПРЕДПРОСМОТР ФАЙЛОВ =====
+        const previewOverlay = $('#filePreviewOverlay');
+        const previewTitle = $('#previewTitle');
+        const previewBody = $('#previewBody');
+        const previewTabs = $('#previewTabs');
+        const previewDownloadBtn = $('#previewDownloadBtn');
+        const previewCloseBtn = $('#previewCloseBtn');
+        const schoolUid = {{ user.id }};
+        let previewSheets = [];
+        let previewOpen = false;
+
+        function escapeHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function closeFilePreview() {
+            if (!previewOverlay) return;
+            previewOverlay.classList.remove('open');
+            previewOverlay.setAttribute('aria-hidden', 'true');
+            previewOpen = false;
+            document.body.style.overflow = '';
+            if (previewBody) previewBody.innerHTML = '';
+            if (previewTabs) {
+                previewTabs.innerHTML = '';
+                previewTabs.hidden = true;
+            }
+            previewSheets = [];
+        }
+
+        function showPreviewLoading(filename) {
+            if (previewTitle) previewTitle.textContent = filename || 'Файл';
+            if (previewTabs) {
+                previewTabs.innerHTML = '';
+                previewTabs.hidden = true;
+            }
+            if (previewBody) {
+                previewBody.innerHTML = `
+                    <div class="preview-loading">
+                        <div class="preview-spinner"></div>
+                        <div>Загружаем содержимое…</div>
+                    </div>`;
+            }
+            if (previewOverlay) {
+                previewOverlay.classList.add('open');
+                previewOverlay.setAttribute('aria-hidden', 'false');
+                previewOpen = true;
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function renderSheet(sheet) {
+            if (!sheet || !sheet.rows || !sheet.rows.length) {
+                return `<div class="preview-empty">В этом листе нет данных для показа</div>`;
+            }
+            const headerIndex = Number.isInteger(sheet.header) ? sheet.header : 0;
+            const metaRows = sheet.rows.slice(0, Math.max(0, headerIndex));
+            const header = sheet.rows[headerIndex] || [];
+            const bodyRows = sheet.rows.slice(headerIndex + 1);
+            const meta = metaRows.length
+                ? `<div class="preview-meta">${metaRows.map(row => {
+                    const cells = row.filter(cell => String(cell || '').trim());
+                    if (!cells.length) return '';
+                    return `<div class="preview-meta-row">${cells.map(cell => `<span>${escapeHtml(cell)}</span>`).join('')}</div>`;
+                }).join('')}</div>`
+                : '';
+            const thead = `<thead><tr>${header.map(cell => `<th>${escapeHtml(cell)}</th>`).join('')}</tr></thead>`;
+            const tbody = `<tbody>${bodyRows.map(row =>
+                `<tr>${row.map(cell => `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`
+            ).join('')}</tbody>`;
+            const note = sheet.truncated
+                ? `<p class="preview-note">Показаны первые строки листа. Полный файл можно скачать.</p>`
+                : '';
+            return `${meta}<div class="preview-table-wrap"><table class="preview-table">${thead}${tbody}</table></div>${note}`;
+        }
+
+        function renderPreviewPayload(data) {
+            if (previewTitle) previewTitle.textContent = data.filename || 'Файл';
+            if (previewDownloadBtn) {
+                previewDownloadBtn.href = data.url || '#';
+                previewDownloadBtn.setAttribute('download', data.filename || '');
+            }
+            if (!previewBody) return;
+
+            if (data.kind === 'sheet') {
+                previewSheets = data.sheets || [];
+                if (!previewSheets.length) {
+                    previewBody.innerHTML = `<div class="preview-empty">Таблица пуста</div>`;
+                    return;
+                }
+                if (previewTabs) {
+                    if (previewSheets.length > 1) {
+                        previewTabs.hidden = false;
+                        previewTabs.innerHTML = previewSheets.map((sheet, index) =>
+                            `<button type="button" class="preview-tab${index === 0 ? ' active' : ''}" data-sheet-index="${index}">${escapeHtml(sheet.name || ('Лист ' + (index + 1)))}</button>`
+                        ).join('');
+                    } else {
+                        previewTabs.hidden = true;
+                        previewTabs.innerHTML = '';
+                    }
+                }
+                previewBody.innerHTML = renderSheet(previewSheets[0]);
+                return;
+            }
+
+            if (data.kind === 'pdf') {
+                previewBody.innerHTML = `<iframe class="preview-frame" title="PDF" src="${escapeHtml(data.inline || data.url)}"></iframe>`;
+                return;
+            }
+
+            if (data.kind === 'image') {
+                previewBody.innerHTML = `<img class="preview-image" alt="${escapeHtml(data.filename || '')}" src="${escapeHtml(data.inline || data.url)}">`;
+                return;
+            }
+
+            previewBody.innerHTML = `
+                <div class="preview-fallback">
+                    <p>${escapeHtml(data.message || 'Для этого файла доступно только скачивание')}</p>
+                    <a class="preview-download-btn" href="${escapeHtml(data.url || '#')}" download>
+                        Скачать файл
+                    </a>
+                </div>`;
+        }
+
+        async function openFilePreview(filename) {
+            if (!filename) return;
+            showPreviewLoading(filename);
+            if (previewDownloadBtn) {
+                previewDownloadBtn.href = `/${schoolUid}/food/${encodeURIComponent(filename)}`;
+                previewDownloadBtn.setAttribute('download', filename);
+            }
+            try {
+                const response = await fetch(`/api/school/${schoolUid}/file-preview?name=${encodeURIComponent(filename)}`);
+                if (!response.ok) throw new Error('preview failed');
+                const data = await response.json();
+                renderPreviewPayload(data);
+            } catch (err) {
+                if (previewBody) {
+                    previewBody.innerHTML = `
+                        <div class="preview-fallback">
+                            <p>Не удалось открыть предпросмотр</p>
+                            <a class="preview-download-btn" href="/${schoolUid}/food/${encodeURIComponent(filename)}" download>
+                                Скачать файл
+                            </a>
+                        </div>`;
+                }
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const trigger = e.target.closest('[data-preview-file]');
+            if (!trigger) return;
+            e.preventDefault();
+            e.stopPropagation();
+            openFilePreview(trigger.dataset.previewFile);
+        });
+
+        if (previewTabs) {
+            previewTabs.addEventListener('click', function(e) {
+                const tab = e.target.closest('.preview-tab');
+                if (!tab) return;
+                const index = Number(tab.dataset.sheetIndex || 0);
+                previewTabs.querySelectorAll('.preview-tab').forEach(node => node.classList.remove('active'));
+                tab.classList.add('active');
+                if (previewSheets[index]) {
+                    previewBody.innerHTML = renderSheet(previewSheets[index]);
+                }
+            });
+        }
+
+        if (previewCloseBtn) previewCloseBtn.addEventListener('click', closeFilePreview);
+        if (previewOverlay) {
+            previewOverlay.addEventListener('click', function(e) {
+                if (e.target === previewOverlay) closeFilePreview();
+            });
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && previewOpen) closeFilePreview();
+        });
 
     });
 </script>

@@ -8,7 +8,7 @@ import time
 import secrets
 import hashlib
 import urllib.parse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from pathlib import Path
 from typing import List, Optional, Dict
 import calendar as pycal
@@ -37,7 +37,8 @@ from fastapi.responses import (
     FileResponse,
     StreamingResponse,
     RedirectResponse,
-    JSONResponse
+    JSONResponse,
+    PlainTextResponse,
 )
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.gzip import GZipMiddleware
@@ -395,6 +396,85 @@ class CachedStaticFiles(StaticFiles):
 app.mount("/static", CachedStaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+BASE_DIR = Path(__file__).resolve().parent
+
+
+@app.get("/manifest.webmanifest")
+async def pwa_manifest():
+    path = BASE_DIR / "static" / "manifest.webmanifest"
+    return FileResponse(
+        path,
+        media_type="application/manifest+json",
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
+@app.get("/sw.js")
+async def pwa_service_worker():
+    """SW must be served from site root for full scope '/'."""
+    path = BASE_DIR / "static" / "sw.js"
+    return FileResponse(
+        path,
+        media_type="application/javascript; charset=utf-8",
+        headers={
+            "Cache-Control": "no-cache",
+            "Service-Worker-Allowed": "/",
+        },
+    )
+
+
+@app.get("/offline", response_class=HTMLResponse)
+async def offline_page(request: Request):
+    return templates.TemplateResponse("offline.html", {"request": request})
+
+
+@app.get("/robots.txt", response_class=PlainTextResponse)
+async def robots_txt(request: Request):
+    host = request.headers.get("host") or request.url.hostname or "localhost"
+    scheme = request.url.scheme
+    return (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /admin\n"
+        "Disallow: /api/\n"
+        "Disallow: /dashboard-admin\n"
+        "Disallow: /regional-admin\n"
+        "Disallow: /knowledge-base/admin\n"
+        f"Sitemap: {scheme}://{host}/sitemap.xml\n"
+    )
+
+
+@app.get("/sitemap.xml", response_class=Response)
+async def sitemap_xml(request: Request):
+    host = request.headers.get("host") or request.url.hostname or "localhost"
+    scheme = request.url.scheme
+    base = f"{scheme}://{host}"
+    paths = [
+        "/",
+        "/login",
+        "/register",
+        "/support",
+        "/tutorials",
+        "/knowledge-base",
+        "/analis",
+        "/util",
+        "/privacy.html",
+        "/agree.html",
+        "/oferta.html",
+        "/appeal",
+    ]
+    urls = "\n".join(
+        f"  <url><loc>{base}{p}</loc><changefreq>weekly</changefreq></url>"
+        for p in paths
+    )
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"{urls}\n"
+        "</urlset>\n"
+    )
+    return Response(content=xml, media_type="application/xml; charset=utf-8")
+
 
 # ДЛЯ ПЕРСОНАЛЬНЫХ ДАННЫХ
 @app.get("/privacy.html", response_class=HTMLResponse)
@@ -671,1145 +751,159 @@ async def update_excel_content(
 
 # Удаляем дубликат run_in_threadpool, так как он уже определен выше
 
-# ИСПРАВЛЕННАЯ ФУНКЦИЯ generate_federal_html_stream с фильтрацией и названием школы
-async def generate_federal_html_stream(
+def _format_file_size(num_bytes: int) -> str:
+    if num_bytes < 1024:
+        return f"{num_bytes} Б"
+    kb = num_bytes / 1024
+    if kb < 1024:
+        return f"{kb:.0f} КБ" if kb >= 10 else f"{kb:.1f} КБ".replace(".0", "")
+    return f"{kb / 1024:.1f} МБ"
+
+
+async def build_public_menu_context(
         uid: int,
         base_path: Path,
         manifest: dict,
         school_name: str,
         filter_year: Optional[str] = None,
         filter_month: Optional[str] = None
-):
-    """Потоковая генерация HTML для федерального мониторинга с фильтрацией и названием школы"""
+) -> dict:
+    """Данные для публичной страницы ежедневного меню."""
 
-    # Получаем все файлы
     files = await list_directory_files_optimized(base_path)
 
-    # Сортируем файлы по дате в имени (новые сверху)
-    def get_file_date(filename):
+    def get_file_date(filename: str):
         match = re.search(r'(\d{4})-(\d{2})-(\d{2})', filename)
         if match:
             return datetime(int(match.group(1)), int(match.group(2)), int(match.group(3)))
         return datetime(2000, 1, 1)
 
-    # Сортируем файлы по дате (новые сверху)
-    files_sorted = sorted([f for f in files if f.name != "manifest.json"],
-                          key=lambda f: get_file_date(f.name), reverse=True)
+    files_sorted = sorted(
+        [f for f in files if f.name != "manifest.json"],
+        key=lambda f: get_file_date(f.name),
+        reverse=True,
+    )
 
-    # Группируем файлы по годам и месяцам
-    grouped_files = {}
+    grouped_all: dict = {}
     special_files = {"tm": [], "kp": [], "findex": []}
 
     for f in files_sorted:
-        if f.name == "manifest.json":
-            continue
-
         file_meta = manifest.get(f.name, {})
         date_match = re.search(r'(\d{4})-(\d{2})-(\d{2})', f.name)
+        if not date_match and f.name != "findex.xlsx":
+            continue
 
-        if date_match:
-            year, month, day = date_match.groups()
-            month_name = MONTHS.get(month, month)
+        size = f.stat().st_size
+        size_label = _format_file_size(size)
 
-            # Определяем тип файла
-            if f.name.startswith('tm') and f.name.endswith('-sm.xlsx'):
-                special_files["tm"].append({
-                    "filename": f.name,
-                    "year": year,
-                    "date": f"{day}.{month}.{year}",
-                    "size": f.stat().st_size
-                })
-            elif f.name.startswith('kp') and f.name.endswith('.xlsx'):
-                special_files["kp"].append({
-                    "filename": f.name,
-                    "year": year,
-                    "date": f"{day}.{month}.{year}",
-                    "size": f.stat().st_size
-                })
-            elif f.name == "findex.xlsx":
-                special_files["findex"].append({
-                    "filename": f.name,
-                    "date": file_meta.get("upload_datetime", f"{day}.{month}.{year}"),
-                    "size": f.stat().st_size
-                })
-            else:
-                # Обычный файл меню
-                grouped_files.setdefault(year, {}).setdefault(month_name, []).append({
-                    "filename": f.name,
-                    "day": day,
-                    "month": month,
-                    "year": year,
-                    "date": f"{day}.{month}.{year}",
-                    "size": f.stat().st_size
-                })
+        if f.name == "findex.xlsx":
+            special_files["findex"].append({
+                "filename": f.name,
+                "date": file_meta.get("upload_datetime", "—"),
+                "size": size,
+                "size_label": size_label,
+            })
+            continue
 
-    # ========== ПРИМЕНЯЕМ ФИЛЬТРАЦИЮ ==========
-    if filter_year:
-        # Если задан год, оставляем только файлы этого года
-        if filter_year in grouped_files:
-            grouped_files = {filter_year: grouped_files[filter_year]}
+        year, month, day = date_match.groups()
+        item = {
+            "filename": f.name,
+            "day": day,
+            "month": month,
+            "year": year,
+            "date": f"{day}.{month}.{year}",
+            "size": size,
+            "size_label": size_label,
+        }
+
+        name_l = f.name.lower()
+        if name_l.startswith("tm") and name_l.endswith("-sm.xlsx"):
+            special_files["tm"].append(item)
+        elif name_l.startswith("kp") and name_l.endswith(".xlsx"):
+            special_files["kp"].append(item)
         else:
-            grouped_files = {}
+            grouped_all.setdefault(year, {}).setdefault(month, []).append(item)
 
-    if filter_month and filter_year:
-        # Если задан месяц, оставляем только файлы этого месяца (в текущем году)
-        month_name = MONTHS.get(filter_month, filter_month)
-        if filter_year in grouped_files and month_name in grouped_files[filter_year]:
-            grouped_files[filter_year] = {month_name: grouped_files[filter_year][month_name]}
-        else:
-            grouped_files = {}
+    available_years = sorted(grouped_all.keys(), reverse=True)
 
-    # Определяем сегодняшнюю дату
+    # Меню на сегодня — из полного архива, не из фильтра
     today = datetime.now()
     today_str = today.strftime("%Y-%m-%d")
     today_file = None
-
-    # Ищем файл за сегодня
-    for year_data in grouped_files.values():
-        for month_data in year_data.values():
-            for file_info in month_data:
-                if file_info["filename"].startswith(today_str):
-                    today_file = file_info
-                    break
-            if today_file:
-                break
-        if today_file:
+    all_menu = []
+    for year_data in grouped_all.values():
+        for month_files in year_data.values():
+            all_menu.extend(month_files)
+    for file_info in all_menu:
+        if file_info["filename"].startswith(today_str):
+            today_file = file_info
             break
-
-    # Если файла за сегодня нет, ищем последний доступный
-    if not today_file:
-        # Собираем все файлы из grouped_files в список
-        all_files = []
-        for year_data in grouped_files.values():
-            for month_data in year_data.values():
-                all_files.extend(month_data)
-        if all_files:
-            # Сортируем по дате (по убыванию) и берем первый
-            all_files.sort(key=lambda x: datetime.strptime(x["date"], "%d.%m.%Y"), reverse=True)
-            today_file = all_files[0]
-
-    # Подсчет общего количества файлов (с учетом фильтрации)
-    total_files_count = sum(
-        len(month_files) for year_data in grouped_files.values() for month_files in year_data.values())
-
-    # Формируем HTML
-    yield f"""<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ежедневное меню - {school_name}</title>
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f0f4f8;
-            color: #1e293b;
-            min-height: 100vh;
-            padding: 20px;
-        }}
-
-        .container {{
-            max-width: 1100px;
-            margin: 0 auto;
-        }}
-
-        .header {{
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border-radius: 20px;
-            padding: 30px 35px;
-            margin-bottom: 25px;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }}
-
-        .header::before {{
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -20%;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
-            border-radius: 50%;
-        }}
-
-        .header-content {{
-            position: relative;
-            z-index: 1;
-        }}
-
-        .header h1 {{
-            font-size: 26px;
-            font-weight: 700;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }}
-
-        .header h1 .badge {{
-            font-size: 13px;
-            font-weight: 500;
-            background: rgba(59, 130, 246, 0.3);
-            padding: 3px 12px;
-            border-radius: 20px;
-        }}
-
-        .header p {{
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 15px;
-        }}
-
-        .header-stats {{
-            display: flex;
-            gap: 25px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }}
-
-        .header-stats .stat {{
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.7);
-        }}
-
-        .header-stats .stat strong {{
-            color: white;
-            font-weight: 600;
-        }}
-
-        .today-section {{
-            background: white;
-            border-radius: 20px;
-            padding: 25px 30px;
-            margin-bottom: 25px;
-            border: 2px solid #3b82f6;
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
-        }}
-
-        .today-section .today-label {{
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #3b82f6;
-            margin-bottom: 10px;
-        }}
-
-        .today-section .today-label svg {{
-            width: 20px;
-            height: 20px;
-            stroke: #3b82f6;
-        }}
-
-        .today-section .today-date {{
-            font-size: 20px;
-            font-weight: 700;
-            color: #0f172a;
-        }}
-
-        .today-section .today-file {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            background: #f8fafc;
-            border-radius: 12px;
-            margin-top: 12px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }}
-
-        .today-section .today-file .file-info {{
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }}
-
-        .today-section .today-file .file-icon {{
-            width: 40px;
-            height: 40px;
-            background: #dbeafe;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }}
-
-        .today-section .today-file .file-icon svg {{
-            width: 20px;
-            height: 20px;
-            stroke: #3b82f6;
-        }}
-
-        .today-section .today-file .file-name {{
-            font-weight: 600;
-            font-size: 16px;
-            color: #0f172a;
-        }}
-
-        .today-section .today-file .file-meta {{
-            font-size: 13px;
-            color: #64748b;
-        }}
-
-        .today-section .today-file .btn-download {{
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 14px;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }}
-
-        .today-section .today-file .btn-download:hover {{
-            background: #1d4ed8;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }}
-
-        .today-section .today-file .btn-download svg {{
-            width: 16px;
-            height: 16px;
-            stroke: white;
-        }}
-
-        .today-section .no-file {{
-            text-align: center;
-            padding: 20px;
-            color: #64748b;
-            font-size: 15px;
-        }}
-
-        .filter-section {{
-            background: white;
-            border-radius: 20px;
-            padding: 20px 25px;
-            margin-bottom: 25px;
-            border: 1px solid #e2e8f0;
-        }}
-
-        .filter-section .filter-label {{
-            font-size: 14px;
-            font-weight: 600;
-            color: #64748b;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }}
-
-        .filter-section .filter-label svg {{
-            width: 18px;
-            height: 18px;
-            stroke: #64748b;
-        }}
-
-        .filter-row {{
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            align-items: center;
-        }}
-
-        .filter-row select,
-        .filter-row input {{
-            padding: 10px 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 15px;
-            background: white;
-            color: #1e293b;
-            font-family: inherit;
-            transition: border-color 0.2s ease;
-        }}
-
-        .filter-row select:focus,
-        .filter-row input:focus {{
-            outline: none;
-            border-color: #3b82f6;
-        }}
-
-        .filter-row .btn-filter {{
-            padding: 10px 25px;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 15px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }}
-
-        .filter-row .btn-filter:hover {{
-            background: #1d4ed8;
-            transform: translateY(-2px);
-        }}
-
-        .files-section {{
-            background: white;
-            border-radius: 20px;
-            border: 1px solid #e2e8f0;
-            overflow: hidden;
-        }}
-
-        .files-section .section-header {{
-            padding: 18px 25px;
-            background: #f8fafc;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }}
-
-        .files-section .section-header h2 {{
-            font-size: 18px;
-            font-weight: 700;
-            color: #0f172a;
-        }}
-
-        .files-section .section-header .count {{
-            font-size: 14px;
-            color: #64748b;
-        }}
-
-        .year-group {{
-            border-bottom: 1px solid #e2e8f0;
-        }}
-
-        .year-group:last-child {{
-            border-bottom: none;
-        }}
-
-        .year-toggle {{
-            padding: 14px 25px;
-            background: #f8fafc;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background 0.2s ease;
-            user-select: none;
-        }}
-
-        .year-toggle:hover {{
-            background: #f1f5f9;
-        }}
-
-        .year-toggle .year-title {{
-            font-size: 16px;
-            font-weight: 600;
-            color: #0f172a;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }}
-
-        .year-toggle .year-title .year-count {{
-            font-size: 13px;
-            font-weight: 500;
-            color: #64748b;
-        }}
-
-        .year-toggle .arrow {{
-            transition: transform 0.3s ease;
-            color: #94a3b8;
-        }}
-
-        .year-toggle .arrow.open {{
-            transform: rotate(180deg);
-        }}
-
-        .year-content {{
-            display: none;
-            padding: 0 25px 20px 25px;
-        }}
-
-        .year-content.open {{
-            display: block;
-        }}
-
-        .months-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }}
-
-        .month-card {{
-            background: #f8fafc;
-            border-radius: 14px;
-            overflow: hidden;
-            border: 1px solid #e2e8f0;
-        }}
-
-        .month-card .month-header {{
-            padding: 12px 18px;
-            background: #f1f5f9;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 600;
-            font-size: 15px;
-            color: #0f172a;
-        }}
-
-        .month-card .month-header .month-count {{
-            font-size: 12px;
-            font-weight: 500;
-            color: #64748b;
-            background: white;
-            padding: 2px 10px;
-            border-radius: 20px;
-        }}
-
-        .month-card .month-files {{
-            padding: 10px 15px;
-        }}
-
-        .file-item {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 12px;
-            background: white;
-            border-radius: 10px;
-            margin-bottom: 8px;
-            border: 1px solid transparent;
-            transition: all 0.2s ease;
-        }}
-
-        .file-item:hover {{
-            border-color: #dbeafe;
-            background: #f8fafc;
-        }}
-
-        .file-item .file-info {{
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
-            min-width: 0;
-        }}
-
-        .file-item .file-icon-small {{
-            width: 32px;
-            height: 32px;
-            background: #dbeafe;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }}
-
-        .file-item .file-icon-small svg {{
-            width: 16px;
-            height: 16px;
-            stroke: #3b82f6;
-        }}
-
-        .file-item .file-details {{
-            flex: 1;
-            min-width: 0;
-        }}
-
-        .file-item .file-details .file-name {{
-            font-weight: 500;
-            font-size: 14px;
-            color: #0f172a;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }}
-
-        .file-item .file-details .file-size {{
-            font-size: 12px;
-            color: #94a3b8;
-        }}
-
-        .file-item .btn-download-small {{
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 6px 14px;
-            background: #f1f5f9;
-            color: #3b82f6;
-            border: none;
-            border-radius: 8px;
-            font-weight: 500;
-            font-size: 13px;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-        }}
-
-        .file-item .btn-download-small:hover {{
-            background: #3b82f6;
-            color: white;
-        }}
-
-        .file-item .btn-download-small svg {{
-            width: 14px;
-            height: 14px;
-        }}
-
-        .sidebar {{
-            margin-top: 25px;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-        }}
-
-        @media (max-width: 768px) {{
-            .sidebar {{
-                grid-template-columns: 1fr;
-            }}
-        }}
-
-        .sidebar-card {{
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            border: 1px solid #e2e8f0;
-        }}
-
-        .sidebar-card .card-title {{
-            font-size: 14px;
-            font-weight: 600;
-            color: #0f172a;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }}
-
-        .sidebar-card .card-title svg {{
-            width: 18px;
-            height: 18px;
-            stroke: #3b82f6;
-        }}
-
-        .sidebar-card .special-file {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #f1f5f9;
-        }}
-
-        .sidebar-card .special-file:last-child {{
-            border-bottom: none;
-        }}
-
-        .sidebar-card .special-file .file-name {{
-            font-size: 13px;
-            font-weight: 500;
-            color: #0f172a;
-        }}
-
-        .sidebar-card .special-file .file-meta {{
-            font-size: 11px;
-            color: #94a3b8;
-        }}
-
-        .sidebar-card .special-file .btn-download-small {{
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 12px;
-            background: #f1f5f9;
-            color: #3b82f6;
-            border: none;
-            border-radius: 6px;
-            font-weight: 500;
-            font-size: 12px;
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }}
-
-        .sidebar-card .special-file .btn-download-small:hover {{
-            background: #3b82f6;
-            color: white;
-        }}
-
-        .sidebar-card .special-file .btn-download-small svg {{
-            width: 12px;
-            height: 12px;
-        }}
-
-        .compliance-badge {{
-            background: #f0fdf4;
-            border: 1px solid #86efac;
-            border-radius: 12px;
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }}
-
-        .compliance-badge svg {{
-            width: 24px;
-            height: 24px;
-            stroke: #22c55e;
-            flex-shrink: 0;
-        }}
-
-        .compliance-badge .text {{
-            font-size: 14px;
-            color: #166534;
-        }}
-
-        .compliance-badge .text strong {{
-            display: block;
-            font-size: 15px;
-        }}
-
-        .survey-link {{
-            display: block;
-            text-align: center;
-            padding: 12px;
-            background: #eff6ff;
-            border-radius: 12px;
-            color: #3b82f6;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }}
-
-        .survey-link:hover {{
-            background: #dbeafe;
-        }}
-
-        .bottom-row {{
-            margin-top: 25px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }}
-
-        @media (max-width: 768px) {{
-            .bottom-row {{
-                grid-template-columns: 1fr;
-            }}
-        }}
-
-        .empty-state {{
-            text-align: center;
-            padding: 50px 20px;
-            color: #94a3b8;
-        }}
-
-        .empty-state svg {{
-            width: 60px;
-            height: 60px;
-            margin-bottom: 15px;
-            stroke: #cbd5e1;
-        }}
-
-        .empty-state h3 {{
-            font-size: 18px;
-            color: #475569;
-            margin-bottom: 6px;
-        }}
-
-        .empty-state p {{
-            font-size: 14px;
-        }}
-
-        @media (max-width: 600px) {{
-            body {{ padding: 12px; }}
-            .header {{ padding: 20px; }}
-            .header h1 {{ font-size: 20px; }}
-            .today-section {{ padding: 18px; }}
-            .today-section .today-file {{ flex-direction: column; align-items: stretch; }}
-            .today-section .today-file .btn-download {{ justify-content: center; }}
-            .filter-row {{ flex-direction: column; align-items: stretch; }}
-            .filter-row select, .filter-row input, .filter-row .btn-filter {{ width: 100%; }}
-            .months-grid {{ grid-template-columns: 1fr; }}
-            .file-item {{ flex-wrap: wrap; gap: 10px; }}
-            .file-item .btn-download-small {{ width: 100%; justify-content: center; }}
-            .sidebar {{ grid-template-columns: 1fr; }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- Шапка -->
-        <div class="header">
-            <div class="header-content">
-                <h1>
-                    🏫 Ежедневное меню
-                    <span class="badge">{school_name}</span>
-                </h1>
-                <p>Актуальное меню питания обучающихся</p>
-                <div class="header-stats">
-                    <span class="stat">📄 Всего: <strong>{total_files_count}</strong></span>
-                    <span class="stat">📅 {len(grouped_files)} лет</span>
-                </div>
-            </div>
-        </div>
-"""
-
-    # Блок "Меню на сегодня"
-    today_date = today.strftime("%d.%m.%Y")
-    today_weekday = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"][today.weekday()]
-
-    yield f"""
-        <!-- Меню на сегодня -->
-        <div class="today-section">
-            <div class="today-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
-                </svg>
-                Меню на сегодня
-            </div>
-            <div class="today-date">{today_weekday}, {today_date}</div>
-"""
-
-    if today_file:
-        size_kb = today_file["size"] // 1024
-        yield f"""
-            <div class="today-file">
-                <div class="file-info">
-                    <div class="file-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="file-name">{today_file["filename"]}</div>
-                        <div class="file-meta">{size_kb} KB • {today_file["date"]}</div>
-                    </div>
-                </div>
-                <a href="{today_file["filename"]}" class="btn-download" download>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                    Скачать меню
-                </a>
-            </div>
-"""
+    if not today_file and all_menu:
+        all_menu_sorted = sorted(
+            all_menu,
+            key=lambda x: datetime.strptime(x["date"], "%d.%m.%Y"),
+            reverse=True,
+        )
+        today_file = all_menu_sorted[0]
+
+    grouped = grouped_all
+    if filter_year:
+        grouped = {filter_year: grouped_all[filter_year]} if filter_year in grouped_all else {}
+    if filter_month and filter_year and filter_year in grouped:
+        month_files = grouped[filter_year].get(filter_month, [])
+        grouped = {filter_year: {filter_month: month_files}} if month_files else {}
+
+    years = []
+    for year in sorted(grouped.keys(), reverse=True):
+        months = []
+        for mid in sorted(grouped[year].keys(), reverse=True):
+            files_list = sorted(grouped[year][mid], key=lambda x: int(x["day"]))
+            months.append({
+                "id": mid,
+                "name": MONTHS.get(mid, mid),
+                "files": files_list,
+            })
+        year_total = sum(len(m["files"]) for m in months)
+        years.append({"year": year, "total": year_total, "months": months})
+
+    total_files_count = sum(y["total"] for y in years)
+    years_count = len(available_years)
+    # русское склонение «год/года/лет»
+    n = years_count % 100
+    n1 = years_count % 10
+    if 11 <= n <= 14:
+        years_label = "лет"
+    elif n1 == 1:
+        years_label = "год"
+    elif 2 <= n1 <= 4:
+        years_label = "года"
     else:
-        yield """
-            <div class="no-file">
-                😕 Меню на сегодня пока не загружено
-                <br><small style="color: #94a3b8;">Попробуйте выбрать другую дату ниже</small>
-            </div>
-"""
+        years_label = "лет"
 
-    yield """
-        </div>
+    weekdays = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
 
-        <!-- Фильтр по дате -->
-        <div class="filter-section">
-            <div class="filter-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                Выбрать дату
-            </div>
-            <form class="filter-row" method="get" id="dateFilterForm">
-                <select name="year" id="filterYear">
-"""
+    special_files["tm"] = sorted(special_files["tm"], key=lambda x: x["year"], reverse=True)
+    special_files["kp"] = sorted(special_files["kp"], key=lambda x: x["year"], reverse=True)
 
-    # Добавляем годы в фильтр
-    years = sorted(grouped_files.keys(), reverse=True)
-    for year in years:
-        selected = "selected" if filter_year == year else ""
-        yield f'                    <option value="{year}" {selected}>{year}</option>'
+    if not available_years and filter_year is None:
+        available_years = [str(today.year)]
 
-    yield """
-                </select>
-                <select name="month" id="filterMonth">
-                    <option value="">Все месяцы</option>
-"""
-
-    for m_id, m_name in MONTHS.items():
-        selected = "selected" if filter_month == m_id else ""
-        yield f'                    <option value="{m_id}" {selected}>{m_name}</option>'
-
-    yield """
-                </select>
-                <button type="submit" class="btn-filter">Показать</button>
-            </form>
-        </div>
-
-        <!-- Список файлов -->
-        <div class="files-section">
-            <div class="section-header">
-                <h2>📋 Все файлы меню</h2>
-                <span class="count">Всего: {total_files_count}</span>
-            </div>
-"""
-
-    # Если есть файлы - показываем
-    if grouped_files:
-        for year in sorted(grouped_files.keys(), reverse=True):
-            year_total = sum(len(month_files) for month_files in grouped_files[year].values())
-            yield f"""
-            <div class="year-group">
-                <div class="year-toggle" onclick="toggleYear(this)">
-                    <span class="year-title">
-                        📅 {year} год
-                        <span class="year-count">({year_total} файлов)</span>
-                    </span>
-                    <span class="arrow">▼</span>
-                </div>
-                <div class="year-content">
-                    <div class="months-grid">
-"""
-
-            for month in sorted(grouped_files[year].keys(), reverse=True):
-                month_files = grouped_files[year][month]
-                month_files.sort(key=lambda x: int(x["day"]))
-
-                yield f"""
-                        <div class="month-card">
-                            <div class="month-header">
-                                {month}
-                                <span class="month-count">{len(month_files)}</span>
-                            </div>
-                            <div class="month-files">
-"""
-
-                for file_info in month_files:
-                    size_kb = file_info["size"] // 1024
-                    yield f"""
-                                <div class="file-item">
-                                    <div class="file-info">
-                                        <div class="file-icon-small">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                                <polyline points="14 2 14 8 20 8"/>
-                                            </svg>
-                                        </div>
-                                        <div class="file-details">
-                                            <div class="file-name">{file_info["filename"]}</div>
-                                            <div class="file-size">{size_kb} KB • {file_info["date"]}</div>
-                                        </div>
-                                    </div>
-                                    <a href="{file_info["filename"]}" class="btn-download-small" download>
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                            <polyline points="7 10 12 15 17 10"/>
-                                            <line x1="12" y1="15" x2="12" y2="3"/>
-                                        </svg>
-                                        Скачать
-                                    </a>
-                                </div>
-"""
-
-                yield """
-                            </div>
-                        </div>
-"""
-
-            yield """
-                    </div>
-                </div>
-            </div>
-"""
-
-    else:
-        yield """
-            <div class="empty-state">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="12" y1="18" x2="12" y2="12"/>
-                    <line x1="9" y1="15" x2="15" y2="15"/>
-                </svg>
-                <h3>Нет файлов меню</h3>
-                <p>Файлы ещё не загружены</p>
-            </div>
-"""
-
-    yield """
-        </div>
-
-        <!-- Специальные файлы -->
-        <div class="sidebar">
-"""
-
-    # ФЦМПО
-    if special_files["findex"]:
-        yield """
-            <div class="sidebar-card">
-                <div class="card-title">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                        <circle cx="12" cy="12" r="3"/>
-                    </svg>
-                    ФЦМПО
-                </div>
-"""
-        for fi in special_files["findex"]:
-            size_kb = fi["size"] // 1024
-            yield f"""
-                <div class="special-file">
-                    <div>
-                        <div class="file-name">{fi["filename"]}</div>
-                        <div class="file-meta">{size_kb} KB • {fi["date"]}</div>
-                    </div>
-                    <a href="{fi["filename"]}" class="btn-download-small" download>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="7 10 12 15 17 10"/>
-                            <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                    </a>
-                </div>
-"""
-        yield """
-            </div>
-"""
-
-    # Календари питания
-    if special_files["kp"]:
-        yield """
-            <div class="sidebar-card">
-                <div class="card-title">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                        <line x1="16" y1="2" x2="16" y2="6"/>
-                        <line x1="8" y1="2" x2="8" y2="6"/>
-                        <line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
-                    Календари питания
-                </div>
-"""
-        for fi in sorted(special_files["kp"], key=lambda x: x["year"], reverse=True):
-            size_kb = fi["size"] // 1024
-            yield f"""
-                <div class="special-file">
-                    <div>
-                        <div class="file-name">{fi["filename"]}</div>
-                        <div class="file-meta">{size_kb} KB • {fi["year"]}</div>
-                    </div>
-                    <a href="{fi["filename"]}" class="btn-download-small" download>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="7 10 12 15 17 10"/>
-                            <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                    </a>
-                </div>
-"""
-        yield """
-            </div>
-"""
-
-    # Типовое меню
-    if special_files["tm"]:
-        yield """
-            <div class="sidebar-card">
-                <div class="card-title">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 4h16v16H4z"/>
-                        <path d="M8 8h8M8 12h6M8 16h4"/>
-                    </svg>
-                    Типовое меню
-                </div>
-"""
-        for fi in sorted(special_files["tm"], key=lambda x: x["year"], reverse=True):
-            size_kb = fi["size"] // 1024
-            yield f"""
-                <div class="special-file">
-                    <div>
-                        <div class="file-name">{fi["filename"]}</div>
-                        <div class="file-meta">{size_kb} KB • {fi["year"]}</div>
-                    </div>
-                    <a href="{fi["filename"]}" class="btn-download-small" download>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="7 10 12 15 17 10"/>
-                            <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                    </a>
-                </div>
-"""
-        yield """
-            </div>
-"""
-
-    yield """
-        </div>
-
-        <!-- СанПиН и опрос -->
-        <div class="bottom-row">
-            <div class="compliance-badge">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                <div class="text">
-                    <strong>Соответствует нормам СанПиН</strong>
-                    Меню разработано в соответствии с требованиями санитарных правил и норм
-                </div>
-            </div>
-            <a href="https://opros.cemon.ru/" target="_blank" class="survey-link">
-                📝 Опрос родителей и обучающихся ФЦМПО →
-            </a>
-        </div>
-    </div>
-
-    <script>
-        function toggleYear(element) {
-            const content = element.nextElementSibling;
-            const arrow = element.querySelector('.arrow');
-
-            if (content.classList.contains('open')) {
-                content.classList.remove('open');
-                arrow.classList.remove('open');
-            } else {
-                content.classList.add('open');
-                arrow.classList.add('open');
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const currentYear = new Date().getFullYear();
-            const yearGroups = document.querySelectorAll('.year-group');
-
-            yearGroups.forEach(group => {
-                const toggle = group.querySelector('.year-toggle');
-                const yearText = toggle.querySelector('.year-title').textContent;
-                if (yearText.includes(String(currentYear))) {
-                    const content = toggle.nextElementSibling;
-                    const arrow = toggle.querySelector('.arrow');
-                    content.classList.add('open');
-                    arrow.classList.add('open');
-                }
-            });
-        });
-    </script>
-</body>
-</html>
-"""
+    return {
+        "uid": uid,
+        "school_name": school_name,
+        "total_files_count": total_files_count,
+        "years_count": years_count,
+        "years_label": years_label,
+        "today_file": today_file,
+        "today_date": today.strftime("%d.%m.%Y"),
+        "today_weekday": weekdays[today.weekday()],
+        "years": years,
+        "special_files": special_files,
+        "available_years": available_years,
+        "filter_year": filter_year or "",
+        "filter_month": filter_month or "",
+        "months_items": list(MONTHS.items()),
+    }
 
 
 # НОВЫЙ МИДЛВАР ДЛЯ КЕШИРОВАНИЯ ИЗОБРАЖЕНИЙ
@@ -1895,6 +989,7 @@ async def performance_middleware(request: Request, call_next):
 # --- ФЕДЕРАЛЬНЫЙ МОНИТОРИНГ (ИСПРАВЛЕННЫЙ) ---
 @app.get("/{uid}/food/", response_class=HTMLResponse)
 async def federal_index(
+        request: Request,
         uid: int,
         year: Optional[str] = None,
         month: Optional[str] = None,
@@ -1904,19 +999,36 @@ async def federal_index(
     base_path = BASE_DIR / str(uid) / "food"
 
     if not await run_in_threadpool(base_path.exists):
-        return HTMLResponse(content="<html><body><h1>📭 Нет доступных файлов</h1></body></html>")
+        return templates.TemplateResponse(
+            "public_menu.html",
+            {
+                "request": request,
+                "uid": uid,
+                "school_name": f"Школа №{uid}",
+                "total_files_count": 0,
+                "years_count": 0,
+                "years_label": "лет",
+                "today_file": None,
+                "today_date": datetime.now().strftime("%d.%m.%Y"),
+                "today_weekday": ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"][datetime.now().weekday()],
+                "years": [],
+                "special_files": {"tm": [], "kp": [], "findex": []},
+                "available_years": [str(datetime.now().year)],
+                "filter_year": year or str(datetime.now().year),
+                "filter_month": month or "",
+                "months_items": list(MONTHS.items()),
+            },
+        )
 
     manifest_path = base_path / "manifest.json"
     manifest = await read_manifest_optimized(manifest_path)
 
-    # Получаем название школы
     user = await get_cached_user(uid, db)
     school_name = user.unit_name if user else f"Школа №{uid}"
 
-    return StreamingResponse(
-        generate_federal_html_stream(uid, base_path, manifest, school_name, year, month),
-        media_type="text/html"
-    )
+    ctx = await build_public_menu_context(uid, base_path, manifest, school_name, year, month)
+    ctx["request"] = request
+    return templates.TemplateResponse("public_menu.html", ctx)
 
 
 # ИСПРАВЛЕННЫЙ эндпоинт для ФЦМПО
@@ -2745,6 +1857,194 @@ async def dashboard(
         "special_files_count": len(special_files_all),
         "fcmp_stats": await run_in_threadpool(fcmp_service.get_school_fcmp_stats, db, uid),
     })
+
+
+def _safe_school_food_file(uid: int, name: str) -> Path:
+    """Файл из папки школы. Имя без путей и без служебного manifest."""
+    if not name or name != Path(name).name or name.startswith("."):
+        raise HTTPException(status_code=400, detail="Некорректное имя файла")
+    if name == "manifest.json":
+        raise HTTPException(status_code=404, detail="Файл не найден")
+    base = (Path(__file__).resolve().parent / str(uid) / "food").resolve()
+    path = (base / name).resolve()
+    if base not in path.parents or not path.is_file():
+        raise HTTPException(status_code=404, detail="Файл не найден")
+    return path
+
+
+def _preview_cell(value):
+    if value is None:
+        return ""
+    if isinstance(value, datetime):
+        return value.strftime("%d.%m.%Y %H:%M") if value.hour or value.minute else value.strftime("%d.%m.%Y")
+    if isinstance(value, date):
+        return value.strftime("%d.%m.%Y")
+    if isinstance(value, float):
+        if value.is_integer():
+            return str(int(value))
+        text = f"{value:.2f}".rstrip("0").rstrip(".")
+        return text
+    if isinstance(value, bool):
+        return "да" if value else "нет"
+    return str(value).replace("\n", " ").strip()
+
+
+def _trim_preview_rows(rows):
+    rows = [list(row) for row in rows if any(cell.strip() for cell in row)]
+    if not rows:
+        return []
+    width = max(len(row) for row in rows)
+    padded = [row + [""] * (width - len(row)) for row in rows]
+    last_col = 0
+    for row in padded:
+        for index, cell in enumerate(row):
+            if cell.strip():
+                last_col = max(last_col, index)
+    return [row[: last_col + 1] for row in padded]
+
+
+def _header_row_index(rows):
+    hints = ("блюдо", "наименование", "прием пищи", "раздел", "день недели")
+    for index, row in enumerate(rows[:8]):
+        joined = " ".join(row).lower()
+        if any(hint in joined for hint in hints):
+            return index
+    return 0 if rows else None
+
+
+def _preview_workbook(path: Path):
+    max_sheets = 4
+    max_rows = 80
+    max_cols = 14
+    wb = load_workbook(path, data_only=True, read_only=True)
+    sheets = []
+    try:
+        for ws in wb.worksheets[:max_sheets]:
+            raw_rows = []
+            truncated = False
+            for index, row in enumerate(ws.iter_rows(max_row=max_rows + 1, max_col=max_cols, values_only=True)):
+                if index >= max_rows:
+                    truncated = True
+                    break
+                raw_rows.append([_preview_cell(value) for value in row])
+            rows = _trim_preview_rows(raw_rows)
+            sheets.append({
+                "name": ws.title,
+                "rows": rows,
+                "header": _header_row_index(rows),
+                "truncated": truncated,
+            })
+    finally:
+        wb.close()
+    return sheets
+
+
+def _preview_csv(path: Path):
+    import csv
+    raw = path.read_bytes()[:1_500_000]
+    text = None
+    for encoding in ("utf-8-sig", "cp1251", "utf-8"):
+        try:
+            text = raw.decode(encoding)
+            break
+        except UnicodeDecodeError:
+            continue
+    if text is None:
+        text = raw.decode("utf-8", errors="replace")
+    sample = text[:4096]
+    try:
+        dialect = csv.Sniffer().sniff(sample, delimiters=";,\t")
+    except csv.Error:
+        dialect = csv.excel
+    reader = csv.reader(text.splitlines(), dialect)
+    raw_rows = []
+    truncated = False
+    for index, row in enumerate(reader):
+        if index >= 80:
+            truncated = True
+            break
+        raw_rows.append([_preview_cell(cell) for cell in row[:14]])
+    rows = _trim_preview_rows(raw_rows)
+    return [{
+        "name": "Таблица",
+        "rows": rows,
+        "header": _header_row_index(rows),
+        "truncated": truncated,
+    }]
+
+
+def build_school_file_preview(uid: int, name: str):
+    path = _safe_school_food_file(uid, name)
+    ext = path.suffix.lower()
+    quoted = urllib.parse.quote(path.name)
+    download_url = f"/{uid}/food/{quoted}"
+    inline_url = f"/api/school/{uid}/file-inline?name={quoted}"
+    if path.stat().st_size > 12 * 1024 * 1024 and ext in {".xlsx", ".xlsm", ".csv"}:
+        return {
+            "kind": "download",
+            "filename": path.name,
+            "url": download_url,
+            "message": "Файл слишком большой для предпросмотра",
+        }
+    if ext in {".xlsx", ".xlsm"}:
+        try:
+            sheets = _preview_workbook(path)
+        except (InvalidFileException, OSError, ValueError) as exc:
+            logger.warning("Preview failed for %s: %s", path, exc)
+            return {
+                "kind": "download",
+                "filename": path.name,
+                "url": download_url,
+                "message": "Не удалось прочитать таблицу",
+            }
+        return {
+            "kind": "sheet",
+            "filename": path.name,
+            "url": download_url,
+            "sheets": sheets,
+        }
+    if ext == ".csv":
+        return {
+            "kind": "sheet",
+            "filename": path.name,
+            "url": download_url,
+            "sheets": _preview_csv(path),
+        }
+    if ext == ".pdf":
+        return {"kind": "pdf", "filename": path.name, "url": download_url, "inline": inline_url}
+    if ext in {".png", ".jpg", ".jpeg", ".gif", ".webp"}:
+        return {"kind": "image", "filename": path.name, "url": download_url, "inline": inline_url}
+    return {
+        "kind": "download",
+        "filename": path.name,
+        "url": download_url,
+        "message": "Для этого формата доступно только скачивание",
+    }
+
+
+@app.get("/api/school/{uid}/file-preview")
+async def school_file_preview(uid: int, name: str):
+    return await run_in_threadpool(build_school_file_preview, uid, name)
+
+
+@app.get("/api/school/{uid}/file-inline")
+async def school_file_inline(uid: int, name: str):
+    path = await run_in_threadpool(_safe_school_food_file, uid, name)
+    media = {
+        ".pdf": "application/pdf",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".gif": "image/gif",
+        ".webp": "image/webp",
+    }.get(path.suffix.lower(), "application/octet-stream")
+    return FileResponse(
+        path,
+        media_type=media,
+        filename=path.name,
+        content_disposition_type="inline",
+        headers={"Cache-Control": "private, max-age=300"},
+    )
 
 
 # --- СТАТИСТИКА ФЦМПО (Чеченская Республика) ---

@@ -1,0 +1,728 @@
+/* Visual skin: light glass panels on the sky background.
+   Loaded after page styles so local palettes follow the same look. */
+
+:root {
+  --bg-main: #d7eefb;
+  --bg-card: rgba(255, 255, 255, 0.82);
+  --bg-card-solid: rgba(255, 255, 255, 0.88);
+  --bg-muted: rgba(226, 241, 250, 0.72);
+  --bg-body: transparent;
+  --surface: rgba(255, 255, 255, 0.72);
+  --border: rgba(186, 214, 232, 0.95);
+  --border-light: rgba(255, 255, 255, 0.7);
+  --text-primary: #1a568f;
+  --text-secondary: #4e7594;
+  --text-muted: #6d90ab;
+  --primary: #2f86d4;
+  --primary-dark: #1d6cb8;
+  --primary-light: #7eb6e8;
+  --primary-bg: rgba(47, 134, 212, 0.12);
+  --primary-hover: #1d6cb8;
+  --gray-50: rgba(247, 251, 254, 0.9);
+  --gray-100: rgba(236, 246, 252, 0.92);
+  --gray-200: rgba(214, 233, 246, 0.95);
+  --gray-300: #b7d4ea;
+  --gray-700: #3d6f99;
+  --gray-800: #1a568f;
+  --mist-100: rgba(232, 244, 252, 0.9);
+  --shadow-sm: 0 1px 2px rgba(74, 140, 190, 0.06);
+  --shadow-md: 0 8px 22px rgba(74, 140, 190, 0.1);
+  --shadow-lg: 0 16px 36px rgba(74, 140, 190, 0.14);
+}
+
+[data-theme="dark"] {
+  --bg-main: #0b1526;
+  --bg-card: rgba(18, 32, 52, 0.72);
+  --bg-card-solid: rgba(22, 38, 60, 0.88);
+  --bg-muted: rgba(26, 42, 66, 0.78);
+  --bg-body: transparent;
+  --surface: rgba(22, 38, 60, 0.7);
+  --border: rgba(126, 184, 232, 0.22);
+  --border-light: rgba(234, 241, 248, 0.1);
+  --text-primary: #eaf1f8;
+  --text-secondary: #b8cde3;
+  --text-muted: #7f9bb8;
+  --primary: #7eb8e8;
+  --primary-dark: #5b9fd4;
+  --primary-light: #a8d4f5;
+  --primary-bg: rgba(126, 184, 232, 0.14);
+  --primary-hover: #5b9fd4;
+  --gray-50: rgba(22, 38, 60, 0.9);
+  --gray-100: rgba(26, 42, 66, 0.92);
+  --gray-200: rgba(36, 56, 84, 0.95);
+  --gray-300: #3d5a7a;
+  --gray-700: #b8cde3;
+  --gray-800: #eaf1f8;
+  --mist-100: rgba(26, 42, 66, 0.9);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.4);
+}
+
+body {
+  background: var(--bg-main);
+  color: var(--text-primary);
+}
+
+.theme-toggle {
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 18px rgba(74, 140, 190, 0.16);
+}
+
+.navbar,
+.dropdown-menu,
+.theme-toggle,
+.nav-burger {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.58) 0%, rgba(226, 241, 250, 0.42) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.78) !important;
+  box-shadow:
+    0 28px 70px rgba(74, 140, 190, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(22px) saturate(1.35);
+  -webkit-backdrop-filter: blur(22px) saturate(1.35);
+}
+
+.dropdown-menu {
+  border-radius: 22px !important;
+  overflow: hidden;
+  padding: 0.4rem !important;
+}
+
+.dropdown-header {
+  border-radius: 14px !important;
+  margin-bottom: 0.2rem;
+  border-bottom: none !important;
+}
+
+.dropdown-item {
+  border-radius: 999px !important;
+  border-bottom: none !important;
+  margin: 0.12rem 0;
+}
+
+.dropdown-divider {
+  margin: 0.35rem 0.55rem !important;
+  border-radius: 999px;
+}
+
+.page-container :is(
+  .card,
+  .ui-card,
+  .auth-card,
+  .channel-card,
+  .utility-card,
+  .kb-card,
+  .kb-hero,
+  .form-card,
+  .report-card,
+  .appeal-card,
+  .price-card,
+  .contact-card,
+  .video-card,
+  .analysis-card,
+  .file-upload-card,
+  .special-file-section,
+  .dashboard-header,
+  .add-category-card,
+  .categories-list-card,
+  .data-card,
+  .admin-sidebar,
+  .fcmp-admin-section,
+  .schools-table-container,
+  .pagination-info,
+  .db-panel,
+  .upload-container,
+  .support-container > .channel-card
+),
+body:not(:has(.glass-login)) .page-container :where([class*="-card"], [class*="-hero"], [class*="-panel"]):not([class*="card-"]):not([class*="-title"]):not([class*="-body"]):not([class*="-header"]):not([class*="-icon"]):not([class*="-meta"]):not([class*="-desc"]):not([class*="-cover"]):not([class*="-fav"]) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.58) 0%, rgba(226, 241, 250, 0.42) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.78) !important;
+  border-radius: 24px;
+  box-shadow:
+    0 28px 70px rgba(74, 140, 190, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(22px) saturate(1.35);
+  -webkit-backdrop-filter: blur(22px) saturate(1.35);
+}
+
+.page-container :is(
+  .support-hero,
+  .appeal-hero,
+  .agree-hero,
+  .privacy-hero,
+  .oferta-hero,
+  .tutorials-hero,
+  .fcmp-hero,
+  .dv-hero,
+  .hero-section
+) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.58) 0%, rgba(226, 241, 250, 0.42) 100%) !important;
+  color: #1d6cb8 !important;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 42px rgba(74, 140, 190, 0.14);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.page-container :is(
+  .support-hero,
+  .appeal-hero,
+  .agree-hero,
+  .privacy-hero,
+  .oferta-hero,
+  .tutorials-hero,
+  .fcmp-hero,
+  .dv-hero,
+  .hero-section
+) :is(h1, h2, h3) {
+  color: #1d6cb8 !important;
+}
+
+.page-container :is(
+  .support-hero,
+  .appeal-hero,
+  .agree-hero,
+  .privacy-hero,
+  .oferta-hero,
+  .tutorials-hero,
+  .fcmp-hero,
+  .dv-hero,
+  .hero-section
+) :is(p, span, li) {
+  color: #5d84a3 !important;
+}
+
+.page-container :is(
+  .support-hero,
+  .appeal-hero,
+  .agree-hero,
+  .privacy-hero,
+  .oferta-hero,
+  .tutorials-hero,
+  .fcmp-hero
+)::before,
+.page-container :is(
+  .support-hero,
+  .appeal-hero,
+  .agree-hero,
+  .privacy-hero,
+  .oferta-hero,
+  .tutorials-hero,
+  .fcmp-hero
+)::after {
+  background: radial-gradient(circle, rgba(126, 182, 220, 0.28) 0%, transparent 70%) !important;
+}
+
+.admin-sidebar {
+  border-radius: 28px !important;
+  overflow: hidden;
+}
+
+.admin-header {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.admin-sidebar .form-card,
+.admin-sidebar .onec-button {
+  background: rgba(255, 255, 255, 0.38) !important;
+  box-shadow: none !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+}
+
+.search-panel,
+.schools-table-container,
+.fcmp-admin-section,
+.pagination-info {
+  border-radius: 28px !important;
+}
+
+.video-thumbnail {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(214, 233, 246, 0.7)) !important;
+}
+
+body:not(:has(.glass-login)) .page-container :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="range"]):not([type="color"]):not([type="submit"]):not([type="button"]),
+  select,
+  textarea
+) {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(186, 214, 232, 0.95);
+  border-radius: 999px;
+  color: #1e4f86;
+}
+
+body:not(:has(.glass-login)) .page-container textarea {
+  border-radius: 18px;
+}
+
+body:not(:has(.glass-login)) .page-container select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #3d86c8 50%),
+    linear-gradient(135deg, #3d86c8 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) calc(50% - 2px),
+    calc(100% - 11px) calc(50% - 2px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 2rem;
+  border-radius: 999px !important;
+}
+
+/* Раскрывающиеся списки / панели */
+.upload-hover-panel,
+.schools-checkbox-grid,
+.months-grid {
+  border-radius: 18px !important;
+}
+
+.filter-select,
+.form-select,
+.period-field select,
+.food-type-edit-form select {
+  border-radius: 999px !important;
+}
+
+.upload-hover-panel li,
+.upload-picked-item,
+.school-checkbox,
+.month-checkbox,
+.delete-option {
+  border-radius: 999px !important;
+}
+
+.schools-checkbox-grid .school-checkbox {
+  border-radius: 12px !important;
+}
+
+/* Кастомный выпадающий список (открытое меню) */
+.ui-select {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  min-width: 0;
+  vertical-align: top;
+}
+
+.ui-select.is-inline {
+  width: auto;
+  min-width: 140px;
+}
+
+.ui-select > select.ui-select-native {
+  position: absolute !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  clip: rect(0 0 0 0);
+}
+
+.ui-select-trigger {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px !important;
+  border: 1px solid rgba(186, 214, 232, 0.95);
+  background: rgba(255, 255, 255, 0.9);
+  color: #1e4f86;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.ui-select-trigger:hover,
+.ui-select.open .ui-select-trigger {
+  border-color: #7eb6e4;
+  box-shadow: 0 0 0 3px rgba(90, 164, 220, 0.16);
+}
+
+.ui-select-trigger-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-select-caret {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  color: #3d86c8;
+  transition: transform 0.15s ease;
+}
+
+.ui-select.open .ui-select-caret {
+  transform: rotate(180deg);
+}
+
+.ui-select-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 2600;
+  display: none;
+  max-height: 240px;
+  overflow: auto;
+  padding: 0.4rem;
+  border-radius: 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(226, 241, 250, 0.9) 100%);
+  box-shadow:
+    0 22px 48px rgba(74, 140, 190, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(18px) saturate(1.3);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+}
+
+/* Меню в body — поверх карточек с overflow/stacking */
+.ui-select-menu.is-open {
+  display: block;
+  position: fixed;
+  right: auto;
+  z-index: 6000;
+  background: #ffffff;
+  border: 1px solid rgba(186, 214, 232, 0.95);
+  box-shadow:
+    0 24px 52px rgba(40, 90, 140, 0.28),
+    0 2px 0 rgba(255, 255, 255, 0.95) inset;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.ui-select.open {
+  z-index: 50;
+}
+
+.ui-select-option {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #1e4f86;
+  text-align: left;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 650;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px !important;
+  cursor: pointer;
+}
+
+.ui-select-option:hover,
+.ui-select-option.is-active {
+  background: rgba(74, 163, 242, 0.14);
+  color: #1d6cb8;
+}
+
+.ui-select-option.is-selected {
+  background: linear-gradient(180deg, #4aa3f2 0%, #1f74d4 100%);
+  color: #fff;
+}
+
+.period-field .ui-select,
+.period-controls .ui-select,
+.search-filters .ui-select,
+.form-grid .ui-select,
+.fcmp-admin-controls .ui-select {
+  width: auto;
+  min-width: 140px;
+}
+
+body:not(:has(.glass-login)) .page-container :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="range"]):not([type="color"]):not([type="submit"]):not([type="button"]),
+  select,
+  textarea
+):focus {
+  outline: none;
+  border-color: #7eb6e4;
+  box-shadow: 0 0 0 3px rgba(90, 164, 220, 0.18);
+  background: #ffffff;
+}
+
+.page-container :is(
+  .btn-primary,
+  .submit-btn,
+  .ui-btn-primary,
+  .btn-submit,
+  .btn-apply,
+  .sp-btn-primary,
+  .download-btn,
+  .btn-create,
+  .btn-add
+) {
+  background: linear-gradient(180deg, #4aa3f2 0%, #1f74d4 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 999px !important;
+  box-shadow: 0 10px 22px rgba(36, 120, 206, 0.28);
+}
+
+.page-container :is(.btn-secondary, .btn-reset, .sp-btn-ghost, .ui-btn-secondary) {
+  background: rgba(255, 255, 255, 0.55) !important;
+  color: #1d6cb8 !important;
+  border: 1px solid rgba(186, 214, 232, 0.95) !important;
+  border-radius: 999px !important;
+}
+
+.page-container :is(table, .ui-table) {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.page-container :is(th, .table-header) {
+  background: rgba(214, 233, 246, 0.72);
+  color: #3d7ec4;
+}
+
+.page-container h1,
+.page-container h2 {
+  letter-spacing: -0.03em;
+}
+
+body:has(.glass-login)::after {
+  opacity: 0;
+}
+
+.reg-shell .auth-card {
+  background: linear-gradient(180deg, rgba(214, 233, 246, 0.45), rgba(255, 255, 255, 0.72)) !important;
+  border: none !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.62) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.db-builder {
+  height: 100vh;
+}
+
+/* ── Dark glass skin ── */
+[data-theme="dark"] .theme-toggle,
+[data-theme="dark"] .navbar,
+[data-theme="dark"] .dropdown-menu,
+[data-theme="dark"] .nav-burger {
+  background: linear-gradient(180deg, rgba(22, 38, 60, 0.82) 0%, rgba(14, 26, 44, 0.74) 100%) !important;
+  border: 1px solid rgba(126, 184, 232, 0.18) !important;
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .theme-toggle svg {
+  stroke: var(--text-secondary);
+}
+
+[data-theme="dark"] .page-container :is(
+  .card,
+  .ui-card,
+  .auth-card,
+  .channel-card,
+  .utility-card,
+  .kb-card,
+  .kb-hero,
+  .form-card,
+  .report-card,
+  .appeal-card,
+  .price-card,
+  .contact-card,
+  .video-card,
+  .analysis-card,
+  .file-upload-card,
+  .special-file-section,
+  .dashboard-header,
+  .add-category-card,
+  .categories-list-card,
+  .data-card,
+  .admin-sidebar,
+  .fcmp-admin-section,
+  .schools-table-container,
+  .pagination-info,
+  .db-panel,
+  .upload-container,
+  .support-container > .channel-card
+),
+[data-theme="dark"] body:not(:has(.glass-login)) .page-container :where([class*="-card"], [class*="-hero"], [class*="-panel"]):not([class*="card-"]):not([class*="-title"]):not([class*="-body"]):not([class*="-header"]):not([class*="-icon"]):not([class*="-meta"]):not([class*="-desc"]):not([class*="-cover"]):not([class*="-fav"]) {
+  background: linear-gradient(180deg, rgba(22, 38, 60, 0.78) 0%, rgba(14, 26, 44, 0.68) 100%) !important;
+  border: 1px solid rgba(126, 184, 232, 0.16) !important;
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .page-container :is(
+  .support-hero,
+  .appeal-hero,
+  .agree-hero,
+  .privacy-hero,
+  .oferta-hero,
+  .tutorials-hero,
+  .fcmp-hero,
+  .dv-hero,
+  .hero-section
+) {
+  background: linear-gradient(180deg, rgba(22, 38, 60, 0.78) 0%, rgba(14, 26, 44, 0.68) 100%) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid rgba(126, 184, 232, 0.16);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] .page-container :is(
+  .support-hero,
+  .appeal-hero,
+  .agree-hero,
+  .privacy-hero,
+  .oferta-hero,
+  .tutorials-hero,
+  .fcmp-hero,
+  .dv-hero,
+  .hero-section
+) :is(h1, h2, h3) {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .page-container :is(
+  .support-hero,
+  .appeal-hero,
+  .agree-hero,
+  .privacy-hero,
+  .oferta-hero,
+  .tutorials-hero,
+  .fcmp-hero,
+  .dv-hero,
+  .hero-section
+) :is(p, span, li) {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .admin-sidebar .form-card,
+[data-theme="dark"] .admin-sidebar .onec-button {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(126, 184, 232, 0.14) !important;
+}
+
+[data-theme="dark"] .video-thumbnail,
+[data-theme="dark"] .dashboard-preview,
+[data-theme="dark"] .category-icon,
+[data-theme="dark"] .kb-hero {
+  background: linear-gradient(180deg, rgba(36, 56, 84, 0.85), rgba(22, 38, 60, 0.8)) !important;
+}
+
+[data-theme="dark"] body:not(:has(.glass-login)) .page-container :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="range"]):not([type="color"]):not([type="submit"]):not([type="button"]),
+  select,
+  textarea
+) {
+  background: rgba(14, 26, 44, 0.85);
+  border: 1px solid rgba(126, 184, 232, 0.22);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] body:not(:has(.glass-login)) .page-container select {
+  background-image:
+    linear-gradient(45deg, transparent 50%, #7eb8e8 50%),
+    linear-gradient(135deg, #7eb8e8 50%, transparent 50%);
+  background-color: rgba(14, 26, 44, 0.85);
+}
+
+[data-theme="dark"] body:not(:has(.glass-login)) .page-container :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="range"]):not([type="color"]):not([type="submit"]):not([type="button"]),
+  select,
+  textarea
+):focus {
+  border-color: #7eb8e8;
+  box-shadow: 0 0 0 3px rgba(126, 184, 232, 0.22);
+  background: rgba(18, 32, 52, 0.95);
+}
+
+[data-theme="dark"] .page-container :is(.btn-secondary, .btn-reset, .sp-btn-ghost, .ui-btn-secondary) {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--primary-light) !important;
+  border: 1px solid rgba(126, 184, 232, 0.22) !important;
+}
+
+[data-theme="dark"] .page-container :is(table, .ui-table) {
+  background: rgba(14, 26, 44, 0.35);
+}
+
+[data-theme="dark"] .page-container :is(th, .table-header) {
+  background: rgba(36, 56, 84, 0.72);
+  color: var(--primary-light);
+}
+
+[data-theme="dark"] .ui-select-trigger {
+  background: rgba(14, 26, 44, 0.85);
+  border-color: rgba(126, 184, 232, 0.22);
+  color: var(--text-primary);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .ui-select-trigger:hover,
+[data-theme="dark"] .ui-select.open .ui-select-trigger {
+  border-color: #7eb8e8;
+  box-shadow: 0 0 0 3px rgba(126, 184, 232, 0.18);
+}
+
+[data-theme="dark"] .ui-select-menu {
+  background: linear-gradient(180deg, rgba(22, 38, 60, 0.96) 0%, rgba(14, 26, 44, 0.94) 100%);
+  border-color: rgba(126, 184, 232, 0.22);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .ui-select-menu.is-open {
+  background: #16263c;
+  border-color: rgba(126, 184, 232, 0.28);
+}
+
+[data-theme="dark"] .ui-select-option {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .ui-select-option:hover,
+[data-theme="dark"] .ui-select-option.is-active {
+  background: rgba(126, 184, 232, 0.14);
+  color: var(--primary-light);
+}
+
+[data-theme="dark"] .reg-shell .auth-card {
+  background: linear-gradient(180deg, rgba(22, 38, 60, 0.55), rgba(14, 26, 44, 0.8)) !important;
+  border-left: 1px solid rgba(126, 184, 232, 0.14) !important;
+}
+
+@media (max-width: 1100px) {
+  .reg-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .reg-art {
+    position: static;
+  }
+
+  .reg-shell .auth-card {
+    border-left: none !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.62) !important;
+  }
+
+  [data-theme="dark"] .reg-shell .auth-card {
+    border-top: 1px solid rgba(126, 184, 232, 0.14) !important;
+  }
+}

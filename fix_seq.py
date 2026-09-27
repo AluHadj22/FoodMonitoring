@@ -2,7 +2,7 @@
 import psycopg2
 
 try:
-    conn = psycopg2.connect('postgresql://postgres:Toshiba3377@localhost:5432/food_management')
+    conn = psycopg2.connect('postgresql://postgres:Toshiba3377@127.0.0.1:5432/food_management')
     cur = conn.cursor()
     
     # Находим максимальный ID

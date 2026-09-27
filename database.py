@@ -9,7 +9,7 @@ load_dotenv()
 # Берем настройки из файла .env
 DATABASE_URL = os.getenv(
     "DATABASE_URL", 
-    "postgresql://postgres:Toshiba3377@localhost:5432/food_management"
+    "postgresql://postgres:Toshiba3377@127.0.0.1:5432/food_management"
 )
 
 # Создаем подключение к PostgreSQL

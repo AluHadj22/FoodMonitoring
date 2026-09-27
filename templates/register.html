@@ -4,23 +4,76 @@
     .auth-container {
         display: flex;
         justify-content: center;
-        align-items: center;
-        min-height: calc(100vh - 73px);
-        padding: 2rem;
-        animation: fadeInUp 0.4s ease-out;
+        align-items: flex-start;
+        min-height: 100vh;
+        padding: 1.35rem 1.15rem 2.25rem;
+    }
+
+    .reg-shell {
+        width: min(1080px, 100%);
+        display: grid;
+        grid-template-columns: minmax(260px, 0.86fr) minmax(340px, 1.14fr);
+        align-items: start;
+        border-radius: 32px;
+        overflow: hidden;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0%, rgba(226, 241, 250, 0.46) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 28px 70px rgba(74, 140, 190, 0.18);
+        backdrop-filter: blur(22px) saturate(1.35);
+        -webkit-backdrop-filter: blur(22px) saturate(1.35);
+    }
+
+    .reg-art {
+        position: sticky;
+        top: 0;
+        padding: 1.5rem 1.35rem 1.7rem;
+    }
+
+    .reg-art img {
+        display: block;
+        width: 100%;
+        height: auto;
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 10px 28px rgba(70, 130, 180, 0.1);
+    }
+
+    .reg-kicker {
+        margin: 1rem 0 0.3rem;
+        color: #3d86c8;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    .reg-art h2 {
+        margin: 0 0 0.45rem;
+        color: #1d6cb8;
+        font-size: 1.7rem;
+        line-height: 1.15;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+    }
+
+    .reg-art p {
+        margin: 0;
+        color: #6d90ab;
+        font-size: 0.92rem;
+        line-height: 1.5;
     }
 
     .auth-card {
-        background: var(--bg-card);
-        border-radius: 32px;
-        padding: 2.5rem;
+        background: transparent;
+        border-radius: 0;
+        padding: 1.7rem 1.6rem 1.5rem;
         width: 100%;
-        max-width: 680px;
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow-lg);
-        transition: var(--transition);
+        max-width: none;
+        border: none;
+        border-left: 1px solid rgba(255, 255, 255, 0.55);
+        box-shadow: none;
         position: relative;
-        overflow: hidden;
+        overflow: visible;
     }
 
     .auth-card::before {
@@ -40,17 +93,7 @@
     }
 
     /* Иконка */
-    .auth-icon {
-        width: 64px;
-        height: 64px;
-        margin: 0 auto 1.5rem;
-        background: var(--primary-bg);
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: var(--transition);
-    }
+    .auth-icon { display: none; }
 
     .auth-icon svg {
         width: 32px;
@@ -70,19 +113,19 @@
 
     /* Заголовок */
     .auth-title {
-        text-align: center;
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 0.5rem;
-        letter-spacing: -0.3px;
+        text-align: left;
+        font-size: 1.55rem;
+        font-weight: 800;
+        color: #1d6cb8;
+        margin-bottom: 0.35rem;
+        letter-spacing: -0.03em;
     }
 
     .auth-subtitle {
-        text-align: center;
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        margin-bottom: 2rem;
+        text-align: left;
+        font-size: 0.88rem;
+        color: #7b98b0;
+        margin-bottom: 1.35rem;
     }
 
     /* Форма */
@@ -409,6 +452,13 @@
 </style>
 
 <div class="auth-container">
+    <div class="reg-shell">
+    <aside class="reg-art">
+        <img src="/static/9762667.png" alt="Иллюстрация мониторинга питания" width="720" height="480">
+        <p class="reg-kicker">Регистрация учреждения</p>
+        <h2>Питание — наглядно и вовремя</h2>
+        <p>Создайте кабинет, чтобы вести режим, рацион и отчёты в одной системе.</p>
+    </aside>
     <div class="auth-card">
         <div class="auth-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -588,6 +638,7 @@
             <span>Уже есть аккаунт? </span>
             <a href="/login">Войти в систему</a>
         </div>
+    </div>
     </div>
 </div>
 

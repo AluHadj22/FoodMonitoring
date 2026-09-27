@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+{% block title %}Нет сети — ЕЦМП{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<div class="offline-shell fade-in-up">
+  <h1>Нет подключения к сети</h1>
+  <p>ЕЦМП сейчас недоступен офлайн для этой страницы. Проверьте интернет и попробуйте снова.</p>
+  <a href="/" onclick="location.reload(); return false;">Обновить</a>
+</div>
+{% endblock %}

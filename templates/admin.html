@@ -24,48 +24,47 @@
     }
 
     .admin-sidebar {
-        background: var(--bg-card-solid);
-        border-radius: var(--radius-lg);
-        border: 1px solid var(--border);
-        padding: 0;
+        background: transparent;
+        border-radius: 28px;
+        border: none;
+        padding: 0 0 0.4rem;
         height: fit-content;
         position: sticky;
-        top: 5rem;
-        box-shadow: var(--shadow-sm);
+        top: 1rem;
+        box-shadow: none;
         overflow: hidden;
     }
 
     .admin-header {
-        padding: 1.25rem 1.35rem;
-        background: linear-gradient(135deg, #3d7eb8 0%, #5b9fd4 100%);
-        color: #eaf1f8;
+        padding: 1.35rem 1.25rem 0.4rem;
+        background: transparent;
+        color: #1d6cb8;
         border-bottom: none;
-        margin-bottom: 0;
-    }
-
-    [data-theme='dark'] .admin-header {
-        background: linear-gradient(135deg, #1a2740 0%, #243552 100%);
+        margin-bottom: 0.35rem;
     }
 
     .admin-header h2 {
-        font-size: 1.1rem;
+        font-size: 1.35rem;
         font-weight: 800;
         letter-spacing: -0.03em;
-        color: #f5f8fc;
-        margin-bottom: 0.4rem;
+        color: #1d6cb8;
+        margin: 0 0 0.45rem;
+        line-height: 1.15;
     }
 
     .admin-role {
-        font-size: 0.68rem;
+        font-size: 0.66rem;
         font-weight: 700;
         letter-spacing: 0.04em;
         text-transform: uppercase;
-        color: #eaf6ff;
-        background: rgba(126, 184, 232, 0.12);
-        border: 1px solid rgba(126, 184, 232, 0.25);
-        padding: 0.25rem 0.55rem;
-        border-radius: var(--radius-sm);
+        color: #3d86c8;
+        background: rgba(255, 255, 255, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.85);
+        padding: 0.28rem 0.65rem;
+        border-radius: 999px;
         display: inline-block;
+        white-space: nowrap;
+        max-width: 100%;
     }
 
     .admin-sidebar > .onec-button,
@@ -149,7 +148,7 @@
         padding: 0.55rem 0.75rem;
         background: var(--bg-card-solid);
         border: 1px solid var(--border);
-        border-radius: var(--radius-md);
+        border-radius: 999px;
         color: var(--text-primary);
         font-size: 0.82rem;
         font-family: inherit;
@@ -230,11 +229,23 @@
     .btn:active { transform: translateY(1px); }
     .btn.loading { opacity: 0.65; pointer-events: none; }
 
-    .btn-primary {
-        background: var(--primary);
+    .btn-primary,
+    .search-button,
+    .manage-button,
+    .fcmp-admin-btn {
+        background: linear-gradient(180deg, #4aa3f2 0%, #1f74d4 100%);
         color: #fff;
+        border: none;
+        border-radius: 999px;
+        box-shadow: 0 10px 22px rgba(36, 120, 206, 0.28);
     }
-    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:hover,
+    .search-button:hover,
+    .manage-button:hover,
+    .fcmp-admin-btn:hover:not(:disabled) {
+        filter: brightness(1.04);
+        background: linear-gradient(180deg, #4aa3f2 0%, #1f74d4 100%);
+    }
 
     .btn-danger { background: var(--danger); color: #fff; }
     .btn-danger:hover { filter: brightness(1.06); }
@@ -292,8 +303,8 @@
         max-height: 200px;
         overflow-y: auto;
         border: 1px solid var(--border-light);
-        border-radius: var(--radius-md);
-        padding: 0.35rem;
+        border-radius: 18px;
+        padding: 0.45rem;
         background: var(--bg-muted);
     }
 
@@ -301,8 +312,8 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.4rem 0.5rem;
-        border-radius: var(--radius-sm);
+        padding: 0.4rem 0.55rem;
+        border-radius: 999px;
         cursor: pointer;
         transition: background 0.12s ease;
     }
@@ -332,10 +343,10 @@
         display: flex;
         align-items: center;
         gap: 0.35rem;
-        padding: 0.35rem 0.45rem;
+        padding: 0.35rem 0.55rem;
         background: var(--bg-muted);
         border: 1px solid var(--border-light);
-        border-radius: var(--radius-sm);
+        border-radius: 999px;
         font-size: 0.72rem;
     }
 
@@ -352,9 +363,9 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.5rem 0.65rem;
+        padding: 0.5rem 0.75rem;
         background: var(--bg-muted);
-        border-radius: var(--radius-sm);
+        border-radius: 999px;
         border-left: 3px solid var(--border);
         font-size: 0.75rem;
     }
@@ -428,7 +439,7 @@
     .filter-select {
         padding: 0.55rem 0.7rem;
         border: 1px solid var(--border);
-        border-radius: var(--radius-md);
+        border-radius: 999px;
         background: var(--bg-muted);
         font-family: inherit;
         font-size: 0.78rem;
@@ -462,11 +473,8 @@
     }
 
     .search-button {
-        background: var(--primary);
-        color: #fff;
-        border: none;
+        border-radius: 999px;
     }
-    .search-button:hover { background: var(--primary-dark); }
 
     .reset-button {
         background: transparent;
@@ -678,18 +686,16 @@
         display: inline-flex;
         align-items: center;
         gap: 0.3rem;
-        padding: 0.4rem 0.75rem;
-        background: var(--primary);
+        padding: 0.42rem 0.8rem;
         color: #fff;
-        border-radius: var(--radius-md);
+        border-radius: 999px;
         text-decoration: none;
-        font-size: 0.7rem;
+        font-size: 0.72rem;
         font-weight: 700;
-        transition: background 0.15s ease, transform 0.15s ease;
+        transition: transform 0.15s ease, filter 0.15s ease;
     }
 
     .manage-button:hover {
-        background: var(--primary-dark);
         transform: translateY(-1px);
     }
 
@@ -797,15 +803,13 @@
     }
     .fcmp-admin-btn {
         border: none;
-        border-radius: 8px;
+        border-radius: 999px;
         padding: 0.55rem 0.95rem;
-        background: #3d7eb8;
         color: #fff;
         font-size: 0.8rem;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
     }
-    .fcmp-admin-btn:hover:not(:disabled) { background: #2f6a9c; }
     .fcmp-admin-btn:disabled { opacity: 0.65; cursor: wait; }
     .fcmp-admin-status {
         font-size: 0.78rem;
@@ -921,6 +925,96 @@
         .fcmp-admin-metrics,
         .fcmp-admin-charts,
         .fcmp-admin-tables { grid-template-columns: 1fr; }
+    }
+
+    main {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .btn-danger,
+    .btn-warning {
+        border-radius: 999px;
+    }
+
+    .btn-danger {
+        background: linear-gradient(180deg, #ef7a7a 0%, #d24b4b 100%);
+    }
+
+    .btn-warning {
+        background: linear-gradient(180deg, #f0b45a 0%, #d4892a 100%);
+        color: #fff;
+    }
+
+    .form-card-header {
+        background: transparent;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.55);
+    }
+
+    .form-card-header h3 {
+        color: #1d6cb8;
+        font-size: 0.88rem;
+    }
+
+    .file-upload-zone,
+    .schools-checkbox-grid,
+    .month-checkbox,
+    .delete-option {
+        background: rgba(255, 255, 255, 0.42);
+        border-color: rgba(255, 255, 255, 0.72);
+        border-radius: 14px;
+    }
+
+    .pagination a,
+    .pagination span {
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.62);
+        border: 1px solid rgba(255, 255, 255, 0.82);
+        padding: 0.45rem 0.9rem;
+    }
+
+    .fcmp-admin-title h3,
+    .table-header h2 {
+        color: #1d6cb8;
+    }
+
+    .fcmp-admin-title h3 {
+        font-size: 1.2rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+    }
+
+    .fcmp-admin-metric,
+    .fcmp-admin-chart-box,
+    .fcmp-admin-table-wrap {
+        background: rgba(255, 255, 255, 0.42);
+        border: 1px solid rgba(255, 255, 255, 0.72);
+        border-radius: 16px;
+    }
+
+    .schools-badge,
+    .district-badge,
+    .food-type {
+        border-radius: 999px;
+    }
+
+    .search-panel,
+    .pagination-info,
+    .fcmp-admin-section,
+    .pagination {
+        margin-bottom: 0;
+    }
+
+    .search-panel:focus-within {
+        box-shadow: none;
+    }
+
+    .schools-table th,
+    .schools-table td {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
     }
 
     @media (max-width: 768px) {

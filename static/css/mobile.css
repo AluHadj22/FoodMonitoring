@@ -1,0 +1,213 @@
+/* Mobile / PWA adaptation — loaded after glass.css */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.nav-scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 190;
+  background: rgba(12, 28, 48, 0.42);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+body.nav-open .nav-scrim {
+  display: block;
+}
+
+.theme-toggle {
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  right: calc(16px + env(safe-area-inset-right));
+}
+
+@media (max-width: 720px) {
+  .nav-burger {
+    top: calc(12px + env(safe-area-inset-top));
+    left: calc(12px + env(safe-area-inset-left));
+  }
+
+  .navbar,
+  html.nav-collapsed .navbar {
+    padding-top: env(safe-area-inset-top);
+    width: min(288px, 86vw);
+    max-width: 100%;
+    z-index: 210;
+  }
+
+  .page-container {
+    margin-left: 0 !important;
+    padding:
+      calc(3.4rem + env(safe-area-inset-top))
+      max(0.75rem, env(safe-area-inset-right))
+      calc(4.5rem + env(safe-area-inset-bottom))
+      max(0.75rem, env(safe-area-inset-left));
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .theme-toggle {
+    width: 42px;
+    height: 42px;
+  }
+
+  /* Prevent body scroll when drawer open */
+  body.nav-open {
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  .page-container :is(
+    .card,
+    .ui-card,
+    .form-card,
+    .channel-card,
+    .utility-card,
+    .kb-card,
+    .file-upload-card,
+    .special-file-section,
+    .dashboard-header,
+    .admin-sidebar,
+    .fcmp-admin-section,
+    .schools-table-container
+  ) {
+    border-radius: 18px !important;
+  }
+
+  .page-container :is(h1) {
+    font-size: clamp(1.25rem, 5.5vw, 1.65rem);
+    line-height: 1.2;
+  }
+
+  .page-container :is(h2) {
+    font-size: clamp(1.05rem, 4.5vw, 1.35rem);
+  }
+
+  /* Tables: horizontal scroll shell */
+  .page-container :is(.table-wrapper, .fcmp-table-wrap, .data-table-wrap, .schools-table-container) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+
+  .page-container table {
+    min-width: 560px;
+  }
+
+  /* Forms / filters stack */
+  .page-container :is(.period-controls, .search-filters, .fcmp-admin-controls, .form-grid, .filter-row) {
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+
+  .page-container :is(.period-field, .search-filters .ui-select, .form-grid .ui-select) {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .page-container :is(.btn-primary, .submit-btn, .apply-btn, .ui-btn-primary) {
+    min-height: 44px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .page-container :is(.support-container, .kb-container, .tutorials-container, .utilities-layout) {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .page-container :is(.support-hero, .appeal-hero, .tutorials-hero, .kb-hero) {
+    padding: 1.35rem 1rem !important;
+    border-radius: 18px !important;
+  }
+
+  .page-container :is(.support-grid, .channels-grid, .utility-grid, .kb-grid, .cards-grid) {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ui-select.is-inline,
+  .period-field .ui-select,
+  .period-controls .ui-select {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-container {
+    padding-left: max(0.55rem, env(safe-area-inset-left));
+    padding-right: max(0.55rem, env(safe-area-inset-right));
+  }
+
+  .page-container :is(
+    .card,
+    .ui-card,
+    .form-card,
+    .channel-card,
+    .file-upload-card,
+    .special-file-section,
+    .dashboard-header
+  ) {
+    border-radius: 14px !important;
+  }
+
+  .logo-text p { display: none; }
+}
+
+/* Standalone PWA (installed) */
+@media (display-mode: standalone) {
+  body {
+    overscroll-behavior-y: contain;
+  }
+
+  .nav-burger {
+    top: calc(10px + env(safe-area-inset-top));
+  }
+}
+
+/* Offline page */
+.offline-shell {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.75rem;
+  padding: 2rem 1.25rem;
+}
+
+.offline-shell h1 {
+  font-size: 1.45rem;
+  letter-spacing: -0.03em;
+}
+
+.offline-shell p {
+  color: var(--text-secondary);
+  max-width: 28rem;
+}
+
+.offline-shell a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.55rem 1.25rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #4aa3f2 0%, #1f74d4 100%);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+}

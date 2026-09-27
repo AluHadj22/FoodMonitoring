@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Ежедневное меню — {{ school_name }}</title>
+  <meta name="description" content="Актуальное меню питания обучающихся: {{ school_name }}. Скачать меню на сегодня и архив по датам."/>
+  <meta name="robots" content="index, follow"/>
+  <meta name="theme-color" content="#1d6cb8"/>
+  <meta property="og:title" content="Ежедневное меню — {{ school_name }}"/>
+  <meta property="og:description" content="Актуальное меню питания обучающихся"/>
+  <meta property="og:type" content="website"/>
+  <link rel="icon" href="/static/icons/favicon-32.png" type="image/png"/>
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/css/public-menu.css?v=1"/>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #d7eefb;
+      color: #1e4f86;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 48% 42% at 12% 16%, rgba(255, 255, 255, 0.9), transparent 62%),
+        radial-gradient(ellipse 36% 32% at 90% 8%, rgba(255, 255, 255, 0.55), transparent 60%),
+        linear-gradient(155deg, #bfe3f8 0%, #e8f6fd 46%, #cfe8f7 100%);
+    }
+    [data-theme="dark"] body { background: #0b1526; color: #eaf1f8; }
+    [data-theme="dark"] body::before {
+      background:
+        radial-gradient(ellipse 48% 42% at 12% 16%, rgba(70, 130, 190, 0.28), transparent 62%),
+        linear-gradient(155deg, #0a1322 0%, #122036 46%, #0d182a 100%);
+    }
+    .pm-theme {
+      position: fixed;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      right: calc(16px + env(safe-area-inset-right));
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 20;
+      box-shadow: 0 8px 18px rgba(74, 140, 190, 0.16);
+    }
+    .pm-theme svg { width: 17px; height: 17px; stroke: #1d6cb8; }
+    [data-theme="dark"] .pm-theme {
+      background: rgba(22, 38, 60, 0.85);
+      border-color: rgba(126, 184, 232, 0.22);
+    }
+    [data-theme="dark"] .pm-theme svg { stroke: #a8d4f5; }
+  </style>
+</head>
+<body>
+  <button type="button" class="pm-theme" id="pm-theme" title="Сменить тему" aria-label="Сменить тему">
+    <svg id="pm-theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </button>
+
+  <main class="pm-page">
+    <div class="pm-shell">
+      <a class="pm-brand" href="/">
+        <img src="/static/icons/icon-96.png" alt="" width="36" height="36"/>
+        <span>ЕЦМП</span>
+      </a>
+
+      <header class="pm-hero">
+        <div class="pm-kicker">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 10h18"/>
+            <path d="M5 6h14v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6z"/>
+            <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/>
+          </svg>
+          Ежедневное меню
+        </div>
+        <h1>{{ school_name }}</h1>
+        <p class="pm-sub">Актуальное меню питания обучающихся</p>
+        <div class="pm-stats">
+          <div class="pm-stat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Всего: <strong>{{ total_files_count }}</strong>
+          </div>
+          <div class="pm-stat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <strong>{{ years_count }}</strong>&nbsp;{{ years_label }}
+          </div>
+        </div>
+      </header>
+
+      <div class="pm-grid">
+        <div class="pm-main">
+          <section class="pm-panel">
+            <div class="pm-panel-head">
+              <h2>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Меню на сегодня
+              </h2>
+            </div>
+            <div class="pm-today-date">{{ today_weekday }}, {{ today_date }}</div>
+            {% if today_file %}
+            <div class="pm-today-file">
+              <div class="pm-file-meta">
+                <div class="pm-file-ico">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+                </div>
+                <div style="min-width:0">
+                  <div class="pm-file-name" title="{{ today_file.filename }}">{{ today_file.filename }}</div>
+                  <div class="pm-file-sub">{{ today_file.size_label }} · {{ today_file.date }}</div>
+                </div>
+              </div>
+              <a class="pm-btn pm-btn-primary" href="/{{ uid }}/food/{{ today_file.filename }}" download>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Скачать меню
+              </a>
+            </div>
+            {% else %}
+            <div class="pm-empty">Меню на сегодня пока не загружено. Выберите другую дату ниже.</div>
+            {% endif %}
+          </section>
+
+          <section class="pm-panel">
+            <div class="pm-filter-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Выбрать дату
+            </div>
+            <form class="pm-filter-row" method="get" action="/{{ uid }}/food/">
+              <select name="year" aria-label="Год">
+                <option value="" {% if not filter_year %}selected{% endif %}>Все годы</option>
+                {% for y in available_years %}
+                <option value="{{ y }}" {% if filter_year == y %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+              </select>
+              <select name="month" aria-label="Месяц">
+                <option value="">Все месяцы</option>
+                {% for mid, mname in months_items %}
+                <option value="{{ mid }}" {% if filter_month == mid %}selected{% endif %}>{{ mname }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="pm-btn pm-btn-primary">Показать</button>
+            </form>
+          </section>
+
+          <section class="pm-panel">
+            <div class="pm-panel-head">
+              <h2>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>
+                Все файлы меню
+              </h2>
+              <span class="pm-count">Всего: {{ total_files_count }}</span>
+            </div>
+
+            {% if years %}
+              {% for year in years %}
+              <div class="pm-year {% if loop.first %}is-open{% endif %}" data-year="{{ year.year }}">
+                <button type="button" class="pm-year-toggle" aria-expanded="{{ 'true' if loop.first else 'false' }}">
+                  <span class="pm-year-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    {{ year.year }} год
+                    <span class="pm-year-meta">({{ year.total }} файлов)</span>
+                  </span>
+                  <svg class="pm-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="pm-year-body">
+                  <div class="pm-months">
+                    {% for month in year.months %}
+                    <article class="pm-month">
+                      <div class="pm-month-head">
+                        {{ month.name }}
+                        <span>{{ month.files|length }}</span>
+                      </div>
+                      <div class="pm-month-list">
+                        {% for f in month.files %}
+                        <div class="pm-row">
+                          <div style="min-width:0">
+                            <div class="pm-file-name" title="{{ f.filename }}">{{ f.filename }}</div>
+                            <div class="pm-file-sub">{{ f.size_label }} · {{ f.date }}</div>
+                          </div>
+                          <a class="pm-btn pm-btn-ghost pm-btn-sm" href="/{{ uid }}/food/{{ f.filename }}" download>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Скачать
+                          </a>
+                        </div>
+                        {% endfor %}
+                      </div>
+                    </article>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="pm-empty">Нет файлов меню за выбранный период.</div>
+            {% endif %}
+          </section>
+        </div>
+
+        <aside class="pm-aside">
+          {% if special_files.findex %}
+          <div class="pm-aside-card">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              ФЦМПО
+            </h3>
+            {% for fi in special_files.findex %}
+            <div class="pm-special">
+              <div style="min-width:0">
+                <div class="pm-file-name">{{ fi.filename }}</div>
+                <div class="pm-file-sub">{{ fi.size_label }} · {{ fi.date }}</div>
+              </div>
+              <a class="pm-btn pm-btn-ghost pm-btn-sm" href="/{{ uid }}/food/{{ fi.filename }}" download aria-label="Скачать {{ fi.filename }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {% if special_files.kp %}
+          <div class="pm-aside-card">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Календари питания
+            </h3>
+            {% for fi in special_files.kp %}
+            <div class="pm-special">
+              <div style="min-width:0">
+                <div class="pm-file-name">{{ fi.filename }}</div>
+                <div class="pm-file-sub">{{ fi.size_label }} · {{ fi.year }}</div>
+              </div>
+              <a class="pm-btn pm-btn-ghost pm-btn-sm" href="/{{ uid }}/food/{{ fi.filename }}" download aria-label="Скачать {{ fi.filename }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {% if special_files.tm %}
+          <div class="pm-aside-card">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h6M8 16h4"/></svg>
+              Типовое меню
+            </h3>
+            {% for fi in special_files.tm %}
+            <div class="pm-special">
+              <div style="min-width:0">
+                <div class="pm-file-name">{{ fi.filename }}</div>
+                <div class="pm-file-sub">{{ fi.size_label }} · {{ fi.year }}</div>
+              </div>
+              <a class="pm-btn pm-btn-ghost pm-btn-sm" href="/{{ uid }}/food/{{ fi.filename }}" download aria-label="Скачать {{ fi.filename }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </aside>
+      </div>
+
+      <div class="pm-foot">
+        <div class="pm-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          <div>
+            <strong>Соответствует нормам СанПиН</strong>
+            <p>Меню разработано в соответствии с требованиями санитарных правил и норм</p>
+          </div>
+        </div>
+        <a class="pm-survey" href="https://opros.cemon.ru/" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+          <div>
+            <strong>Опрос родителей и обучающихся ФЦМПО</strong>
+            <p>Поделитесь мнением о питании в школе</p>
+          </div>
+          <span class="pm-survey-go">Перейти</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const html = document.documentElement;
+      const btn = document.getElementById('pm-theme');
+      const icon = document.getElementById('pm-theme-icon');
+      const sun = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
+      const moon = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+      function setTheme(t) {
+        html.setAttribute('data-theme', t);
+        try { localStorage.setItem('ecm_theme', t); } catch (e) {}
+        icon.innerHTML = t === 'dark' ? moon : sun;
+      }
+      const saved = localStorage.getItem('ecm_theme');
+      setTheme(saved || 'light');
+      btn.addEventListener('click', () => setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+
+      document.querySelectorAll('.pm-year-toggle').forEach((toggle) => {
+        toggle.addEventListener('click', () => {
+          const year = toggle.closest('.pm-year');
+          const open = !year.classList.contains('is-open');
+          year.classList.toggle('is-open', open);
+          toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
