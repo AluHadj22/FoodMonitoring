@@ -4,128 +4,109 @@
     .auth-container {
         display: flex;
         justify-content: center;
-        align-items: flex-start;
-        min-height: 100vh;
-        padding: 1.35rem 1.15rem 2.25rem;
+        align-items: stretch;
+        min-height: calc(100vh - 58px);
+        padding: 0;
+        background: #f6f6f6;
     }
 
     .reg-shell {
-        width: min(1080px, 100%);
+        width: 100%;
+        max-width: 1180px;
+        margin: 0 auto;
         display: grid;
-        grid-template-columns: minmax(260px, 0.86fr) minmax(340px, 1.14fr);
-        align-items: start;
-        border-radius: 32px;
+        grid-template-columns: minmax(280px, 0.92fr) minmax(360px, 1.08fr);
+        align-items: stretch;
+        border-radius: 0;
         overflow: hidden;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0%, rgba(226, 241, 250, 0.46) 100%);
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        box-shadow: 0 28px 70px rgba(74, 140, 190, 0.18);
-        backdrop-filter: blur(22px) saturate(1.35);
-        -webkit-backdrop-filter: blur(22px) saturate(1.35);
+        background: #ffffff;
+        border: 1px solid #e2e2e2;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
     }
 
     .reg-art {
-        position: sticky;
-        top: 0;
-        padding: 1.5rem 1.35rem 1.7rem;
+        position: relative;
+        padding: clamp(2rem, 4vw, 3.25rem) clamp(1.5rem, 3vw, 2.5rem);
+        background: #141414;
+        color: #f6f6f6;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
     .reg-art img {
         display: block;
         width: 100%;
         height: auto;
-        background: #fff;
-        border-radius: 18px;
-        box-shadow: 0 10px 28px rgba(70, 130, 180, 0.1);
+        background: transparent;
+        border-radius: 0;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: none;
+        margin-bottom: 1.35rem;
     }
 
     .reg-kicker {
-        margin: 1rem 0 0.3rem;
-        color: #3d86c8;
-        font-size: 0.72rem;
-        font-weight: 700;
-        letter-spacing: 0.12em;
+        margin: 0 0 0.55rem;
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 0.7rem;
+        font-weight: 500;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
     }
 
     .reg-art h2 {
-        margin: 0 0 0.45rem;
-        color: #1d6cb8;
-        font-size: 1.7rem;
-        line-height: 1.15;
-        font-weight: 800;
-        letter-spacing: -0.03em;
+        margin: 0 0 0.65rem;
+        color: #ffffff;
+        font-size: clamp(1.45rem, 2.4vw, 1.9rem);
+        line-height: 1.2;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
     }
 
-    .reg-art p {
+    .reg-art p:not(.reg-kicker) {
         margin: 0;
-        color: #6d90ab;
+        color: rgba(255, 255, 255, 0.72);
         font-size: 0.92rem;
-        line-height: 1.5;
+        line-height: 1.55;
+        max-width: 26rem;
     }
 
     .auth-card {
-        background: transparent;
+        background: #ffffff;
         border-radius: 0;
-        padding: 1.7rem 1.6rem 1.5rem;
+        padding: clamp(1.75rem, 3.5vw, 2.75rem) clamp(1.35rem, 3vw, 2.5rem);
         width: 100%;
         max-width: none;
         border: none;
-        border-left: 1px solid rgba(255, 255, 255, 0.55);
+        border-left: 1px solid #e2e2e2;
         box-shadow: none;
         position: relative;
         overflow: visible;
     }
 
-    .auth-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, var(--primary), var(--primary-light), var(--primary));
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
+    .auth-card::before { display: none; }
 
-    .auth-card:hover::before {
-        opacity: 1;
-    }
-
-    /* Иконка */
     .auth-icon { display: none; }
 
-    .auth-icon svg {
-        width: 32px;
-        height: 32px;
-        stroke: var(--primary);
-        stroke-width: 1.5;
-    }
-
-    .auth-icon:hover {
-        transform: scale(1.05);
-        background: var(--primary);
-    }
-
-    .auth-icon:hover svg {
-        stroke: white;
-    }
-
-    /* Заголовок */
     .auth-title {
         text-align: left;
-        font-size: 1.55rem;
-        font-weight: 800;
-        color: #1d6cb8;
-        margin-bottom: 0.35rem;
-        letter-spacing: -0.03em;
+        font-size: clamp(1.35rem, 2.2vw, 1.7rem);
+        font-weight: 500;
+        color: #141414;
+        margin-bottom: 0.4rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
     }
 
     .auth-subtitle {
         text-align: left;
-        font-size: 0.88rem;
-        color: #7b98b0;
-        margin-bottom: 1.35rem;
+        font-size: 0.9rem;
+        color: #4a4a4a;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
     }
 
     /* Форма */
@@ -158,27 +139,33 @@
     .form-group input,
     .form-group select {
         width: 100%;
-        padding: 0.875rem 1rem 0.875rem 2.75rem;
+        padding: 0.85rem 1rem 0.85rem 2.85rem !important;
         background: var(--surface);
-        border: 1.5px solid var(--border);
-        border-radius: 16px;
+        border: 1px solid var(--border);
+        border-radius: 0;
         font-size: 0.9rem;
         color: var(--text-primary);
         transition: var(--transition);
         font-family: inherit;
+        min-height: 46px;
+        box-sizing: border-box;
     }
 
     .form-group select {
         cursor: pointer;
         appearance: none;
-        padding-right: 2.5rem;
+        padding-right: 2.5rem !important;
+    }
+
+    .form-group:has(> .password-toggle) > input {
+        padding-right: 2.85rem !important;
     }
 
     .form-group input:focus,
     .form-group select:focus {
         outline: none;
         border-color: var(--primary);
-        box-shadow: 0 0 0 3px var(--primary-bg);
+        box-shadow: none;
     }
 
     .form-group input::placeholder {
@@ -188,40 +175,66 @@
 
     .form-icon {
         position: absolute;
-        left: 1rem;
-        top: 2.5rem;
-        width: 18px;
-        height: 18px;
+        left: 0.95rem;
+        top: auto;
+        bottom: 0.95rem;
+        width: 16px;
+        height: 16px;
         color: var(--text-secondary);
         pointer-events: none;
         transition: var(--transition);
+        z-index: 2;
+    }
+
+    #district-container {
+        position: relative;
+    }
+
+    #district-container > .form-icon {
+        top: 0.95rem;
+        bottom: auto;
+    }
+
+    #district-container > select {
+        padding-left: 2.85rem !important;
     }
 
     .form-group input:focus + .form-icon,
-    .form-group select:focus + .form-icon {
+    .form-group select:focus + .form-icon,
+    #district-container select:focus + .form-icon {
         color: var(--primary);
     }
 
     /* Кнопка показа пароля */
     .password-toggle {
         position: absolute;
-        right: 1rem;
-        top: 2.5rem;
+        right: 0.55rem;
+        top: auto;
+        bottom: 0.55rem;
+        width: 34px;
+        height: 34px;
         background: none;
         border: none;
         cursor: pointer;
-        padding: 0.25rem;
+        padding: 0;
         display: flex;
         align-items: center;
         justify-content: center;
         color: var(--text-secondary);
         transition: var(--transition);
-        border-radius: 8px;
+        border-radius: 0;
+        z-index: 3;
+    }
+
+    .password-toggle svg {
+        width: 16px;
+        height: 16px;
+        display: block;
     }
 
     .password-toggle:hover {
         color: var(--primary);
-        background: var(--primary-bg);
+        background: transparent;
     }
 
     /* Секция дополнительной информации */
@@ -243,27 +256,27 @@
 
     .section-divider span {
         position: relative;
-        background: var(--bg-card);
+        background: #ffffff;
         padding: 0 1rem;
-        font-size: 0.75rem;
-        color: var(--text-secondary);
+        font-size: 0.72rem;
+        color: #6e6e6e;
         font-weight: 500;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.12em;
     }
 
     /* Чекбоксы согласия */
     .consent-group {
         margin: 0.5rem 0;
-        padding: 0.75rem;
-        background: var(--surface);
-        border-radius: 16px;
-        border: 1px solid var(--border);
-        transition: var(--transition);
+        padding: 0.85rem 0.9rem;
+        background: #f6f6f6;
+        border-radius: 0;
+        border: 1px solid #e2e2e2;
+        transition: border-color 0.15s ease;
     }
 
     .consent-group:hover {
-        border-color: var(--primary);
+        border-color: #141414;
     }
 
     .checkbox-wrapper {
@@ -304,15 +317,17 @@
     /* Кнопка отправки */
     .submit-btn {
         width: 100%;
-        padding: 0.875rem;
-        background: var(--primary);
-        color: white;
-        border: none;
-        border-radius: 60px;
-        font-size: 0.95rem;
-        font-weight: 600;
+        padding: 0.9rem 1rem;
+        background: #141414;
+        color: #ffffff;
+        border: 1px solid #141414;
+        border-radius: 0;
+        font-size: 0.82rem;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
         cursor: pointer;
-        transition: var(--transition);
+        transition: background 0.15s ease;
         margin-top: 1rem;
         display: flex;
         align-items: center;
@@ -321,12 +336,13 @@
     }
 
     .submit-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        transform: none;
+        background: #2a2a2a;
+        box-shadow: none;
     }
 
     .submit-btn:active {
-        transform: translateY(0);
+        transform: none;
     }
 
     /* Ссылка на вход */
@@ -356,26 +372,26 @@
     /* Сообщения */
     .alert {
         padding: 0.875rem 1rem;
-        border-radius: 16px;
+        border-radius: 0;
         margin-bottom: 1.5rem;
         font-size: 0.85rem;
         font-weight: 500;
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        animation: slideIn 0.3s ease-out;
+        animation: none;
     }
 
     .alert-error {
-        background: rgba(239, 68, 68, 0.1);
-        border: 1px solid rgba(239, 68, 68, 0.2);
-        color: #ef4444;
+        background: #faf0f0;
+        border: 1px solid #a33b3b;
+        color: #a33b3b;
     }
 
     .alert-success {
-        background: rgba(16, 185, 129, 0.1);
-        border: 1px solid rgba(16, 185, 129, 0.2);
-        color: #10b981;
+        background: #f0f6f3;
+        border: 1px solid #2f6b4f;
+        color: #2f6b4f;
     }
 
     .alert svg {
@@ -409,27 +425,31 @@
     }
 
     /* Адаптивность */
+    @media (max-width: 900px) {
+        .reg-shell {
+            grid-template-columns: 1fr;
+        }
+
+        .reg-art {
+            display: none;
+        }
+
+        .auth-card {
+            border-left: none;
+        }
+    }
+
     @media (max-width: 640px) {
         .auth-container {
-            padding: 1rem;
+            padding: 0;
         }
         
         .auth-card {
-            padding: 1.75rem;
+            padding: 1.5rem 1.15rem 2rem;
         }
         
         .auth-title {
-            font-size: 1.5rem;
-        }
-        
-        .auth-icon {
-            width: 56px;
-            height: 56px;
-        }
-        
-        .auth-icon svg {
-            width: 28px;
-            height: 28px;
+            font-size: 1.3rem;
         }
         
         .form-grid {
@@ -442,11 +462,13 @@
         }
         
         .form-icon {
-            top: 2.3rem;
+            top: auto;
+            bottom: 0.95rem;
         }
         
         .password-toggle {
-            top: 2.3rem;
+            top: auto;
+            bottom: 0.55rem;
         }
     }
 </style>
@@ -556,14 +578,14 @@
                             {% for d in districts %}
                             <option value="{{ d }}">{{ d }}</option>
                             {% endfor %}
-                            <option value="other">✏️ Другой (ввести вручную)</option>
+                            <option value="other">Другой (ввести вручную)</option>
                         </select>
+                        <svg class="form-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
                         <input type="text" name="district_manual" id="district_manual" placeholder="Введите название района" style="margin-top: 0.5rem; display: none;">
                     </div>
-                    <svg class="form-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                        <circle cx="12" cy="10" r="3"/>
-                    </svg>
                 </div>
             </div>
             

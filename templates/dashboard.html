@@ -3,7 +3,7 @@
 {% block meta_description %}Личный кабинет школы в ЕЦМП: загрузка меню, контроль сроков, статистика ФЦМПО и специальные файлы.{% endblock %}
 {% block meta_robots %}noindex, nofollow{% endblock %}
 {% block page_styles %}
-<link rel="stylesheet" href="/static/css/school-cabinet.css?v=8">
+<link rel="stylesheet" href="/static/css/school-cabinet.css?v=13">
 {% endblock %}
 {% block content %}
 
@@ -1458,6 +1458,11 @@
 
         // ===== УДАЛЕНИЕ =====
         const deleteModal = $('#deleteModal');
+        function mountOverlay(el) {
+            if (el && el.parentElement !== document.body) document.body.appendChild(el);
+        }
+        mountOverlay(deleteModal);
+        mountOverlay($('#filePreviewOverlay'));
         const confirmDeleteBtn = $('#confirmDelete');
         const cancelDeleteBtn = $('#cancelDelete');
         const deleteMessage = $('#deleteMessage');
@@ -1480,7 +1485,10 @@
             if (filename) {
                 pendingDeleteFiles = [filename];
                 if (deleteMessage) deleteMessage.textContent = `Вы действительно хотите удалить файл "${filename}"?`;
-                if (deleteModal) deleteModal.style.display = 'flex';
+                if (deleteModal) {
+                    mountOverlay(deleteModal);
+                    deleteModal.style.display = 'flex';
+                }
 
                 currentDeleteCallback = function() {
                     const form = document.createElement('form');
@@ -1525,8 +1533,11 @@
                     return;
                 }
                 pendingDeleteFiles = selected;
-                if (deleteMessage) deleteMessage.textContent = `Вы действительно хотите удалить выбранные файлы (${selected.length})?`;
-                if (deleteModal) deleteModal.style.display = 'flex';
+                if (deleteMessage) deleteMessage.textContent = `Вы действительно хотите удалить выделенные файлы (${selected.length})?`;
+                if (deleteModal) {
+                    mountOverlay(deleteModal);
+                    deleteModal.style.display = 'flex';
+                }
 
                 currentDeleteCallback = function() {
                     const form = document.createElement('form');
@@ -1652,6 +1663,9 @@
                     </div>`;
             }
             if (previewOverlay) {
+                if (previewOverlay.parentElement !== document.body) {
+                    document.body.appendChild(previewOverlay);
+                }
                 previewOverlay.classList.add('open');
                 previewOverlay.setAttribute('aria-hidden', 'false');
                 previewOpen = true;

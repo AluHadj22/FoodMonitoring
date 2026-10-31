@@ -25,12 +25,12 @@
 
     .admin-sidebar {
         background: transparent;
-        border-radius: 28px;
+        border-radius: 0;
         border: none;
         padding: 0 0 0.4rem;
         height: fit-content;
         position: sticky;
-        top: 1rem;
+        top: 4.5rem;
         box-shadow: none;
         overflow: hidden;
     }
@@ -38,30 +38,31 @@
     .admin-header {
         padding: 1.35rem 1.25rem 0.4rem;
         background: transparent;
-        color: #1d6cb8;
+        color: #141414;
         border-bottom: none;
         margin-bottom: 0.35rem;
     }
 
     .admin-header h2 {
-        font-size: 1.35rem;
-        font-weight: 800;
-        letter-spacing: -0.03em;
-        color: #1d6cb8;
+        font-size: 1.15rem;
+        font-weight: 500;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #141414;
         margin: 0 0 0.45rem;
         line-height: 1.15;
     }
 
     .admin-role {
         font-size: 0.66rem;
-        font-weight: 700;
+        font-weight: 500;
         letter-spacing: 0.04em;
         text-transform: uppercase;
-        color: #3d86c8;
+        color: #4a4a4a;
         background: rgba(255, 255, 255, 0.55);
         border: 1px solid rgba(255, 255, 255, 0.85);
         padding: 0.28rem 0.65rem;
-        border-radius: 999px;
+        border-radius: 0;
         display: inline-block;
         white-space: nowrap;
         max-width: 100%;
@@ -79,7 +80,7 @@
         gap: 0.6rem;
         background: var(--mist-100);
         color: var(--text-primary);
-        font-weight: 700;
+        font-weight: 500;
         padding: 0.7rem 1rem;
         border-radius: var(--radius-md);
         text-decoration: none;
@@ -148,7 +149,7 @@
         padding: 0.55rem 0.75rem;
         background: var(--bg-card-solid);
         border: 1px solid var(--border);
-        border-radius: 999px;
+        border-radius: 0;
         color: var(--text-primary);
         font-size: 0.82rem;
         font-family: inherit;
@@ -216,7 +217,7 @@
         gap: 0.45rem;
         padding: 0.65rem 1.1rem;
         border-radius: var(--radius-md);
-        font-weight: 700;
+        font-weight: 500;
         font-size: 0.8rem;
         cursor: pointer;
         transition: background 0.15s ease, transform 0.15s ease, filter 0.15s ease;
@@ -233,10 +234,10 @@
     .search-button,
     .manage-button,
     .fcmp-admin-btn {
-        background: linear-gradient(180deg, #4aa3f2 0%, #1f74d4 100%);
+        background: linear-gradient(180deg, #2a2a2a 0%, #141414 100%);
         color: #fff;
         border: none;
-        border-radius: 999px;
+        border-radius: 0;
         box-shadow: 0 10px 22px rgba(36, 120, 206, 0.28);
     }
     .btn-primary:hover,
@@ -244,7 +245,7 @@
     .manage-button:hover,
     .fcmp-admin-btn:hover:not(:disabled) {
         filter: brightness(1.04);
-        background: linear-gradient(180deg, #4aa3f2 0%, #1f74d4 100%);
+        background: linear-gradient(180deg, #2a2a2a 0%, #141414 100%);
     }
 
     .btn-danger { background: var(--danger); color: #fff; }
@@ -269,7 +270,7 @@
         color: var(--primary-dark);
         padding: 0.25rem 0.55rem;
         border-radius: var(--radius-sm);
-        font-weight: 700;
+        font-weight: 500;
         display: inline-block;
         margin-bottom: 0.45rem;
         border: 1px solid rgba(91, 159, 212, 0.16);
@@ -286,7 +287,7 @@
         border-radius: var(--radius-sm);
         padding: 0.2rem 0.55rem;
         font-size: 0.65rem;
-        font-weight: 700;
+        font-weight: 500;
         color: var(--text-secondary);
         cursor: pointer;
         font-family: inherit;
@@ -303,7 +304,7 @@
         max-height: 200px;
         overflow-y: auto;
         border: 1px solid var(--border-light);
-        border-radius: 18px;
+        border-radius: 0;
         padding: 0.45rem;
         background: var(--bg-muted);
     }
@@ -313,7 +314,7 @@
         align-items: center;
         gap: 0.5rem;
         padding: 0.4rem 0.55rem;
-        border-radius: 999px;
+        border-radius: 0;
         cursor: pointer;
         transition: background 0.12s ease;
     }
@@ -346,7 +347,7 @@
         padding: 0.35rem 0.55rem;
         background: var(--bg-muted);
         border: 1px solid var(--border-light);
-        border-radius: 999px;
+        border-radius: 0;
         font-size: 0.72rem;
     }
 
@@ -365,7 +366,7 @@
         gap: 0.5rem;
         padding: 0.5rem 0.75rem;
         background: var(--bg-muted);
-        border-radius: 999px;
+        border-radius: 0;
         border-left: 3px solid var(--border);
         font-size: 0.75rem;
     }
@@ -439,7 +440,7 @@
     .filter-select {
         padding: 0.55rem 0.7rem;
         border: 1px solid var(--border);
-        border-radius: 999px;
+        border-radius: 0;
         background: var(--bg-muted);
         font-family: inherit;
         font-size: 0.78rem;
@@ -463,7 +464,7 @@
         gap: 0.35rem;
         padding: 0.55rem 0.95rem;
         border-radius: var(--radius-md);
-        font-weight: 700;
+        font-weight: 500;
         font-size: 0.78rem;
         font-family: inherit;
         cursor: pointer;
@@ -473,7 +474,7 @@
     }
 
     .search-button {
-        border-radius: 999px;
+        border-radius: 0;
     }
 
     .reset-button {
@@ -509,7 +510,7 @@
         padding: 0.4rem 0.75rem;
         border-radius: var(--radius-sm);
         font-size: 0.75rem;
-        font-weight: 700;
+        font-weight: 500;
         text-decoration: none;
         border: 1px solid var(--border);
         background: var(--bg-card-solid);
@@ -542,16 +543,16 @@
         gap: 0.75rem;
         padding: 1rem 1.25rem;
         border-bottom: 1px solid var(--border-light);
-        background: linear-gradient(180deg, var(--mist-50), var(--bg-card-solid));
+        background: #ffffff;
     }
 
     [data-theme='dark'] .table-header {
-        background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent);
+        background: transparent;
     }
 
     .table-header h2 {
         font-size: 1rem;
-        font-weight: 800;
+        font-weight: 500;
         letter-spacing: -0.02em;
         color: var(--text-primary);
         margin: 0;
@@ -614,7 +615,7 @@
         display: flex;
         align-items: center;
         gap: 0.55rem;
-        font-weight: 700;
+        font-weight: 500;
         color: var(--text-primary);
         letter-spacing: -0.01em;
     }
@@ -650,7 +651,7 @@
         padding: 0.2rem 0.5rem;
         border-radius: var(--radius-sm);
         font-size: 0.7rem;
-        font-weight: 700;
+        font-weight: 500;
         background: var(--mist-100);
         color: var(--text-secondary);
         border: 1px solid var(--border-light);
@@ -688,10 +689,10 @@
         gap: 0.3rem;
         padding: 0.42rem 0.8rem;
         color: #fff;
-        border-radius: 999px;
+        border-radius: 0;
         text-decoration: none;
         font-size: 0.72rem;
-        font-weight: 700;
+        font-weight: 500;
         transition: transform 0.15s ease, filter 0.15s ease;
     }
 
@@ -778,7 +779,7 @@
     .fcmp-admin-title h3 {
         margin: 0 0 0.2rem;
         font-size: 1.05rem;
-        font-weight: 700;
+        font-weight: 500;
         color: var(--text-primary);
     }
     .fcmp-admin-title p {
@@ -803,11 +804,11 @@
     }
     .fcmp-admin-btn {
         border: none;
-        border-radius: 999px;
+        border-radius: 0;
         padding: 0.55rem 0.95rem;
         color: #fff;
         font-size: 0.8rem;
-        font-weight: 700;
+        font-weight: 500;
         cursor: pointer;
     }
     .fcmp-admin-btn:disabled { opacity: 0.65; cursor: wait; }
@@ -838,7 +839,7 @@
     }
     .fcmp-admin-metric .value {
         font-size: 1.35rem;
-        font-weight: 700;
+        font-weight: 500;
         color: var(--text-primary);
     }
     .fcmp-admin-charts {
@@ -936,15 +937,15 @@
 
     .btn-danger,
     .btn-warning {
-        border-radius: 999px;
+        border-radius: 0;
     }
 
     .btn-danger {
-        background: linear-gradient(180deg, #ef7a7a 0%, #d24b4b 100%);
+        background: #a33b3b;
     }
 
     .btn-warning {
-        background: linear-gradient(180deg, #f0b45a 0%, #d4892a 100%);
+        background: #9a6b2f;
         color: #fff;
     }
 
@@ -954,7 +955,7 @@
     }
 
     .form-card-header h3 {
-        color: #1d6cb8;
+        color: #141414;
         font-size: 0.88rem;
     }
 
@@ -964,12 +965,12 @@
     .delete-option {
         background: rgba(255, 255, 255, 0.42);
         border-color: rgba(255, 255, 255, 0.72);
-        border-radius: 14px;
+        border-radius: 0;
     }
 
     .pagination a,
     .pagination span {
-        border-radius: 999px;
+        border-radius: 0;
         background: rgba(255, 255, 255, 0.62);
         border: 1px solid rgba(255, 255, 255, 0.82);
         padding: 0.45rem 0.9rem;
@@ -977,13 +978,13 @@
 
     .fcmp-admin-title h3,
     .table-header h2 {
-        color: #1d6cb8;
+        color: #141414;
     }
 
     .fcmp-admin-title h3 {
         font-size: 1.2rem;
-        font-weight: 800;
-        letter-spacing: -0.03em;
+        font-weight: 500;
+        letter-spacing: 0.08em;
     }
 
     .fcmp-admin-metric,
@@ -991,13 +992,13 @@
     .fcmp-admin-table-wrap {
         background: rgba(255, 255, 255, 0.42);
         border: 1px solid rgba(255, 255, 255, 0.72);
-        border-radius: 16px;
+        border-radius: 0;
     }
 
     .schools-badge,
     .district-badge,
     .food-type {
-        border-radius: 999px;
+        border-radius: 0;
     }
 
     .search-panel,

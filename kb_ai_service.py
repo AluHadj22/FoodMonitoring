@@ -1,4 +1,13 @@
-"""ИИ-помощник справочного центра через OpenRouter."""
+"""ИИ-помощник справочного центра.
+
+Провайдеры (OpenAI-совместимые):
+  - pollinations — бесплатно, без ключа, доступен из РФ (по умолчанию)
+  - neuralgate  — бесплатные модели через РФ-шлюз (нужен бесплатный ключ)
+  - zveno       — бесплатные маршруты, ключ без карты
+  - openrouter  — legacy (часто режется Cloudflare с РФ-серверов)
+
+Если удалённый API недоступен — локальный режим: выжимки и подбор документов.
+"""
 
 from __future__ import annotations
 
@@ -6,54 +15,134 @@ import json
 import logging
 import os
 import re
+from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
-import httpx
 from cachetools import TTLCache
 from dotenv import load_dotenv
 
-# Всегда грузим .env рядом с проектом (не зависеть от cwd systemd)
 _BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(_BASE_DIR / ".env", override=False)
 
 logger = logging.getLogger(__name__)
 
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-MAX_DOC_CHARS = 70_000
-MAX_PREVIEW_CHARS = 1_400
-MAX_CATALOG_CHARS = 90_000
+MAX_DOC_CHARS = 28_000
+MAX_PREVIEW_CHARS = 1_200
+MAX_CATALOG_CHARS = 70_000
+
+_PROVIDERS = {
+    "pollinations": {
+        "base_url": "https://text.pollinations.ai/openai",
+        "model": "openai-fast",
+        "keyless": True,
+        "supports_json_object": False,
+    },
+    "neuralgate": {
+        "base_url": "https://api.neuralgate.ru/v1/chat/completions",
+        "model": "deepseek/deepseek-v4-flash:free",
+        "keyless": False,
+        "supports_json_object": True,
+    },
+    "zveno": {
+        "base_url": "https://api.zveno.ai/v1/chat/completions",
+        "model": "cohere/north-mini-code:free",
+        "keyless": False,
+        "supports_json_object": True,
+    },
+    "openrouter": {
+        "base_url": "https://openrouter.ai/api/v1/chat/completions",
+        "model": "openai/gpt-4o-mini",
+        "keyless": False,
+        "supports_json_object": True,
+    },
+}
 
 _text_cache: TTLCache = TTLCache(maxsize=128, ttl=3600)
 
 
+def _provider_name() -> str:
+    raw = (os.getenv("KB_AI_PROVIDER") or "").strip().lower()
+    if raw in _PROVIDERS:
+        return raw
+    # Совместимость со старым .env
+    if (os.getenv("OPENROUTER_API_KEY") or "").strip() and not (
+        os.getenv("KB_AI_API_KEY") or ""
+    ).strip():
+        return "openrouter"
+    return "pollinations"
+
+
+def _provider_cfg() -> Dict[str, Any]:
+    return dict(_PROVIDERS[_provider_name()])
+
+
 def _api_key() -> str:
-    return (os.getenv("OPENROUTER_API_KEY") or "").strip()
+    return (
+        os.getenv("KB_AI_API_KEY")
+        or os.getenv("OPENROUTER_API_KEY")
+        or os.getenv("NEURALGATE_API_KEY")
+        or os.getenv("ZVENO_API_KEY")
+        or ""
+    ).strip()
+
+
+def _base_url() -> str:
+    override = (os.getenv("KB_AI_BASE_URL") or os.getenv("OPENROUTER_URL") or "").strip()
+    if override:
+        return override.rstrip("/")
+    return _provider_cfg()["base_url"]
 
 
 def _model() -> str:
-    return (os.getenv("OPENROUTER_MODEL") or "openai/gpt-4o-mini").strip()
+    return (
+        os.getenv("KB_AI_MODEL")
+        or os.getenv("OPENROUTER_MODEL")
+        or _provider_cfg()["model"]
+    ).strip()
 
 
 def _site_url() -> str:
-    return (os.getenv("OPENROUTER_SITE_URL") or "https://openrouter.ai").strip()
+    return (
+        os.getenv("KB_AI_SITE_URL")
+        or os.getenv("OPENROUTER_SITE_URL")
+        or "https://monitoring95.ru"
+    ).strip()
 
 
 def _site_name() -> str:
-    return (os.getenv("OPENROUTER_SITE_NAME") or "FoodMonitoring").strip()
+    return (
+        os.getenv("KB_AI_SITE_NAME")
+        or os.getenv("OPENROUTER_SITE_NAME")
+        or "FoodMonitoring"
+    ).strip()
 
 
 def _http_proxy() -> Optional[str]:
     return (
-        os.getenv("OPENROUTER_HTTP_PROXY")
+        os.getenv("KB_AI_HTTP_PROXY")
+        or os.getenv("OPENROUTER_HTTP_PROXY")
         or os.getenv("HTTPS_PROXY")
         or os.getenv("HTTP_PROXY")
         or ""
     ).strip() or None
 
 
-def is_configured() -> bool:
+def remote_enabled() -> bool:
+    """Удалённый LLM доступен: keyless-провайдер или задан ключ."""
+    cfg = _provider_cfg()
+    if cfg.get("keyless"):
+        return True
     return bool(_api_key())
+
+
+def is_configured() -> bool:
+    """Всегда True: есть удалённый LLM и/или локальный запасной режим."""
+    return True
+
+
+def using_local_only() -> bool:
+    return not remote_enabled()
 
 
 def extract_text_from_file(file_path: Path) -> str:
@@ -128,61 +217,53 @@ def get_document_text(base_dir: Path, relative_path: str, doc_id: int) -> str:
     return text
 
 
-def _format_openrouter_error(status: int, body: str) -> str:
-    hint = ""
+def _format_remote_error(status: int, body: str, provider: str) -> str:
     lower = (body or "").lower()
-    if status == 403:
-        if "security policy" in lower or "cloudflare" in lower or "access denied" in lower:
+    hint = ""
+    if status in {401, 403}:
+        hint = " Проверьте KB_AI_API_KEY и доступность провайдера из РФ."
+        if "cloudflare" in lower or "security policy" in lower:
             hint = (
-                " Сервер, скорее всего, заблокирован Cloudflare/по региону. "
-                "Проверьте с сервера curl к OpenRouter или задайте OPENROUTER_HTTP_PROXY."
+                " Провайдер, похоже, блокирует РФ-IP. "
+                "Переключите KB_AI_PROVIDER на neuralgate или pollinations."
             )
-        else:
-            hint = (
-                " Проверьте ключ OPENROUTER_API_KEY и баланс на openrouter.ai; "
-                "для продакшена укажите реальный OPENROUTER_SITE_URL (не localhost)."
-            )
-    elif status == 401:
-        hint = " Неверный или отозванный OPENROUTER_API_KEY."
     elif status == 402:
-        hint = " Недостаточно средств на аккаунте OpenRouter."
+        if "free_limit" in lower or "retry after" in lower:
+            hint = " Бесплатный лимит провайдера исчерпан — использован локальный режим."
+        else:
+            hint = " Недостаточно средств / лимит бесплатного тарифа."
+    elif status == 429:
+        hint = " Слишком много запросов — подождите и повторите."
 
     snippet = re.sub(r"\s+", " ", (body or "").strip())[:220]
     if snippet:
-        return f"OpenRouter вернул ошибку {status}: {snippet}.{hint}"
-    return f"OpenRouter вернул ошибку {status}.{hint}"
+        return f"{provider} вернул ошибку {status}: {snippet}.{hint}"
+    return f"{provider} вернул ошибку {status}.{hint}"
 
 
-async def openrouter_chat(
-    messages: List[Dict[str, str]],
-    *,
-    temperature: float = 0.3,
-    max_tokens: int = 1800,
-    response_format: Optional[Dict[str, str]] = None,
-) -> str:
-    key = _api_key()
-    if not key:
-        raise RuntimeError("OPENROUTER_API_KEY не задан")
+async def _post_chat(payload: Dict[str, Any]) -> str:
+    """POST OpenAI-compatible chat/completions. Returns assistant content."""
+    try:
+        import httpx
+    except ImportError as exc:
+        raise RuntimeError("httpx не установлен") from exc
 
-    site_url = _site_url()
-    site_name = _site_name()
+    provider = _provider_name()
+    url = _base_url()
+    # Некоторые шлюзы ждут .../v1, а chat — на .../v1/chat/completions
+    if not url.endswith("/chat/completions") and not url.endswith("/openai"):
+        url = url.rstrip("/") + "/chat/completions"
+
     headers = {
-        "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": site_url,
-        "Referer": site_url,
-        "X-Title": site_name,
-        "X-OpenRouter-Title": site_name,
-        "User-Agent": f"FoodMonitoring/1.0 ({site_name})",
+        "User-Agent": f"FoodMonitoring/1.0 ({_site_name()})",
+        "HTTP-Referer": _site_url(),
+        "Referer": _site_url(),
+        "X-Title": _site_name(),
     }
-    payload: Dict[str, Any] = {
-        "model": _model(),
-        "messages": messages,
-        "temperature": temperature,
-        "max_tokens": max_tokens,
-    }
-    if response_format:
-        payload["response_format"] = response_format
+    key = _api_key()
+    if key:
+        headers["Authorization"] = f"Bearer {key}"
 
     proxy = _http_proxy()
     client_kwargs: Dict[str, Any] = {"timeout": 90.0}
@@ -190,17 +271,51 @@ async def openrouter_chat(
         client_kwargs["proxy"] = proxy
 
     async with httpx.AsyncClient(**client_kwargs) as client:
-        resp = await client.post(OPENROUTER_URL, headers=headers, json=payload)
+        resp = await client.post(url, headers=headers, json=payload)
         if resp.status_code >= 400:
             detail = resp.text[:800]
-            logger.error("OpenRouter error %s: %s", resp.status_code, detail)
-            raise RuntimeError(_format_openrouter_error(resp.status_code, detail))
+            logger.error("KB AI %s error %s: %s", provider, resp.status_code, detail)
+            raise RuntimeError(_format_remote_error(resp.status_code, detail, provider))
         data = resp.json()
 
     try:
-        return data["choices"][0]["message"]["content"].strip()
+        content = data["choices"][0]["message"]["content"]
+        if isinstance(content, list):
+            content = "".join(
+                part.get("text", "") if isinstance(part, dict) else str(part)
+                for part in content
+            )
+        return (content or "").strip()
     except (KeyError, IndexError, TypeError) as exc:
-        raise RuntimeError("Некорректный ответ OpenRouter") from exc
+        raise RuntimeError(f"Некорректный ответ {provider}") from exc
+
+
+async def llm_chat(
+    messages: List[Dict[str, str]],
+    *,
+    temperature: float = 0.3,
+    max_tokens: int = 1800,
+    response_format: Optional[Dict[str, str]] = None,
+) -> str:
+    if not remote_enabled():
+        raise RuntimeError("Удалённый ИИ не настроен")
+
+    payload: Dict[str, Any] = {
+        "model": _model(),
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+    cfg = _provider_cfg()
+    if response_format and cfg.get("supports_json_object"):
+        payload["response_format"] = response_format
+
+    return await _post_chat(payload)
+
+
+# Обратная совместимость
+async def openrouter_chat(*args: Any, **kwargs: Any) -> str:
+    return await llm_chat(*args, **kwargs)
 
 
 def _parse_json_payload(raw: str) -> Dict[str, Any]:
@@ -220,6 +335,96 @@ def _parse_json_payload(raw: str) -> Dict[str, Any]:
     return {"reply": raw, "documents": []}
 
 
+def _tokenize(text: str) -> List[str]:
+    return [t for t in re.split(r"[^\wа-яёА-ЯЁ]+", (text or "").lower()) if len(t) > 2]
+
+
+_STOP = {
+    "это", "как", "для", "что", "или", "при", "без", "все", "они", "она", "его",
+    "ещё", "еще", "также", "того", "этот", "эта", "есть", "быть", "если", "чтобы",
+    "какой", "какие", "какая", "нужно", "можно", "документ", "документы", "файл",
+}
+
+
+def _split_sentences(text: str) -> List[str]:
+    parts = re.split(r"(?<=[.!?…])\s+|\n+", text)
+    out: List[str] = []
+    for p in parts:
+        s = re.sub(r"\s+", " ", p).strip(" •\t-–—")
+        if 40 <= len(s) <= 420:
+            out.append(s)
+    return out
+
+
+def _score_sentence(sentence: str, query_tokens: List[str], freq: Counter) -> float:
+    tokens = _tokenize(sentence)
+    if not tokens:
+        return 0.0
+    score = 0.0
+    for t in tokens:
+        score += 0.35 * freq.get(t, 0)
+        if t in query_tokens:
+            score += 3.0
+    # Бонус за «нормативные» маркеры
+    markers = (
+        "требован", "норм", "санпин", "обязател", "запрещ", "рекоменд",
+        "срок", "температур", "калор", "меню", "питани", "гигиен",
+    )
+    low = sentence.lower()
+    score += sum(1.5 for m in markers if m in low)
+    # Чуть выше оцениваем более информативные предложения
+    score += min(len(tokens), 28) * 0.05
+    return score
+
+
+def local_summarize(text: str, *, meta_title: str = "", question: str = "") -> str:
+    """Локальная выжимка / ответ по тексту без внешнего API."""
+    if not text:
+        return (
+            f"Текст файла «{meta_title or 'документ'}» извлечь не удалось "
+            "(скан, видео или защищённый формат). Откройте файл вручную."
+        )
+
+    q = (question or "").strip()
+    query_tokens = [t for t in _tokenize(q) if t not in _STOP]
+    sentences = _split_sentences(text[:MAX_DOC_CHARS])
+    if not sentences:
+        snippet = re.sub(r"\s+", " ", text[:700]).strip()
+        return f"**Кратко по документу**\n\n{snippet}…"
+
+    # Частоты слов для TF-подобной оценки
+    all_tokens = []
+    for s in sentences:
+        all_tokens.extend(t for t in _tokenize(s) if t not in _STOP)
+    freq = Counter(all_tokens)
+
+    ranked: List[Tuple[float, int, str]] = []
+    for idx, s in enumerate(sentences):
+        ranked.append((_score_sentence(s, query_tokens, freq), idx, s))
+    ranked.sort(key=lambda x: (-x[0], x[1]))
+
+    if q and not any(x in q.lower() for x in ("выжимк", "кратко", "summar", "итог")):
+        picks = [s for _, _, s in ranked[:5] if _score_sentence(s, query_tokens, freq) > 0]
+        if not picks:
+            picks = [s for _, _, s in ranked[:3]]
+        lines = "\n".join(f"• {s}" for s in picks)
+        return (
+            f"**Ответ по документу «{meta_title or 'документ'}»**\n\n"
+            f"{lines}\n\n"
+            "_Локальный режим: ответ собран по наиболее релевантным фрагментам текста._"
+        )
+
+    # Выжимка: берём топ, восстанавливаем порядок появления
+    top = sorted(ranked[:7], key=lambda x: x[1])
+    lines = "\n".join(f"• {s}" for _, _, s in top)
+    return (
+        f"**Выжимка: {meta_title or 'документ'}**\n\n"
+        f"{lines}\n\n"
+        "**На что обратить внимание:** сверьте сроки, нормы и обязательные требования "
+        "в полном тексте документа — выжимка выделяет ключевые формулировки."
+    )
+
+
 def build_catalog_entries(
     documents: List[Any],
     base_dir: Path,
@@ -227,7 +432,7 @@ def build_catalog_entries(
     categories: Dict[int, str],
     query: str = "",
 ) -> List[Dict[str, Any]]:
-    tokens = [t for t in re.split(r"\W+", query.lower()) if len(t) > 2]
+    tokens = [t for t in _tokenize(query) if t not in _STOP]
     entries: List[Dict[str, Any]] = []
     total_chars = 0
 
@@ -269,14 +474,65 @@ def build_catalog_entries(
             "extension": doc.file_extension or "",
             "downloads": doc.downloads_count or 0,
             "preview": preview,
+            "_score": score,
         }
-        chunk = json.dumps(entry, ensure_ascii=False)
+        chunk = json.dumps({k: v for k, v in entry.items() if k != "_score"}, ensure_ascii=False)
         if total_chars + len(chunk) > MAX_CATALOG_CHARS and entries:
             break
         entries.append(entry)
         total_chars += len(chunk)
 
     return entries
+
+
+def local_search_documents(
+    *,
+    user_message: str,
+    documents: List[Any],
+    base_dir: Path,
+    document_types: Dict[str, str],
+    categories: Dict[int, str],
+) -> Dict[str, Any]:
+    catalog = build_catalog_entries(
+        documents, base_dir, document_types, categories, user_message
+    )
+    matched = [e for e in catalog if e.get("_score", 0) > 0][:5]
+    if not matched:
+        matched = catalog[:3]
+
+    recommended = []
+    for e in matched:
+        reason_bits = []
+        if e.get("_score"):
+            reason_bits.append("совпадение по названию/тегам/описанию")
+        if e.get("category"):
+            reason_bits.append(f"категория: {e['category']}")
+        recommended.append(
+            {
+                "id": e["id"],
+                "title": e["title"],
+                "type": e["type"],
+                "url": f"/knowledge-base/document/{e['id']}",
+                "cover_url": None,
+                "reason": "; ".join(reason_bits) or "популярный документ справочника",
+            }
+        )
+
+    # cover_url заполним в вызывающем коде при наличии объекта
+    if matched and any(e.get("_score", 0) > 0 for e in matched):
+        titles = ", ".join(f"«{e['title']}»" for e in matched[:3])
+        reply = (
+            f"По запросу «{user_message.strip()}» лучше всего подходят: {titles}.\n\n"
+            "Откройте карточку документа — там можно сделать ИИ-выжимку."
+        )
+    else:
+        reply = (
+            f"Точного совпадения по «{user_message.strip()}» не нашёл. "
+            "Ниже — наиболее скачиваемые документы; уточните тему "
+            "(СанПиН, меню, нормы, технологические карты)."
+        )
+
+    return {"reply": reply, "documents": recommended, "mode": "local"}
 
 
 async def search_documents_with_ai(
@@ -288,10 +544,40 @@ async def search_documents_with_ai(
     categories: Dict[int, str],
     history: Optional[List[Dict[str, str]]] = None,
 ) -> Dict[str, Any]:
+    id_map = {d.id: d for d in documents}
+
+    def _attach_covers(result: Dict[str, Any]) -> Dict[str, Any]:
+        for item in result.get("documents") or []:
+            doc = id_map.get(item.get("id"))
+            if doc and getattr(doc, "cover_image_path", None):
+                item["cover_url"] = f"/knowledge-base/cover/{doc.id}"
+            elif "cover_url" not in item:
+                item["cover_url"] = None
+        return result
+
+    # Для keyless Pollinations поиск держим локальным: общий IP-сервера
+    # быстро упирается в free-limit, а подбор по каталогу и так точный.
+    force_local_search = (
+        not remote_enabled()
+        or _provider_name() == "pollinations"
+        or (os.getenv("KB_AI_SEARCH_LOCAL") or "").strip() in {"1", "true", "yes"}
+    )
+    if force_local_search:
+        return _attach_covers(
+            local_search_documents(
+                user_message=user_message,
+                documents=documents,
+                base_dir=base_dir,
+                document_types=document_types,
+                categories=categories,
+            )
+        )
+
     catalog = build_catalog_entries(
         documents, base_dir, document_types, categories, user_message
     )
-    catalog_json = json.dumps(catalog, ensure_ascii=False)
+    catalog_clean = [{k: v for k, v in e.items() if k != "_score"} for e in catalog]
+    catalog_json = json.dumps(catalog_clean, ensure_ascii=False)
 
     system = (
         "Ты — ИИ-помощник справочного центра по организации питания в образовательных учреждениях. "
@@ -321,15 +607,29 @@ async def search_documents_with_ai(
         }
     )
 
-    raw = await openrouter_chat(
-        messages,
-        temperature=0.2,
-        max_tokens=1600,
-        response_format={"type": "json_object"},
-    )
-    parsed = _parse_json_payload(raw)
+    try:
+        raw = await llm_chat(
+            messages,
+            temperature=0.2,
+            max_tokens=1600,
+            response_format={"type": "json_object"},
+        )
+        parsed = _parse_json_payload(raw)
+    except Exception as exc:
+        logger.warning("KB AI search fallback to local: %s", exc)
+        result = local_search_documents(
+            user_message=user_message,
+            documents=documents,
+            base_dir=base_dir,
+            document_types=document_types,
+            categories=categories,
+        )
+        result["reply"] = (
+            result["reply"]
+            + "\n\n_Сейчас использован локальный подбор (внешний ИИ временно недоступен)._"
+        )
+        return _attach_covers(result)
 
-    id_map = {d.id: d for d in documents}
     recommended = []
     for item in parsed.get("documents") or []:
         try:
@@ -350,8 +650,10 @@ async def search_documents_with_ai(
             }
         )
 
-    reply = (parsed.get("reply") or "").strip() or "Не удалось сформировать ответ. Попробуйте переформулировать запрос."
-    return {"reply": reply, "documents": recommended}
+    reply = (parsed.get("reply") or "").strip() or (
+        "Не удалось сформировать ответ. Попробуйте переформулировать запрос."
+    )
+    return {"reply": reply, "documents": recommended, "mode": "remote"}
 
 
 async def ask_about_document(
@@ -371,6 +673,22 @@ async def ask_about_document(
         f"Формат: {document.file_extension or '—'}"
     )
 
+    q = (question or "").strip()
+    if not q:
+        q = (
+            "Сделай краткую выжимку документа: основные положения, важные требования, "
+            "сроки/нормы если есть, и на что обратить внимание практическому специалисту."
+        )
+
+    if not remote_enabled():
+        reply = local_summarize(text, meta_title=document.title or "", question=q)
+        return {
+            "reply": reply,
+            "has_text": bool(text),
+            "chars_used": min(len(text), MAX_DOC_CHARS) if text else 0,
+            "mode": "local",
+        }
+
     if not text:
         text_block = (
             "Текст файла извлечь не удалось (возможно, это скан, видео или защищённый файл). "
@@ -378,13 +696,6 @@ async def ask_about_document(
         )
     else:
         text_block = text[:MAX_DOC_CHARS]
-
-    q = (question or "").strip()
-    if not q:
-        q = (
-            "Сделай краткую выжимку документа: основные положения, важные требования, "
-            "сроки/нормы если есть, и на что обратить внимание практическому специалисту."
-        )
 
     system = (
         "Ты — ИИ-помощник справочного центра. Отвечай на русском, ясно и по делу. "
@@ -411,9 +722,18 @@ async def ask_about_document(
         }
     )
 
-    reply = await openrouter_chat(messages, temperature=0.25, max_tokens=2200)
+    try:
+        reply = await llm_chat(messages, temperature=0.25, max_tokens=2200)
+        mode = "remote"
+    except Exception as exc:
+        logger.warning("KB AI document fallback to local: %s", exc)
+        reply = local_summarize(text, meta_title=document.title or "", question=q)
+        reply += "\n\n_Сейчас использован локальный режим (внешний ИИ временно недоступен)._"
+        mode = "local"
+
     return {
         "reply": reply,
         "has_text": bool(text),
         "chars_used": min(len(text), MAX_DOC_CHARS) if text else 0,
+        "mode": mode,
     }

@@ -6,7 +6,8 @@
   <title>Ежедневное меню — {{ school_name }}</title>
   <meta name="description" content="Актуальное меню питания обучающихся: {{ school_name }}. Скачать меню на сегодня и архив по датам."/>
   <meta name="robots" content="index, follow"/>
-  <meta name="theme-color" content="#1d6cb8"/>
+  <meta name="theme-color" content="#141414"/>
+  <meta name="color-scheme" content="light"/>
   <meta property="og:title" content="Ежедневное меню — {{ school_name }}"/>
   <meta property="og:description" content="Актуальное меню питания обучающихся"/>
   <meta property="og:type" content="website"/>
@@ -16,6 +17,17 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/static/css/public-menu.css?v=1"/>
+  <script>
+    (function () {
+      try {
+        localStorage.removeItem('ecm_theme');
+        document.documentElement.setAttribute('data-theme', 'light');
+        if (localStorage.getItem('ecm_a11y') === '1') {
+          document.documentElement.setAttribute('data-a11y', 'on');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <style>
     body {
       margin: 0;
@@ -34,50 +46,65 @@
         radial-gradient(ellipse 36% 32% at 90% 8%, rgba(255, 255, 255, 0.55), transparent 60%),
         linear-gradient(155deg, #bfe3f8 0%, #e8f6fd 46%, #cfe8f7 100%);
     }
-    [data-theme="dark"] body { background: #0b1526; color: #eaf1f8; }
-    [data-theme="dark"] body::before {
-      background:
-        radial-gradient(ellipse 48% 42% at 12% 16%, rgba(70, 130, 190, 0.28), transparent 62%),
-        linear-gradient(155deg, #0a1322 0%, #122036 46%, #0d182a 100%);
-    }
-    .pm-theme {
+    .pm-a11y {
       position: fixed;
       bottom: calc(16px + env(safe-area-inset-bottom));
       right: calc(16px + env(safe-area-inset-right));
-      width: 42px;
+      min-width: 42px;
       height: 42px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.85);
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(12px);
+      padding: 0 0.75rem;
+      border-radius: 0;
+      border: 1px solid #141414;
+      background: #ffffff;
+      color: #141414;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      gap: 0.4rem;
       cursor: pointer;
       z-index: 20;
-      box-shadow: 0 8px 18px rgba(74, 140, 190, 0.16);
+      font: 600 0.78rem/1 inherit;
+      letter-spacing: 0.04em;
     }
-    .pm-theme svg { width: 17px; height: 17px; stroke: #1d6cb8; }
-    [data-theme="dark"] .pm-theme {
-      background: rgba(22, 38, 60, 0.85);
-      border-color: rgba(126, 184, 232, 0.22);
+    .pm-a11y svg { width: 17px; height: 17px; stroke: currentColor; }
+    html[data-a11y="on"] {
+      font-size: 125%;
     }
-    [data-theme="dark"] .pm-theme svg { stroke: #a8d4f5; }
+    html[data-a11y="on"] body {
+      background: #ffffff !important;
+      color: #000000 !important;
+    }
+    html[data-a11y="on"] body::before { display: none; }
+    html[data-a11y="on"] .pm-a11y {
+      background: #000000;
+      color: #ffff00;
+      border-color: #000000;
+      min-height: 48px;
+    }
+    html[data-a11y="on"] .pm-page,
+    html[data-a11y="on"] .pm-shell,
+    html[data-a11y="on"] .pm-hero,
+    html[data-a11y="on"] .pm-card,
+    html[data-a11y="on"] aside {
+      background: #ffffff !important;
+      color: #000000 !important;
+      border-color: #000000 !important;
+      box-shadow: none !important;
+    }
+    html[data-a11y="on"] a {
+      color: #0000ee !important;
+      text-decoration: underline !important;
+      font-weight: 700 !important;
+    }
   </style>
 </head>
 <body>
-  <button type="button" class="pm-theme" id="pm-theme" title="Сменить тему" aria-label="Сменить тему">
-    <svg id="pm-theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="5"></circle>
-      <line x1="12" y1="1" x2="12" y2="3"></line>
-      <line x1="12" y1="21" x2="12" y2="23"></line>
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-      <line x1="1" y1="12" x2="3" y2="12"></line>
-      <line x1="21" y1="12" x2="23" y2="12"></line>
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+  <button type="button" class="pm-a11y" id="pm-a11y" title="Версия для слабовидящих" aria-pressed="false" aria-label="Включить версию для слабовидящих">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/>
+      <circle cx="12" cy="12" r="3"/>
     </svg>
+    <span id="pm-a11y-label">А+</span>
   </button>
 
   <main class="pm-page">
@@ -303,18 +330,28 @@
   <script>
     (function () {
       const html = document.documentElement;
-      const btn = document.getElementById('pm-theme');
-      const icon = document.getElementById('pm-theme-icon');
-      const sun = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
-      const moon = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
-      function setTheme(t) {
-        html.setAttribute('data-theme', t);
-        try { localStorage.setItem('ecm_theme', t); } catch (e) {}
-        icon.innerHTML = t === 'dark' ? moon : sun;
+      const btn = document.getElementById('pm-a11y');
+      const label = document.getElementById('pm-a11y-label');
+
+      function setA11y(on) {
+        html.setAttribute('data-theme', 'light');
+        if (on) {
+          html.setAttribute('data-a11y', 'on');
+          localStorage.setItem('ecm_a11y', '1');
+        } else {
+          html.removeAttribute('data-a11y');
+          localStorage.setItem('ecm_a11y', '0');
+        }
+        if (btn) {
+          btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+          btn.setAttribute('aria-label', on ? 'Выключить версию для слабовидящих' : 'Включить версию для слабовидящих');
+          btn.title = on ? 'Обычная версия' : 'Версия для слабовидящих';
+        }
+        if (label) label.textContent = on ? 'Обычная' : 'А+';
       }
-      const saved = localStorage.getItem('ecm_theme');
-      setTheme(saved || 'light');
-      btn.addEventListener('click', () => setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+
+      setA11y(localStorage.getItem('ecm_a11y') === '1');
+      if (btn) btn.addEventListener('click', () => setA11y(html.getAttribute('data-a11y') !== 'on'));
 
       document.querySelectorAll('.pm-year-toggle').forEach((toggle) => {
         toggle.addEventListener('click', () => {

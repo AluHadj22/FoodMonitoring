@@ -58,24 +58,24 @@
     }
 
     .page-header h1 {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        letter-spacing: -0.5px;
+        font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+        font-weight: 500;
+        color: #141414;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
         margin-bottom: 0.5rem;
     }
 
     .page-header h1 span {
-        background: var(--primary);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        background: none;
+        -webkit-text-fill-color: #141414;
+        color: #141414;
     }
 
     .page-header p {
-        color: var(--text-secondary);
+        color: #4a4a4a;
         font-size: 0.9rem;
-        opacity: 0.8;
+        opacity: 1;
     }
 
     /* Сетка карточек */
@@ -375,7 +375,7 @@
         gap: 0.625rem;
         width: 100%;
         padding: 0.7rem;
-        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+        background: #141414;
         color: white;
         border: none;
         border-radius: var(--radius-md);
@@ -390,7 +390,7 @@
     .sanpin-link:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 24px rgba(139, 92, 246, 0.25);
-        background: linear-gradient(135deg, #7c3aed, #5b21b6);
+        background: #2a2a2a;
     }
 
     .sanpin-link svg {

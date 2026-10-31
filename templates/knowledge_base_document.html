@@ -86,43 +86,7 @@
         margin-bottom: 1.5rem;
     }
 
-    .doc-hero-mesh {
-        position: absolute;
-        inset: -18px -12px -28px;
-        pointer-events: none;
-        z-index: 0;
-        overflow: hidden;
-        border-radius: calc(var(--radius-xl) + 8px);
-    }
-
-    .doc-hero-mesh span {
-        position: absolute;
-        border-radius: 50%;
-    }
-
-    .doc-hero-mesh .mesh-a {
-        width: 280px;
-        height: 280px;
-        left: -60px;
-        top: -80px;
-        background: radial-gradient(circle, rgba(91, 159, 212, 0.28), transparent 68%);
-    }
-
-    .doc-hero-mesh .mesh-b {
-        width: 220px;
-        height: 220px;
-        right: -40px;
-        top: 20%;
-        background: radial-gradient(circle, rgba(139, 191, 230, 0.24), transparent 70%);
-    }
-
-    .doc-hero-mesh .mesh-c {
-        width: 180px;
-        height: 180px;
-        left: 38%;
-        bottom: -70px;
-        background: radial-gradient(circle, rgba(61, 126, 184, 0.14), transparent 72%);
-    }
+    .doc-hero-mesh { display: none; }
 
     .doc-hero {
         position: relative;
@@ -130,19 +94,18 @@
         display: grid;
         grid-template-columns: 240px 1fr;
         gap: 1.65rem;
-        background:
-            linear-gradient(145deg, rgba(255, 255, 255, 0.94) 0%, rgba(245, 248, 252, 0.9) 100%);
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-xl);
+        background: #141414;
+        border: 1px solid #141414;
+        border-radius: 0;
         padding: 1.4rem;
         align-items: start;
-        box-shadow: var(--shadow-lg);
+        box-shadow: none;
         overflow: hidden;
+        color: #f6f6f6;
     }
 
     [data-theme="dark"] .doc-hero {
-        background:
-            linear-gradient(145deg, rgba(22, 32, 51, 0.96) 0%, rgba(26, 39, 64, 0.92) 100%);
+        background: #0a0a0a;
     }
 
     .doc-cover {
@@ -178,9 +141,8 @@
         align-items: center;
         justify-content: center;
         gap: 0.45rem;
-        background:
-            linear-gradient(155deg, #e8f2fa 0%, #cfe4f5 48%, #a9cce8 100%);
-        color: var(--primary-dark);
+        background: #efefef;
+        color: #141414;
     }
 
     .doc-cover-placeholder svg {
@@ -211,34 +173,35 @@
         align-items: center;
         gap: 0.35rem;
         padding: 0.28rem 0.7rem;
-        background: linear-gradient(135deg, var(--primary-bg), rgba(139, 191, 230, 0.18));
-        color: var(--primary-dark);
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.85);
         font-size: 0.68rem;
-        font-weight: 700;
-        letter-spacing: 0.04em;
+        font-weight: 500;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
-        border-radius: var(--radius-sm);
-        border: 1px solid rgba(91, 159, 212, 0.22);
-        box-shadow: var(--shadow-sm);
+        border-radius: 0;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        box-shadow: none;
     }
 
     .doc-type::before {
         content: "";
         width: 6px;
         height: 6px;
-        border-radius: 50%;
-        background: var(--primary);
-        box-shadow: 0 0 0 3px rgba(91, 159, 212, 0.2);
+        border-radius: 0;
+        background: #ffffff;
+        box-shadow: none;
     }
 
     .doc-title {
         margin: 0;
-        font-family: var(--font-display);
-        font-size: 1.7rem;
-        font-weight: 700;
-        letter-spacing: -0.03em;
-        line-height: 1.22;
-        color: var(--text-primary);
+        font-family: var(--font-display, inherit);
+        font-size: clamp(1.25rem, 2.2vw, 1.7rem);
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        line-height: 1.25;
+        color: #ffffff;
     }
 
     .doc-meta-row {
@@ -246,9 +209,9 @@
         flex-wrap: wrap;
         gap: 0.55rem 0.85rem;
         font-size: 0.8rem;
-        color: var(--text-muted);
+        color: rgba(255, 255, 255, 0.65);
         font-variant-numeric: tabular-nums;
-        font-weight: 600;
+        font-weight: 500;
     }
 
     .doc-meta-row span {
@@ -1208,6 +1171,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const history = [];
     let busy = false;
     let summaryLoaded = false;
+    let aiStatus = null;
+    let docContext = null;
 
     function escapeHtml(str) {
         return String(str)
@@ -1232,6 +1197,91 @@ document.addEventListener('DOMContentLoaded', function() {
         messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
+    async function ensureAiStatus() {
+        if (aiStatus) return aiStatus;
+        try {
+            const res = await fetch('/knowledge-base/ai/status');
+            aiStatus = await res.json();
+        } catch (e) {
+            aiStatus = { client_llm: false };
+        }
+        return aiStatus;
+    }
+
+    async function ensureDocContext() {
+        if (docContext) return docContext;
+        const res = await fetch(`/knowledge-base/ai/document/${DOC_AI_ID}/context`);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.detail || 'Не удалось загрузить текст документа');
+        docContext = data;
+        return docContext;
+    }
+
+    async function askClientLlm(question) {
+        const status = await ensureAiStatus();
+        const ctx = await ensureDocContext();
+        const q = (question || '').trim() || (
+            'Сделай краткую выжимку документа: основные положения, важные требования, ' +
+            'сроки/нормы если есть, и на что обратить внимание практическому специалисту.'
+        );
+        const meta =
+            `Название: ${ctx.title || ''}\n` +
+            `Тип: ${ctx.type || ''}\n` +
+            `Описание: ${ctx.description || '—'}\n` +
+            `Теги: ${ctx.tags || '—'}\n` +
+            `Формат: ${ctx.extension || '—'}`;
+        const textBlock = ctx.has_text
+            ? (ctx.text || '')
+            : 'Текст файла извлечь не удалось. Опирайся только на метаданные и честно скажи, если данных мало.';
+        const messages = [
+            {
+                role: 'system',
+                content:
+                    'Ты — ИИ-помощник справочного центра. Отвечай на русском, ясно и по делу. ' +
+                    'Опирайся только на предоставленный текст документа и метаданные. ' +
+                    'Если ответа в тексте нет — так и скажи. Не выдумывай факты. ' +
+                    'Форматируй ответ структурированно (короткие абзацы или маркированные списки).'
+            }
+        ];
+        history.slice(-8).forEach(item => {
+            if (item.role && item.content) messages.push({ role: item.role, content: String(item.content).slice(0, 3000) });
+        });
+        messages.push({
+            role: 'user',
+            content: `${meta}\n\n--- Текст документа ---\n${textBlock}\n--- Конец ---\n\nВопрос пользователя: ${q}`
+        });
+
+        const res = await fetch(status.client_endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: status.model || 'openai-fast',
+                messages,
+                temperature: 0.25,
+                max_tokens: 2200
+            })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const msg = (data && data.error && data.error.message) || data.message || ('Ошибка ИИ ' + res.status);
+            throw new Error(msg);
+        }
+        const reply = (((data.choices || [])[0] || {}).message || {}).content || '';
+        if (!String(reply).trim()) throw new Error('Пустой ответ ИИ');
+        return String(reply).trim();
+    }
+
+    async function askServer(question) {
+        const res = await fetch(`/knowledge-base/ai/document/${DOC_AI_ID}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question: question || '', history })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.detail || 'Не удалось получить ответ ИИ.');
+        return data.reply || 'Готово.';
+    }
+
     async function ask(question, label) {
         if (busy) return;
         busy = true;
@@ -1248,29 +1298,27 @@ document.addEventListener('DOMContentLoaded', function() {
         messagesEl.scrollTop = messagesEl.scrollHeight;
 
         try {
-            const res = await fetch(`/knowledge-base/ai/document/${DOC_AI_ID}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    question: question || '',
-                    history
-                })
-            });
-            const data = await res.json().catch(() => ({}));
-            typing.remove();
-            if (!res.ok) {
-                addMessage('assistant', data.detail || 'Не удалось получить ответ ИИ.');
+            const status = await ensureAiStatus();
+            let reply;
+            if (status.client_llm && status.client_endpoint) {
+                try {
+                    reply = await askClientLlm(question);
+                } catch (clientErr) {
+                    reply = await askServer(question);
+                }
             } else {
-                const qText = question || 'Сделать краткую выжимку документа';
-                history.push({ role: 'user', content: qText });
-                history.push({ role: 'assistant', content: data.reply || '' });
-                if (history.length > 16) history.splice(0, history.length - 16);
-                addMessage('assistant', data.reply || 'Готово.');
-                if (!question) summaryLoaded = true;
+                reply = await askServer(question);
             }
+            typing.remove();
+            const qText = question || 'Сделать краткую выжимку документа';
+            history.push({ role: 'user', content: qText });
+            history.push({ role: 'assistant', content: reply || '' });
+            if (history.length > 16) history.splice(0, history.length - 16);
+            addMessage('assistant', reply || 'Готово.');
+            if (!question) summaryLoaded = true;
         } catch (err) {
             typing.remove();
-            addMessage('assistant', 'Ошибка сети. Попробуйте ещё раз.');
+            addMessage('assistant', (err && err.message) || 'Ошибка сети. Попробуйте ещё раз.');
         } finally {
             busy = false;
             sendBtn.disabled = false;

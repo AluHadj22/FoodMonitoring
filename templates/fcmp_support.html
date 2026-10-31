@@ -11,24 +11,16 @@
 
     /* Hero секция */
     .fcmp-hero {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        border-radius: 32px;
-        padding: 3rem;
+        background: #141414;
+        border-radius: 0;
+        padding: 2.5rem 2rem;
         margin-bottom: 2rem;
         position: relative;
         overflow: hidden;
+        border: 1px solid #141414;
     }
 
-    .fcmp-hero::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -20%;
-        width: 400px;
-        height: 400px;
-        background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
-        border-radius: 50%;
-    }
+    .fcmp-hero::before { display: none; }
 
     .fcmp-hero-content {
         position: relative;
@@ -39,27 +31,32 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background: rgba(16, 185, 129, 0.2);
-        padding: 6px 14px;
-        border-radius: 100px;
-        font-size: 0.75rem;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 6px 12px;
+        border-radius: 0;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        font-size: 0.7rem;
         font-weight: 500;
-        color: #10b981;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.85);
         margin-bottom: 1rem;
     }
 
     .fcmp-title {
-        font-size: 2rem;
-        font-weight: 700;
-        color: white;
-        margin-bottom: 1rem;
-        letter-spacing: -0.02em;
+        font-size: clamp(1.4rem, 2.4vw, 1.85rem);
+        font-weight: 500;
+        color: #ffffff;
+        margin-bottom: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
     }
 
     .fcmp-description {
         font-size: 0.95rem;
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(255, 255, 255, 0.78);
         max-width: 600px;
+        line-height: 1.55;
     }
 
     /* Сетка */
@@ -808,7 +805,7 @@
                         <td>
                             {% if req.reply %}
                             <div class="reply-bubble">
-                                <strong>📨 {{ req.reply_date }}</strong>
+                                <strong>{{ req.reply_date }}</strong>
                                 <p>{{ req.reply }}</p>
                             </div>
                             {% else %}
@@ -891,7 +888,7 @@
                                 <td>
                                     {% if req.reply %}
                                     <div class="reply-preview" title="{{ req.reply }}">
-                                        💬 {{ req.reply[:50] }}{% if req.reply|length > 50 %}...{% endif %}
+                                        {{ req.reply[:50] }}{% if req.reply|length > 50 %}...{% endif %}
                                     </div>
                                     {% else %}
                                     —
@@ -900,10 +897,10 @@
                                 <td>
                                     <div class="action-buttons">
                                         {% if req.status != 'completed' %}
-                                        <button class="action-btn complete" onclick="completeRequest({{ req.id }})">✓ Выполнено</button>
-                                        <button class="action-btn reply" onclick="replyRequest({{ req.id }})">✉️ Ответить</button>
+                                        <button class="action-btn complete" onclick="completeRequest({{ req.id }})">Выполнено</button>
+                                        <button class="action-btn reply" onclick="replyRequest({{ req.id }})">Ответить</button>
                                         {% endif %}
-                                        <button class="action-btn delete" onclick="deleteRequest({{ req.id }})">🗑️ Удалить</button>
+                                        <button class="action-btn delete" onclick="deleteRequest({{ req.id }})">Удалить</button>
                                     </div>
                                 </td>
                             </tr>

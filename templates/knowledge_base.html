@@ -1,13 +1,11 @@
 {% extends "layout.html" %}
+{% from "macros/kb_icons.html" import kb_icon %}
 {% block title %}Справочный центр — ЕЦМП{% endblock %}
 {% block meta_description %}Справочный центр ЕЦМП: база знаний, инструкции и материалы по мониторингу школьного питания.{% endblock %}
 
 {% block content %}
 <style>
     .kb-page {
-        --kb-sky-a: rgba(91, 159, 212, 0.22);
-        --kb-sky-b: rgba(139, 191, 230, 0.16);
-        --kb-sky-c: rgba(61, 126, 184, 0.08);
         position: relative;
         max-width: 1280px;
         margin: 0 auto;
@@ -15,35 +13,9 @@
         animation: kb-page-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
     }
 
-    .kb-page::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        z-index: -2;
-        pointer-events: none;
-        background:
-            radial-gradient(900px 520px at 8% -8%, var(--kb-sky-a), transparent 58%),
-            radial-gradient(720px 480px at 92% 6%, var(--kb-sky-b), transparent 55%),
-            radial-gradient(640px 420px at 50% 100%, var(--kb-sky-c), transparent 60%),
-            var(--bg-main);
-    }
-
+    .kb-page::before,
     .kb-page::after {
-        content: "";
-        position: fixed;
-        inset: 0;
-        z-index: -1;
-        pointer-events: none;
-        opacity: 0.45;
-        background-image: radial-gradient(rgba(91, 159, 212, 0.18) 1px, transparent 1px);
-        background-size: 22px 22px;
-        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 78%);
-    }
-
-    [data-theme="dark"] .kb-page::before {
-        --kb-sky-a: rgba(126, 184, 232, 0.16);
-        --kb-sky-b: rgba(91, 159, 212, 0.12);
-        --kb-sky-c: rgba(61, 126, 184, 0.1);
+        display: none;
     }
 
     @keyframes kb-page-in {
@@ -79,67 +51,23 @@
 
     .kb-hero {
         position: relative;
-        overflow: visible;
+        overflow: hidden;
         display: flex;
         align-items: flex-end;
         justify-content: space-between;
         gap: 1.5rem;
         margin-bottom: 1.35rem;
-        padding: 1.55rem 1.6rem 1.45rem;
-        background:
-            linear-gradient(145deg, rgba(255, 255, 255, 0.92) 0%, rgba(245, 248, 252, 0.88) 100%);
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-xl);
-        box-shadow: var(--shadow-md);
+        padding: 1.85rem 1.75rem 1.65rem;
+        background: #141414;
+        border: 1px solid #141414;
+        border-radius: 0;
+        box-shadow: none;
         flex-wrap: wrap;
         z-index: 20;
+        color: #f6f6f6;
     }
 
-    [data-theme="dark"] .kb-hero {
-        background:
-            linear-gradient(145deg, rgba(22, 32, 51, 0.95) 0%, rgba(26, 39, 64, 0.9) 100%);
-    }
-
-    .kb-hero-deco {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        overflow: hidden;
-        border-radius: inherit;
-    }
-
-    .kb-hero-deco span {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(0.5px);
-    }
-
-    .kb-hero-deco .blob-a {
-        width: 220px;
-        height: 220px;
-        right: -40px;
-        top: -70px;
-        background: radial-gradient(circle, rgba(91, 159, 212, 0.28), transparent 68%);
-    }
-
-    .kb-hero-deco .blob-b {
-        width: 160px;
-        height: 160px;
-        right: 120px;
-        bottom: -80px;
-        background: radial-gradient(circle, rgba(139, 191, 230, 0.22), transparent 70%);
-    }
-
-    .kb-hero-deco .arc {
-        width: 280px;
-        height: 280px;
-        left: -100px;
-        bottom: -160px;
-        border: 18px solid rgba(91, 159, 212, 0.1);
-        border-radius: 50%;
-        background: none;
-        filter: none;
-    }
+    .kb-hero-deco { display: none; }
 
     .kb-header-text {
         position: relative;
@@ -152,12 +80,12 @@
         display: inline-flex;
         align-items: center;
         gap: 0.45rem;
-        font-size: 0.7rem;
-        font-weight: 600;
-        letter-spacing: 0.08em;
+        font-size: 0.68rem;
+        font-weight: 500;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
-        color: var(--primary-dark);
-        margin-bottom: 0.55rem;
+        color: rgba(255, 255, 255, 0.72);
+        margin-bottom: 0.65rem;
     }
 
     .kb-kicker-mark {
@@ -166,10 +94,10 @@
         justify-content: center;
         width: 1.15rem;
         height: 1.15rem;
-        border-radius: 4px;
-        background: var(--primary);
-        color: #fff;
-        box-shadow: 0 2px 8px rgba(91, 159, 212, 0.35);
+        border-radius: 0;
+        background: #ffffff;
+        color: #141414;
+        box-shadow: none;
     }
 
     .kb-kicker-mark svg {
@@ -178,19 +106,20 @@
     }
 
     .kb-title {
-        font-family: var(--font-display);
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        letter-spacing: -0.035em;
-        line-height: 1.15;
-        margin: 0 0 0.5rem;
+        font-family: var(--font-display, inherit);
+        font-size: clamp(1.45rem, 2.4vw, 2rem);
+        font-weight: 500;
+        color: #ffffff;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        line-height: 1.2;
+        margin: 0 0 0.55rem;
     }
 
     .kb-subtitle {
         margin: 0;
         font-size: 0.92rem;
-        color: var(--text-secondary);
+        color: rgba(255, 255, 255, 0.72);
         max-width: 38rem;
         line-height: 1.55;
     }
@@ -207,54 +136,37 @@
     .kb-stat {
         min-width: 5.5rem;
         padding: 0.7rem 0.85rem 0.65rem;
-        background: var(--bg-card-solid);
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-md);
-        box-shadow: var(--shadow-sm);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 0;
+        box-shadow: none;
         text-align: left;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transition: border-color 0.2s ease, background 0.2s ease;
         position: relative;
         overflow: hidden;
     }
 
-    .kb-stat::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        height: 3px;
-        background: linear-gradient(90deg, var(--primary), var(--primary-light));
-        opacity: 0.9;
-    }
-
-    .kb-stat:nth-child(2)::before {
-        background: linear-gradient(90deg, var(--primary-dark), var(--primary));
-    }
-
-    .kb-stat:nth-child(3)::before {
-        background: linear-gradient(90deg, #6bb8a0, var(--primary-light));
-    }
+    .kb-stat::before { display: none; }
 
     .kb-stat:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.4);
     }
 
     .kb-stat-value {
         font-size: 1.3rem;
-        font-weight: 700;
-        color: var(--text-primary);
+        font-weight: 600;
+        color: #ffffff;
         line-height: 1.1;
         font-variant-numeric: tabular-nums;
     }
 
     .kb-stat-label {
         font-size: 0.68rem;
-        color: var(--text-muted);
+        color: rgba(255, 255, 255, 0.62);
         text-transform: uppercase;
-        letter-spacing: 0.04em;
-        font-weight: 600;
+        letter-spacing: 0.08em;
+        font-weight: 500;
         margin-top: 0.2rem;
     }
 
@@ -265,22 +177,25 @@
         height: 100%;
         min-height: 3.15rem;
         padding: 0.55rem 0.95rem;
-        background: var(--bg-card-solid);
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-md);
-        color: var(--text-secondary);
-        font-size: 0.8rem;
-        font-weight: 600;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 0;
+        color: #f6f6f6;
+        font-size: 0.78rem;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
         cursor: pointer;
-        transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+        transition: border-color 0.15s ease, background 0.15s ease;
         position: relative;
-        box-shadow: var(--shadow-sm);
+        box-shadow: none;
     }
 
     .kb-admin-btn:hover {
-        border-color: var(--primary-light);
-        color: var(--primary);
-        box-shadow: var(--shadow-md);
+        border-color: rgba(255, 255, 255, 0.5);
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.14);
+        box-shadow: none;
     }
 
     .kb-admin-btn svg {
@@ -365,14 +280,15 @@
         background: var(--bg-card-solid);
         border: 1px solid var(--border-light);
         border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-md), 0 0 0 1px rgba(91, 159, 212, 0.04);
+        box-shadow: none;
+        border-radius: 0;
         overflow: hidden;
-        transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        transition: border-color 0.2s ease;
     }
 
     .kb-search:focus-within {
-        border-color: var(--primary-light);
-        box-shadow: var(--shadow-lg), var(--shadow-focus);
+        border-color: #141414;
+        box-shadow: none;
     }
 
     .kb-search-field {
@@ -507,9 +423,15 @@
     }
 
     .kb-cat.active {
-        background: linear-gradient(90deg, var(--primary-bg), transparent 90%);
-        color: var(--primary-dark);
-        border-left-color: var(--primary);
+        background: rgba(20, 20, 20, 0.06);
+        color: #141414;
+        border-left-color: #141414;
+    }
+
+    [data-theme="dark"] .kb-cat.active {
+        background: rgba(242, 242, 242, 0.08);
+        color: #f2f2f2;
+        border-left-color: #f2f2f2;
     }
 
     .kb-cat-icon {
@@ -535,16 +457,21 @@
     }
 
     .kb-cat.active .kb-cat-count {
-        color: var(--primary-dark);
-        background: rgba(91, 159, 212, 0.18);
+        color: #141414;
+        background: rgba(20, 20, 20, 0.08);
+    }
+
+    [data-theme="dark"] .kb-cat.active .kb-cat-count {
+        color: #f2f2f2;
+        background: rgba(242, 242, 242, 0.1);
     }
 
     .kb-login-hint {
         margin: 0.75rem 1.1rem 1.1rem;
         padding: 0.85rem;
-        background: linear-gradient(160deg, var(--bg-muted), rgba(91, 159, 212, 0.08));
+        background: var(--bg-muted);
         border: 1px solid var(--border-light);
-        border-radius: var(--radius-md);
+        border-radius: 0;
         font-size: 0.75rem;
         color: var(--text-muted);
         line-height: 1.45;
@@ -572,9 +499,7 @@
         gap: 1rem;
         padding: 0.95rem 1.25rem;
         border-bottom: 1px solid var(--border-light);
-        background:
-            linear-gradient(180deg, rgba(91, 159, 212, 0.07) 0%, transparent 100%),
-            var(--bg-card-solid);
+        background: var(--bg-card-solid);
         flex-wrap: wrap;
     }
 
@@ -1329,14 +1254,14 @@
             <div class="kb-sidebar-head">Категории</div>
             <nav>
                 <a href="/knowledge-base" class="kb-cat {% if not current_category %}active{% endif %}">
-                    <span class="kb-cat-icon">≡</span>
+                    {{ kb_icon('all') }}
                     Все документы
                     <span class="kb-cat-count">{{ total }}</span>
                 </a>
                 {% for cat in categories %}
                 <a href="/knowledge-base?category={{ cat.id }}"
                    class="kb-cat {% if current_category and current_category.id == cat.id %}active{% endif %}">
-                    <span class="kb-cat-icon">{{ cat.icon or '·' }}</span>
+                    {{ kb_icon(cat.icon or 'folder') }}
                     {{ cat.name }}
                     <span class="kb-cat-count">{{ cat.documents|length }}</span>
                 </a>

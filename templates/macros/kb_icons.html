@@ -1,0 +1,63 @@
+{# Stroke marks for knowledge-base categories (no emoji). #}
+{% macro kb_icon(icon, size=14) -%}
+{%- set emoji_map = {
+  '📁': 'folder', '📊': 'chart', '📋': 'list', '📌': 'pin', '📚': 'book',
+  '🎥': 'video', '📝': 'note', '⚖️': 'law', '🍎': 'food', '🥗': 'salad',
+  '📈': 'trend', '🔬': 'lab', '🏫': 'school', '👨‍🍳': 'chef', '·': 'dot', '≡': 'all'
+} -%}
+{%- set key = emoji_map.get(icon, icon if icon else 'folder') -%}
+{%- if key not in ['folder','chart','list','pin','book','video','note','law','food','salad','trend','lab','school','chef','dot','all'] -%}
+  {%- set key = 'folder' -%}
+{%- endif -%}
+<span class="fq-mark kb-cat-icon" data-icon="{{ key }}" aria-hidden="true">
+  <svg viewBox="0 0 24 24" width="{{ size }}" height="{{ size }}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter">
+    {%- if key == 'folder' -%}
+      <path d="M3 7h6l2 2h10v10H3z"/><path d="M3 7V5h5l2 2"/>
+    {%- elif key == 'chart' -%}
+      <path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M22 19H2"/>
+    {%- elif key == 'list' -%}
+      <path d="M9 6h12"/><path d="M9 12h12"/><path d="M9 18h12"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/>
+    {%- elif key == 'pin' -%}
+      <path d="M12 17v5"/><path d="M8 3h8l-1 7h3l-6 7-6-7h3z"/>
+    {%- elif key == 'book' -%}
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+    {%- elif key == 'video' -%}
+      <rect x="3" y="6" width="13" height="12" rx="0"/><path d="M16 10l5-3v10l-5-3z"/>
+    {%- elif key == 'note' -%}
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h6"/>
+    {%- elif key == 'law' -%}
+      <path d="M12 3v18"/><path d="M5 8h14"/><path d="M7 8l-3 6h6z"/><path d="M17 8l-3 6h6z"/><path d="M6 21h12"/>
+    {%- elif key == 'food' -%}
+      <circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 1.5"/>
+    {%- elif key == 'salad' -%}
+      <path d="M12 21c4-3 7-6.2 7-10a7 7 0 1 0-14 0c0 3.8 3 7 7 10z"/><path d="M12 7v5"/>
+    {%- elif key == 'trend' -%}
+      <path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>
+    {%- elif key == 'lab' -%}
+      <path d="M9 3h6"/><path d="M10 3v6L5 18a2 2 0 0 0 1.7 3h10.6A2 2 0 0 0 19 18l-5-9V3"/>
+    {%- elif key == 'school' -%}
+      <path d="M3 10l9-5 9 5-9 5-9-5z"/><path d="M7 12v5l5 3 5-3v-5"/>
+    {%- elif key == 'chef' -%}
+      <path d="M8 14h8v7H8z"/><path d="M6 10a6 6 0 0 1 12 0"/><path d="M9 10V8a3 3 0 0 1 6 0v2"/>
+    {%- elif key == 'all' -%}
+      <path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/>
+    {%- else -%}
+      <circle cx="12" cy="12" r="2"/>
+    {%- endif -%}
+  </svg>
+</span>
+{%- endmacro %}
+
+{% macro kb_icon_options() -%}
+{%- set options = [
+  ('folder', 'Папка'), ('chart', 'График'), ('list', 'Список'), ('pin', 'Метка'),
+  ('book', 'Книга'), ('video', 'Видео'), ('note', 'Заметка'), ('law', 'Нормы'),
+  ('food', 'Питание'), ('salad', 'Меню'), ('trend', 'Динамика'), ('lab', 'Контроль'),
+  ('school', 'Школа'), ('chef', 'Повар')
+] -%}
+{%- for key, label in options -%}
+<button type="button" class="icon-option" data-icon="{{ key }}" title="{{ label }}" onclick="selectIcon(this, '{{ key }}')">
+  {{ kb_icon(key, 16) }}
+</button>
+{%- endfor -%}
+{%- endmacro %}

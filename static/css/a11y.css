@@ -1,0 +1,686 @@
+/* =========================================================
+   ЕЦМП — версия для слабовидящих
+   Panel + high-contrast themes, scalable type, image toggle
+   ========================================================= */
+
+.a11y-toggle {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  z-index: 11000 !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+  padding: 0 0.95rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.45rem !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-family: Arial, Helvetica, sans-serif !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+  cursor: pointer !important;
+  line-height: 1 !important;
+}
+
+.a11y-toggle svg {
+  width: 20px !important;
+  height: 20px !important;
+  stroke: currentColor !important;
+  fill: none !important;
+}
+
+.a11y-toggle:hover,
+.a11y-toggle:focus-visible {
+  background: #ffff00 !important;
+  color: #000000 !important;
+  outline: 3px solid #000000 !important;
+  outline-offset: 2px !important;
+}
+
+html.a11y-on .a11y-toggle,
+html[data-a11y="on"] .a11y-toggle {
+  background: #000000 !important;
+  color: #ffff00 !important;
+  border-color: #000000 !important;
+}
+
+/* ---- Top control panel ---- */
+.a11y-panel {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10950;
+  background: #000000;
+  color: #ffffff;
+  border-bottom: 3px solid #ffff00;
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 0.65rem 1rem;
+}
+
+html.a11y-on .a11y-panel,
+html[data-a11y="on"] .a11y-panel {
+  display: block !important;
+}
+
+.a11y-panel-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+}
+
+.a11y-panel-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-right: 0.5rem;
+  color: #ffff00;
+}
+
+.a11y-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.a11y-group-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-right: 0.25rem;
+  color: #ffffff;
+}
+
+.a11y-panel button {
+  font-family: Arial, Helvetica, sans-serif !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  min-height: 40px !important;
+  min-width: 40px !important;
+  padding: 0.35rem 0.7rem !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 0 !important;
+  background: #000000 !important;
+  color: #ffffff !important;
+  cursor: pointer !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  box-shadow: none !important;
+}
+
+.a11y-panel button.is-active,
+.a11y-panel button[aria-pressed="true"] {
+  background: #ffff00 !important;
+  color: #000000 !important;
+  border-color: #ffff00 !important;
+}
+
+.a11y-panel button:hover,
+.a11y-panel button:focus-visible {
+  outline: 3px solid #ffff00 !important;
+  outline-offset: 2px !important;
+}
+
+.a11y-panel .a11y-exit {
+  margin-left: auto;
+  background: #ffff00 !important;
+  color: #000000 !important;
+  border-color: #ffff00 !important;
+}
+
+/* Push page below panel + taller nav clearance */
+html.a11y-on,
+html[data-a11y="on"] {
+  --a11y-panel-h: 72px;
+}
+
+html.a11y-on .navbar,
+html[data-a11y="on"] .navbar {
+  top: var(--a11y-panel-h) !important;
+}
+
+html.a11y-on .page-container,
+html[data-a11y="on"] .page-container {
+  padding-top: calc(58px + var(--a11y-panel-h)) !important;
+}
+
+/* ---- Base a11y (always when on) ---- */
+html.a11y-on,
+html[data-a11y="on"] {
+  font-size: 118% !important;
+}
+
+html.a11y-on body,
+html[data-a11y="on"] body {
+  font-family: Arial, Helvetica, sans-serif !important;
+  letter-spacing: 0.02em !important;
+  line-height: 1.7 !important;
+  word-spacing: 0.04em !important;
+}
+
+html.a11y-on.a11y-size-md,
+html[data-a11y="on"].a11y-size-md { font-size: 132% !important; }
+
+html.a11y-on.a11y-size-lg,
+html[data-a11y="on"].a11y-size-lg { font-size: 150% !important; }
+
+html.a11y-on.a11y-spacing-wide body,
+html[data-a11y="on"].a11y-spacing-wide body {
+  letter-spacing: 0.08em !important;
+  line-height: 1.95 !important;
+  word-spacing: 0.12em !important;
+}
+
+html.a11y-on.a11y-images-off img,
+html.a11y-on.a11y-images-off video,
+html.a11y-on.a11y-images-off picture,
+html[data-a11y="on"].a11y-images-off img,
+html[data-a11y="on"].a11y-images-off video,
+html[data-a11y="on"].a11y-images-off picture {
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+html.a11y-on.a11y-images-off img[alt]::after,
+html[data-a11y="on"].a11y-images-off img[alt]::after {
+  content: none;
+}
+
+/* Kill decorative noise */
+html.a11y-on body::before,
+html.a11y-on body::after,
+html[data-a11y="on"] body::before,
+html[data-a11y="on"] body::after,
+html.a11y-on .page-container *::before,
+html.a11y-on .page-container *::after,
+html[data-a11y="on"] .page-container *::before,
+html[data-a11y="on"] .page-container *::after {
+  background-image: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.a11y-on *,
+html[data-a11y="on"] * {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  animation: none !important;
+  transition: none !important;
+}
+
+html.a11y-on .navbar,
+html[data-a11y="on"] .navbar,
+html.a11y-on .nav-btn,
+html[data-a11y="on"] .nav-btn,
+html.a11y-on .dropdown-menu,
+html[data-a11y="on"] .dropdown-menu {
+  backdrop-filter: none !important;
+}
+
+html.a11y-on a,
+html[data-a11y="on"] a {
+  text-decoration: underline !important;
+  text-underline-offset: 0.18em !important;
+  font-weight: 700 !important;
+}
+
+html.a11y-on :focus-visible,
+html[data-a11y="on"] :focus-visible {
+  outline: 3px solid #ffff00 !important;
+  outline-offset: 3px !important;
+}
+
+html.a11y-on .page-container :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+  select, textarea, button, .ui-select-trigger, .form-control
+),
+html[data-a11y="on"] .page-container :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+  select, textarea, button, .ui-select-trigger, .form-control
+) {
+  min-height: 48px !important;
+  font-size: 1.05em !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+}
+
+html.a11y-on .page-container button:not(.nav-btn):not(.password-toggle),
+html[data-a11y="on"] .page-container button:not(.nav-btn):not(.password-toggle),
+html.a11y-on .page-container .submit-btn,
+html[data-a11y="on"] .page-container .submit-btn,
+html.a11y-on .page-container .btn-primary,
+html[data-a11y="on"] .page-container .btn-primary {
+  font-weight: 700 !important;
+  text-transform: none !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* ---- Scheme: black on white (default) ---- */
+html.a11y-on,
+html.a11y-on.a11y-scheme-bw,
+html[data-a11y="on"],
+html[data-a11y="on"].a11y-scheme-bw {
+  --bg-main: #ffffff !important;
+  --bg-card: #ffffff !important;
+  --bg-card-solid: #ffffff !important;
+  --bg-muted: #ffffff !important;
+  --surface: #ffffff !important;
+  --border: #000000 !important;
+  --text-primary: #000000 !important;
+  --text-secondary: #000000 !important;
+  --text-muted: #000000 !important;
+  --primary: #000000 !important;
+  --primary-dark: #000000 !important;
+  --primary-light: #222222 !important;
+  --primary-bg: #ffff00 !important;
+}
+
+html.a11y-on body,
+html.a11y-on.a11y-scheme-bw body,
+html[data-a11y="on"] body,
+html[data-a11y="on"].a11y-scheme-bw body,
+html.a11y-on .page-container,
+html.a11y-on.a11y-scheme-bw .page-container,
+html[data-a11y="on"] .page-container,
+html[data-a11y="on"].a11y-scheme-bw .page-container {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+html.a11y-on .navbar,
+html.a11y-on.a11y-scheme-bw .navbar,
+html[data-a11y="on"] .navbar,
+html[data-a11y="on"].a11y-scheme-bw .navbar {
+  background: #000000 !important;
+  border-bottom: 3px solid #000000 !important;
+}
+
+html.a11y-on .logo-word,
+html.a11y-on .logo-mark,
+html.a11y-on .nav-btn,
+html.a11y-on.a11y-scheme-bw .logo-word,
+html.a11y-on.a11y-scheme-bw .logo-mark,
+html.a11y-on.a11y-scheme-bw .nav-btn,
+html[data-a11y="on"] .logo-word,
+html[data-a11y="on"] .logo-mark,
+html[data-a11y="on"] .nav-btn {
+  color: #ffffff !important;
+}
+
+html.a11y-on .nav-btn-primary,
+html.a11y-on.a11y-scheme-bw .nav-btn-primary,
+html[data-a11y="on"] .nav-btn-primary {
+  background: #ffff00 !important;
+  color: #000000 !important;
+  border: 2px solid #ffff00 !important;
+}
+
+html.a11y-on .page-container,
+html.a11y-on.a11y-scheme-bw .page-container,
+html[data-a11y="on"] .page-container,
+html[data-a11y="on"].a11y-scheme-bw .page-container {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+html.a11y-on .page-container :is(h1, h2, h3, h4, h5, h6, p, li, label, td, th, span, div),
+html.a11y-on.a11y-scheme-bw .page-container :is(h1, h2, h3, h4, h5, h6, p, li, label, td, th, span, div),
+html[data-a11y="on"] .page-container :is(h1, h2, h3, h4, h5, h6, p, li, label, td, th, span, div) {
+  color: #000000 !important;
+  background-image: none !important;
+}
+
+html.a11y-on .page-container a,
+html.a11y-on.a11y-scheme-bw .page-container a,
+html[data-a11y="on"] .page-container a {
+  color: #0000ee !important;
+  background: transparent !important;
+}
+
+html.a11y-on .page-container a:hover,
+html.a11y-on .page-container a:focus-visible,
+html[data-a11y="on"] .page-container a:hover,
+html[data-a11y="on"] .page-container a:focus-visible {
+  color: #000000 !important;
+  background: #ffff00 !important;
+}
+
+html.a11y-on .page-container :is(
+  .card, .ui-card, .auth-card, .channel-card, .utility-card, .kb-card, .form-card,
+  .report-card, .appeal-card, .price-card, .video-card, .kb-main, .kb-sidebar,
+  .kb-search, .kb-hero, .doc-hero, .support-hero, .appeal-hero, .agree-hero,
+  .privacy-hero, .oferta-hero, .tutorials-hero, .fcmp-hero, .hero-section,
+  .reg-shell, .reg-art, .glass-shell, .glass-form, .glass-visual,
+  .add-category-card, .categories-list-card, .page-header, .dashboard-header
+),
+html[data-a11y="on"] .page-container :is(
+  .card, .ui-card, .auth-card, .channel-card, .utility-card, .kb-card, .form-card,
+  .report-card, .appeal-card, .price-card, .video-card, .kb-main, .kb-sidebar,
+  .kb-search, .kb-hero, .doc-hero, .support-hero, .appeal-hero, .agree-hero,
+  .privacy-hero, .oferta-hero, .tutorials-hero, .fcmp-hero, .hero-section,
+  .reg-shell, .reg-art, .glass-shell, .glass-form, .glass-visual,
+  .add-category-card, .categories-list-card, .page-header, .dashboard-header
+) {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+}
+
+html.a11y-on .page-container :is(
+  .kb-hero, .doc-hero, .support-hero, .appeal-hero, .agree-hero, .privacy-hero,
+  .oferta-hero, .tutorials-hero, .fcmp-hero, .hero-section, .page-header.fouquet-hero,
+  .glass-visual
+),
+html[data-a11y="on"] .page-container :is(
+  .kb-hero, .doc-hero, .support-hero, .appeal-hero, .agree-hero, .privacy-hero,
+  .oferta-hero, .tutorials-hero, .fcmp-hero, .hero-section, .page-header.fouquet-hero,
+  .glass-visual
+) {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 3px solid #000000 !important;
+}
+
+html.a11y-on .page-container :is(
+  .kb-hero, .doc-hero, .support-hero, .appeal-hero, .agree-hero, .privacy-hero,
+  .oferta-hero, .tutorials-hero, .fcmp-hero, .hero-section, .page-header.fouquet-hero,
+  .glass-visual
+) :is(h1, h2, h3, .kb-title, .hero-title, .doc-title, .auth-title, .privacy-title, .oferta-title, .agree-title, .fcmp-title),
+html[data-a11y="on"] .page-container :is(
+  .kb-hero, .doc-hero, .support-hero, .appeal-hero, .agree-hero, .privacy-hero,
+  .oferta-hero, .tutorials-hero, .fcmp-hero, .hero-section, .page-header.fouquet-hero,
+  .glass-visual
+) :is(h1, h2, h3, .kb-title, .hero-title, .doc-title, .auth-title, .privacy-title, .oferta-title, .agree-title, .fcmp-title) {
+  color: #ffff00 !important;
+}
+
+html.a11y-on .page-container :is(
+  .kb-hero, .doc-hero, .support-hero, .appeal-hero, .agree-hero, .privacy-hero,
+  .oferta-hero, .tutorials-hero, .fcmp-hero, .hero-section, .page-header.fouquet-hero,
+  .glass-visual
+) :is(p, span, li, .kb-subtitle, .kb-kicker, .kb-stat-label, .kb-stat-value, .hero-description, .doc-meta-row),
+html[data-a11y="on"] .page-container :is(
+  .kb-hero, .doc-hero, .support-hero, .appeal-hero, .agree-hero, .privacy-hero,
+  .oferta-hero, .tutorials-hero, .fcmp-hero, .hero-section, .page-header.fouquet-hero,
+  .glass-visual
+) :is(p, span, li, .kb-subtitle, .kb-kicker, .kb-stat-label, .kb-stat-value, .hero-description, .doc-meta-row) {
+  color: #ffffff !important;
+}
+
+html.a11y-on .page-container :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+  select, textarea, .ui-select-trigger, .form-control
+),
+html[data-a11y="on"] .page-container :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+  select, textarea, .ui-select-trigger, .form-control
+) {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+html.a11y-on .page-container :is(button:not(.nav-btn):not(.password-toggle), .submit-btn, .btn-primary, .channel-link, .ui-btn-primary),
+html[data-a11y="on"] .page-container :is(button:not(.nav-btn):not(.password-toggle), .submit-btn, .btn-primary, .channel-link, .ui-btn-primary) {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #000000 !important;
+}
+
+html.a11y-on .page-container :is(button:not(.nav-btn):not(.password-toggle), .submit-btn, .btn-primary, .channel-link, .ui-btn-primary):hover,
+html.a11y-on .page-container :is(button:not(.nav-btn):not(.password-toggle), .submit-btn, .btn-primary, .channel-link, .ui-btn-primary):focus-visible,
+html[data-a11y="on"] .page-container :is(button:not(.nav-btn):not(.password-toggle), .submit-btn, .btn-primary, .channel-link, .ui-btn-primary):hover,
+html[data-a11y="on"] .page-container :is(button:not(.nav-btn):not(.password-toggle), .submit-btn, .btn-primary, .channel-link, .ui-btn-primary):focus-visible {
+  background: #ffff00 !important;
+  color: #000000 !important;
+}
+
+/* ---- Scheme: white on black ---- */
+html.a11y-on.a11y-scheme-wb,
+html[data-a11y="on"].a11y-scheme-wb {
+  --bg-main: #000000 !important;
+  --bg-card: #000000 !important;
+  --bg-card-solid: #000000 !important;
+  --bg-muted: #000000 !important;
+  --surface: #000000 !important;
+  --border: #ffffff !important;
+  --text-primary: #ffffff !important;
+  --text-secondary: #ffffff !important;
+  --text-muted: #ffffff !important;
+  --primary: #ffff00 !important;
+  --primary-bg: #333333 !important;
+}
+
+html.a11y-on.a11y-scheme-wb body,
+html.a11y-on.a11y-scheme-wb .page-container,
+html[data-a11y="on"].a11y-scheme-wb body,
+html[data-a11y="on"].a11y-scheme-wb .page-container {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+html.a11y-on.a11y-scheme-wb .navbar,
+html[data-a11y="on"].a11y-scheme-wb .navbar {
+  background: #000000 !important;
+  border-bottom: 3px solid #ffff00 !important;
+}
+
+html.a11y-on.a11y-scheme-wb .page-container :is(h1, h2, h3, h4, h5, h6, p, li, label, td, th, span, div),
+html[data-a11y="on"].a11y-scheme-wb .page-container :is(h1, h2, h3, h4, h5, h6, p, li, label, td, th, span, div) {
+  color: #ffffff !important;
+  background-color: transparent !important;
+}
+
+html.a11y-on.a11y-scheme-wb .page-container a,
+html[data-a11y="on"].a11y-scheme-wb .page-container a {
+  color: #ffff00 !important;
+}
+
+html.a11y-on.a11y-scheme-wb .page-container a:hover,
+html.a11y-on.a11y-scheme-wb .page-container a:focus-visible,
+html[data-a11y="on"].a11y-scheme-wb .page-container a:hover,
+html[data-a11y="on"].a11y-scheme-wb .page-container a:focus-visible {
+  color: #000000 !important;
+  background: #ffff00 !important;
+}
+
+html.a11y-on.a11y-scheme-wb .page-container :is(
+  .card, .ui-card, .auth-card, .channel-card, .utility-card, .kb-card, .form-card,
+  .report-card, .appeal-card, .kb-main, .kb-sidebar, .kb-search, .kb-hero, .doc-hero,
+  .support-hero, .appeal-hero, .agree-hero, .privacy-hero, .oferta-hero, .tutorials-hero,
+  .fcmp-hero, .hero-section, .reg-shell, .reg-art, .glass-shell, .glass-form, .glass-visual,
+  .add-category-card, .categories-list-card, .page-header, .dashboard-header
+),
+html[data-a11y="on"].a11y-scheme-wb .page-container :is(
+  .card, .ui-card, .auth-card, .channel-card, .utility-card, .kb-card, .form-card,
+  .report-card, .appeal-card, .kb-main, .kb-sidebar, .kb-search, .kb-hero, .doc-hero,
+  .support-hero, .appeal-hero, .agree-hero, .privacy-hero, .oferta-hero, .tutorials-hero,
+  .fcmp-hero, .hero-section, .reg-shell, .reg-art, .glass-shell, .glass-form, .glass-visual,
+  .add-category-card, .categories-list-card, .page-header, .dashboard-header
+) {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+html.a11y-on.a11y-scheme-wb .page-container :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+  select, textarea, .ui-select-trigger, .form-control
+),
+html[data-a11y="on"].a11y-scheme-wb .page-container :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+  select, textarea, .ui-select-trigger, .form-control
+) {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+html.a11y-on.a11y-scheme-wb .page-container :is(button:not(.nav-btn):not(.password-toggle), .submit-btn, .btn-primary, .channel-link),
+html[data-a11y="on"].a11y-scheme-wb .page-container :is(button:not(.nav-btn):not(.password-toggle), .submit-btn, .btn-primary, .channel-link) {
+  background: #ffff00 !important;
+  color: #000000 !important;
+  border: 2px solid #ffff00 !important;
+}
+
+html.a11y-on.a11y-scheme-wb .page-container :is(
+  .kb-hero, .doc-hero, .support-hero, .appeal-hero, .agree-hero, .privacy-hero,
+  .oferta-hero, .tutorials-hero, .fcmp-hero, .hero-section, .glass-visual
+) :is(h1, h2, h3, .kb-title, .hero-title, .doc-title),
+html[data-a11y="on"].a11y-scheme-wb .page-container :is(
+  .kb-hero, .doc-hero, .support-hero, .appeal-hero, .agree-hero, .privacy-hero,
+  .oferta-hero, .tutorials-hero, .fcmp-hero, .hero-section, .glass-visual
+) :is(h1, h2, h3, .kb-title, .hero-title, .doc-title) {
+  color: #ffff00 !important;
+}
+
+/* ---- Scheme: dark blue on azure ---- */
+html.a11y-on.a11y-scheme-blue,
+html[data-a11y="on"].a11y-scheme-blue {
+  --bg-main: #9dd1ff !important;
+  --bg-card: #eef7ff !important;
+  --bg-card-solid: #eef7ff !important;
+  --bg-muted: #cfe8ff !important;
+  --surface: #eef7ff !important;
+  --border: #063a76 !important;
+  --text-primary: #063a76 !important;
+  --text-secondary: #063a76 !important;
+  --text-muted: #063a76 !important;
+  --primary: #063a76 !important;
+  --primary-bg: #ffff00 !important;
+}
+
+html.a11y-on.a11y-scheme-blue body,
+html.a11y-on.a11y-scheme-blue .page-container,
+html[data-a11y="on"].a11y-scheme-blue body,
+html[data-a11y="on"].a11y-scheme-blue .page-container {
+  background: #9dd1ff !important;
+  color: #063a76 !important;
+}
+
+html.a11y-on.a11y-scheme-blue .navbar,
+html[data-a11y="on"].a11y-scheme-blue .navbar {
+  background: #063a76 !important;
+  border-bottom: 3px solid #063a76 !important;
+}
+
+html.a11y-on.a11y-scheme-blue .page-container :is(h1, h2, h3, h4, h5, h6, p, li, label, td, th, span, div),
+html[data-a11y="on"].a11y-scheme-blue .page-container :is(h1, h2, h3, h4, h5, h6, p, li, label, td, th, span, div) {
+  color: #063a76 !important;
+}
+
+html.a11y-on.a11y-scheme-blue .page-container a,
+html[data-a11y="on"].a11y-scheme-blue .page-container a {
+  color: #0000ee !important;
+}
+
+html.a11y-on.a11y-scheme-blue .page-container :is(
+  .card, .ui-card, .auth-card, .channel-card, .utility-card, .kb-card, .form-card,
+  .kb-main, .kb-sidebar, .kb-search, .reg-shell, .reg-art, .glass-shell, .glass-form,
+  .add-category-card, .categories-list-card, .page-header
+),
+html[data-a11y="on"].a11y-scheme-blue .page-container :is(
+  .card, .ui-card, .auth-card, .channel-card, .utility-card, .kb-card, .form-card,
+  .kb-main, .kb-sidebar, .kb-search, .reg-shell, .reg-art, .glass-shell, .glass-form,
+  .add-category-card, .categories-list-card, .page-header
+) {
+  background: #eef7ff !important;
+  color: #063a76 !important;
+  border: 2px solid #063a76 !important;
+}
+
+html.a11y-on.a11y-scheme-blue .page-container :is(
+  .kb-hero, .doc-hero, .support-hero, .appeal-hero, .agree-hero, .privacy-hero,
+  .oferta-hero, .tutorials-hero, .fcmp-hero, .hero-section, .glass-visual, .page-header.fouquet-hero
+),
+html[data-a11y="on"].a11y-scheme-blue .page-container :is(
+  .kb-hero, .doc-hero, .support-hero, .appeal-hero, .agree-hero, .privacy-hero,
+  .oferta-hero, .tutorials-hero, .fcmp-hero, .hero-section, .glass-visual, .page-header.fouquet-hero
+) {
+  background: #063a76 !important;
+  color: #ffffff !important;
+  border: 3px solid #063a76 !important;
+}
+
+html.a11y-on.a11y-scheme-blue .page-container :is(
+  .kb-hero, .doc-hero, .support-hero, .appeal-hero, .agree-hero, .privacy-hero,
+  .oferta-hero, .tutorials-hero, .fcmp-hero, .hero-section, .glass-visual, .page-header.fouquet-hero
+) :is(h1, h2, h3, .kb-title, .hero-title, .doc-title),
+html[data-a11y="on"].a11y-scheme-blue .page-container :is(
+  .kb-hero, .doc-hero, .support-hero, .appeal-hero, .agree-hero, .privacy-hero,
+  .oferta-hero, .tutorials-hero, .fcmp-hero, .hero-section, .glass-visual, .page-header.fouquet-hero
+) :is(h1, h2, h3, .kb-title, .hero-title, .doc-title) {
+  color: #ffff00 !important;
+}
+
+html.a11y-on.a11y-scheme-blue .page-container :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+  select, textarea, .ui-select-trigger, .form-control
+),
+html[data-a11y="on"].a11y-scheme-blue .page-container :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+  select, textarea, .ui-select-trigger, .form-control
+) {
+  background: #ffffff !important;
+  color: #063a76 !important;
+  border-color: #063a76 !important;
+}
+
+html.a11y-on.a11y-scheme-blue .page-container :is(button:not(.nav-btn):not(.password-toggle), .submit-btn, .btn-primary, .channel-link),
+html[data-a11y="on"].a11y-scheme-blue .page-container :is(button:not(.nav-btn):not(.password-toggle), .submit-btn, .btn-primary, .channel-link) {
+  background: #063a76 !important;
+  color: #ffffff !important;
+  border: 2px solid #063a76 !important;
+}
+
+html.a11y-on.a11y-scheme-blue .page-container :is(button:not(.nav-btn):not(.password-toggle), .submit-btn, .btn-primary, .channel-link):hover,
+html[data-a11y="on"].a11y-scheme-blue .page-container :is(button:not(.nav-btn):not(.password-toggle), .submit-btn, .btn-primary, .channel-link):hover {
+  background: #ffff00 !important;
+  color: #000000 !important;
+}
+
+/* School cabinet + admin surfaces */
+html.a11y-on .school-cabinet,
+html[data-a11y="on"] .school-cabinet,
+html.a11y-on .admin-layout,
+html[data-a11y="on"] .admin-layout {
+  background: inherit !important;
+  color: inherit !important;
+}
+
+@media (max-width: 820px) {
+  .a11y-toggle {
+    bottom: 16px !important;
+    right: 16px !important;
+  }
+
+  .a11y-toggle-label { display: none; }
+
+  html.a11y-on,
+  html[data-a11y="on"] {
+    --a11y-panel-h: 118px;
+  }
+
+  .a11y-panel-inner {
+    gap: 0.5rem;
+  }
+
+  .a11y-panel .a11y-exit {
+    margin-left: 0;
+    width: 100%;
+  }
+}

@@ -2983,7 +2983,10 @@ DOCUMENT_TYPES = {
     "other": "Другое"
 }
 
-CATEGORY_ICONS = ["📁", "📊", "📋", "📌", "📚", "🎥", "📝", "⚖️", "🍎", "🥗", "📈", "🔬", "🏫", "👨‍🍳"]
+CATEGORY_ICONS = [
+    "folder", "chart", "list", "pin", "book", "video", "note",
+    "law", "food", "salad", "trend", "lab", "school", "chef",
+]
 
 
 @app.get("/knowledge-base", response_class=HTMLResponse)
@@ -3241,7 +3244,7 @@ async def create_category(
         request: Request,
         name: str = Form(...),
         description: str = Form(""),
-        icon: str = Form("📁"),
+        icon: str = Form("folder"),
         color: str = Form("#667eea"),
         order_index: int = Form(0),
         kb_db: Session = Depends(get_kb_db)
@@ -3270,7 +3273,7 @@ async def update_category(
         category_id: int,
         name: str = Form(...),
         description: str = Form(""),
-        icon: str = Form("📁"),
+        icon: str = Form("folder"),
         color: str = Form("#667eea"),
         order_index: int = Form(0),
         is_active: bool = Form(True),
@@ -3822,6 +3825,54 @@ def _kb_ai_rate_limit(request: Request, limit: int = 25) -> None:
         raise HTTPException(status_code=429, detail="Слишком много запросов к ИИ. Подождите несколько минут.")
 
 
+@app.get("/knowledge-base/ai/status")
+async def knowledge_base_ai_status():
+    """Конфиг ИИ для UI: провайдер и можно ли звать LLM из браузера."""
+    provider = kb_ai_service._provider_name()
+    client_llm = provider == "pollinations" and kb_ai_service.remote_enabled()
+    return {
+        "ok": True,
+        "provider": provider,
+        "model": kb_ai_service._model(),
+        "client_llm": client_llm,
+        "client_endpoint": "https://text.pollinations.ai/openai" if client_llm else None,
+        "remote": kb_ai_service.remote_enabled(),
+    }
+
+
+@app.get("/knowledge-base/ai/document/{doc_id}/context")
+async def knowledge_base_ai_document_context(
+        request: Request,
+        doc_id: int,
+        kb_db: Session = Depends(get_kb_db)
+):
+    """Текст документа для клиентского ИИ (без вызова LLM на сервере)."""
+    _kb_ai_rate_limit(request, limit=40)
+    document = await run_in_threadpool(
+        lambda: kb_db.query(KnowledgeBaseDocument).filter(KnowledgeBaseDocument.id == doc_id).first()
+    )
+    if not document:
+        raise HTTPException(status_code=404, detail="Документ не найден")
+    if not document.is_published and not request.session.get("knowledge_base_admin"):
+        raise HTTPException(status_code=404, detail="Документ не найден")
+
+    base_dir = Path(__file__).resolve().parent
+    text = await run_in_threadpool(
+        lambda: kb_ai_service.get_document_text(base_dir, document.file_path, document.id)
+    )
+    max_chars = kb_ai_service.MAX_DOC_CHARS
+    return {
+        "id": document.id,
+        "title": document.title,
+        "type": DOCUMENT_TYPES.get(document.document_type, document.document_type),
+        "description": document.description or "",
+        "tags": document.tags or "",
+        "extension": document.file_extension or "",
+        "has_text": bool(text),
+        "text": (text or "")[:max_chars],
+    }
+
+
 @app.post("/knowledge-base/ai/search")
 async def knowledge_base_ai_search(
         request: Request,
@@ -3829,7 +3880,7 @@ async def knowledge_base_ai_search(
 ):
     """ИИ-помощник: поиск подходящих документов по запросу пользователя"""
     if not kb_ai_service.is_configured():
-        raise HTTPException(status_code=503, detail="ИИ-помощник не настроен (нет OPENROUTER_API_KEY)")
+        raise HTTPException(status_code=503, detail="ИИ-помощник временно недоступен")
 
     _kb_ai_rate_limit(request)
 
@@ -3887,7 +3938,7 @@ async def knowledge_base_ai_document(
 ):
     """ИИ-выжимка и ответы по конкретному документу"""
     if not kb_ai_service.is_configured():
-        raise HTTPException(status_code=503, detail="ИИ-помощник не настроен (нет OPENROUTER_API_KEY)")
+        raise HTTPException(status_code=503, detail="ИИ-помощник временно недоступен")
 
     _kb_ai_rate_limit(request)
 
