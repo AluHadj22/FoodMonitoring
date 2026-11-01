@@ -1,9 +1,10 @@
 {% extends "layout.html" %}
-{% block title %}Кабинет школы — ЕЦМП{% endblock %}
-{% block meta_description %}Личный кабинет школы в ЕЦМП: загрузка меню, контроль сроков, статистика ФЦМПО и специальные файлы.{% endblock %}
+{% block title %}Кабинет школы — ЕЦМ{% endblock %}
+{% block meta_description %}Личный кабинет школы в ЕЦМ: загрузка меню, контроль сроков, статистика и специальные файлы.{% endblock %}
 {% block meta_robots %}noindex, nofollow{% endblock %}
 {% block page_styles %}
-<link rel="stylesheet" href="/static/css/school-cabinet.css?v=13">
+<link rel="stylesheet" href="/static/css/school-cabinet.css?v=14">
+<link rel="stylesheet" href="/static/css/file-preview.css?v=1">
 {% endblock %}
 {% block content %}
 
@@ -757,24 +758,10 @@
 <div class="preview-overlay" id="filePreviewOverlay" aria-hidden="true">
     <div class="preview-shell" role="dialog" aria-modal="true" aria-labelledby="previewTitle">
         <div class="preview-top">
-            <div>
-                <p class="preview-kicker">Предпросмотр файла</p>
-                <h3 class="preview-title" id="previewTitle">Файл</h3>
-            </div>
+            <h3 class="preview-title" id="previewTitle">Предпросмотр</h3>
             <div class="preview-top-actions">
-                <a class="preview-icon-btn" id="previewDownloadBtn" href="#" download title="Скачать">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                </a>
-                <button type="button" class="preview-icon-btn" id="previewCloseBtn" title="Закрыть" aria-label="Закрыть">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
+                <a class="preview-text-btn" id="previewDownloadBtn" href="#" download>Скачать</a>
+                <button type="button" class="preview-text-btn preview-text-btn-solid" id="previewCloseBtn" aria-label="Закрыть">Закрыть</button>
             </div>
         </div>
         <div class="preview-tabs" id="previewTabs" hidden></div>
@@ -791,15 +778,46 @@
 <div class="copy-notification" id="copyNotification">Ссылка скопирована!</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="/static/js/file-preview-render.js?v=1"></script>
 <script>
 (function () {
     const initialFcmp = {{ (fcmp_stats or {})|tojson }};
     let deadlineChart, processedChart, sanpinChart;
 
+    function chartPalette() {
+        const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+        return {
+            ink: dark ? '#f2f2f2' : '#141414',
+            ok: '#2f6b4f',
+            muted: dark ? '#8a8a8a' : '#c8c8c8',
+            danger: '#a33b3b',
+            fill: dark ? 'rgba(242,242,242,0.12)' : 'rgba(20,20,20,0.10)',
+            tick: dark ? '#8a8a8a' : '#6e6e6e',
+            grid: dark ? 'rgba(255,255,255,0.08)' : 'rgba(20,20,20,0.08)',
+        };
+    }
+
     function yesNoColor(ok) {
-        if (ok === true) return "#3d9a78";
-        if (ok === false) return "#d46565";
-        return "#7f9bb8";
+        const p = chartPalette();
+        if (ok === true) return p.ok;
+        if (ok === false) return p.danger;
+        return p.muted;
+    }
+
+    function chartScaleOptions() {
+        const p = chartPalette();
+        return {
+            x: {
+                ticks: { color: p.tick, font: { size: 10 } },
+                grid: { color: p.grid },
+                border: { color: p.grid },
+            },
+            y: {
+                ticks: { color: p.tick, font: { size: 10 } },
+                grid: { color: p.grid },
+                border: { color: p.grid },
+            },
+        };
     }
 
     function destroyCharts() {
@@ -868,6 +886,9 @@
         const labels = chartRows.map((r) => (r.date || "").slice(5));
         destroyCharts();
 
+        const palette = chartPalette();
+        const scales = chartScaleOptions();
+
         deadlineChart = new Chart(document.getElementById("fcmpDeadlineChart"), {
             type: "bar",
             data: {
@@ -876,12 +897,22 @@
                     label: "Сроки",
                     data: chartRows.map((r) => r.deadline_ok === true ? 1 : (r.deadline_ok === false ? 0 : null)),
                     backgroundColor: chartRows.map((r) => yesNoColor(r.deadline_ok)),
+                    borderWidth: 0,
                 }],
             },
             options: {
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { min: 0, max: 1, ticks: { callback: (v) => (v === 1 ? "да" : (v === 0 ? "нет" : "")) } },
+                    x: scales.x,
+                    y: {
+                        ...scales.y,
+                        min: 0,
+                        max: 1,
+                        ticks: {
+                            ...scales.y.ticks,
+                            callback: (v) => (v === 1 ? "да" : (v === 0 ? "нет" : "")),
+                        },
+                    },
                 },
             },
         });
@@ -895,10 +926,18 @@
                 labels: ["Обработан", "Не обработан", "Нет данных"],
                 datasets: [{
                     data: [processedYes, processedNo, processedUnk],
-                    backgroundColor: ["#3d9a78", "#d46565", "#b8cde3"],
+                    backgroundColor: [palette.ok, palette.danger, palette.muted],
+                    borderWidth: 0,
                 }],
             },
-            options: { plugins: { legend: { position: "bottom" } } },
+            options: {
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: { color: palette.tick, boxWidth: 10, font: { size: 11 } },
+                    },
+                },
+            },
         });
 
         sanpinChart = new Chart(document.getElementById("fcmpSanpinChart"), {
@@ -908,13 +947,20 @@
                 datasets: [{
                     label: "Ошибки СанПиН",
                     data: chartRows.map((r) => r.sanpin_errors ?? null),
-                    borderColor: "#5b9fd4",
-                    backgroundColor: "rgba(91,159,212,0.15)",
+                    borderColor: palette.ink,
+                    backgroundColor: palette.fill,
+                    pointBackgroundColor: palette.ink,
+                    pointBorderColor: palette.ink,
+                    pointRadius: 2,
+                    borderWidth: 2,
                     tension: 0.25,
                     fill: true,
                 }],
             },
-            options: { plugins: { legend: { display: false } } },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: { x: scales.x, y: { ...scales.y, beginAtZero: true } },
+            },
         });
 
         if (statusEl && data.match && data.match.last_synced_at) {
@@ -1678,24 +1724,15 @@
                 return `<div class="preview-empty">В этом листе нет данных для показа</div>`;
             }
             const headerIndex = Number.isInteger(sheet.header) ? sheet.header : 0;
-            const metaRows = sheet.rows.slice(0, Math.max(0, headerIndex));
-            const header = sheet.rows[headerIndex] || [];
-            const bodyRows = sheet.rows.slice(headerIndex + 1);
-            const meta = metaRows.length
-                ? `<div class="preview-meta">${metaRows.map(row => {
-                    const cells = row.filter(cell => String(cell || '').trim());
-                    if (!cells.length) return '';
-                    return `<div class="preview-meta-row">${cells.map(cell => `<span>${escapeHtml(cell)}</span>`).join('')}</div>`;
-                }).join('')}</div>`
-                : '';
-            const thead = `<thead><tr>${header.map(cell => `<th>${escapeHtml(cell)}</th>`).join('')}</tr></thead>`;
-            const tbody = `<tbody>${bodyRows.map(row =>
-                `<tr>${row.map(cell => `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`
-            ).join('')}</tbody>`;
+            const rowsHtml = sheet.rows.map((row, idx) => {
+                const tag = idx === headerIndex ? 'th' : 'td';
+                const cells = (row || []).map(cell => `<${tag}>${escapeHtml(cell)}</${tag}>`).join('');
+                return `<tr>${cells}</tr>`;
+            }).join('');
             const note = sheet.truncated
-                ? `<p class="preview-note">Показаны первые строки листа. Полный файл можно скачать.</p>`
+                ? `<p class="preview-note">Показана часть таблицы. Полный файл можно скачать.</p>`
                 : '';
-            return `${meta}<div class="preview-table-wrap"><table class="preview-table">${thead}${tbody}</table></div>${note}`;
+            return `<div class="preview-table-wrap"><table class="preview-table">${rowsHtml}</table></div>${note}`;
         }
 
         function renderPreviewPayload(data) {
@@ -1705,6 +1742,21 @@
                 previewDownloadBtn.setAttribute('download', data.filename || '');
             }
             if (!previewBody) return;
+
+            if (previewTabs) {
+                previewTabs.hidden = true;
+                previewTabs.innerHTML = '';
+            }
+
+            if (data.kind === 'calendar' && window.FilePreviewRender) {
+                previewBody.innerHTML = FilePreviewRender.renderCalendar(data, escapeHtml);
+                return;
+            }
+
+            if (data.kind === 'menu' && window.FilePreviewRender) {
+                previewBody.innerHTML = FilePreviewRender.renderMenu(data, escapeHtml);
+                return;
+            }
 
             if (data.kind === 'sheet') {
                 previewSheets = data.sheets || [];

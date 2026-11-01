@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>{% block title %}ЕЦМП — Единый Центр Мониторинга питания{% endblock %}</title>
-  <meta name="description" content="{% block meta_description %}ЕЦМП — цифровая платформа мониторинга школьного питания: контроль меню, сроков загрузки, СанПиН и отчётности для школ, операторов и органов управления.{% endblock %}"/>
-  <meta name="keywords" content="{% block meta_keywords %}мониторинг питания, школьное питание, СанПиН, ЕЦМП, меню школы, ФЦМПО, контроль питания{% endblock %}"/>
-  <meta name="author" content="ЕЦМП"/>
+  <title>{% block title %}ЕЦМ — Единый Центр Мониторинга{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}ЕЦМ — Единый Центр Мониторинга: цифровая платформа для школ, муниципалитетов и региона — питание, целевое обучение, аналитика и отчётность в одном контуре.{% endblock %}"/>
+  <meta name="keywords" content="{% block meta_keywords %}ЕЦМ, единый центр мониторинга, мониторинг, аналитика, школы, целевое обучение, отчётность{% endblock %}"/>
+  <meta name="author" content="ЕЦМ"/>
   <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}"/>
   <meta name="theme-color" content="#141414"/>
   <meta name="color-scheme" content="light"/>
@@ -29,10 +29,10 @@
     })();
   </script>
   <link rel="stylesheet" href="/static/css/a11y.css?v=2">
-  <meta name="application-name" content="ЕЦМП"/>
+  <meta name="application-name" content="ЕЦМ"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
-  <meta name="apple-mobile-web-app-title" content="ЕЦМП"/>
+  <meta name="apple-mobile-web-app-title" content="ЕЦМ"/>
   <meta name="mobile-web-app-capable" content="yes"/>
   <meta name="format-detection" content="telephone=no"/>
   <link rel="canonical" href="{% block canonical %}{{ request.url.scheme }}://{{ request.headers.get('host', request.url.hostname) }}{{ request.url.path }}{% endblock %}"/>
@@ -40,28 +40,28 @@
   <!-- Open Graph -->
   <meta property="og:type" content="{% block og_type %}website{% endblock %}"/>
   <meta property="og:locale" content="ru_RU"/>
-  <meta property="og:site_name" content="ЕЦМП"/>
-  <meta property="og:title" content="{% block og_title %}ЕЦМП — Единый Центр Мониторинга питания{% endblock %}"/>
-  <meta property="og:description" content="{% block og_description %}ЕЦМП — цифровая платформа мониторинга школьного питания: контроль меню, сроков загрузки, СанПиН и отчётности для школ, операторов и органов управления.{% endblock %}"/>
+  <meta property="og:site_name" content="ЕЦМ"/>
+  <meta property="og:title" content="{% block og_title %}ЕЦМ — Единый Центр Мониторинга{% endblock %}"/>
+  <meta property="og:description" content="{% block og_description %}ЕЦМ — Единый Центр Мониторинга: питание, целевое обучение, аналитика и отчётность для школ и органов управления.{% endblock %}"/>
   <meta property="og:url" content="{% block og_url %}{{ request.url.scheme }}://{{ request.headers.get('host', request.url.hostname) }}{{ request.url.path }}{% endblock %}"/>
   <meta property="og:image" content="{% block og_image %}{{ request.url.scheme }}://{{ request.headers.get('host', request.url.hostname) }}/static/icons/og-cover.jpg{% endblock %}"/>
   <meta property="og:image:width" content="1200"/>
   <meta property="og:image:height" content="630"/>
-  <meta property="og:image:alt" content="ЕЦМП — мониторинг школьного питания"/>
+  <meta property="og:image:alt" content="ЕЦМ — Единый Центр Мониторинга"/>
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image"/>
-  <meta name="twitter:title" content="{% block twitter_title %}ЕЦМП — Единый Центр Мониторинга питания{% endblock %}"/>
-  <meta name="twitter:description" content="{% block twitter_description %}Цифровая платформа мониторинга школьного питания: меню, сроки, СанПиН и отчётность.{% endblock %}"/>
+  <meta name="twitter:title" content="{% block twitter_title %}ЕЦМ — Единый Центр Мониторинга{% endblock %}"/>
+  <meta name="twitter:description" content="{% block twitter_description %}Единый Центр Мониторинга: аналитика, направления и отчётность в одном контуре.{% endblock %}"/>
   <meta name="twitter:image" content="{% block twitter_image %}{{ request.url.scheme }}://{{ request.headers.get('host', request.url.hostname) }}/static/icons/og-cover.jpg{% endblock %}"/>
 
   <!-- PWA / icons -->
-  <link rel="manifest" href="/manifest.webmanifest"/>
-  <link rel="icon" href="/static/icons/favicon-32.png" type="image/png" sizes="32x32"/>
-  <link rel="icon" href="/static/icons/favicon-16.png" type="image/png" sizes="16x16"/>
-  <link rel="icon" href="/static/app.ico" sizes="any"/>
-  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png"/>
-  <link rel="mask-icon" href="/static/icons/icon-192.png" color="#141414"/>
+  <link rel="manifest" href="/manifest.webmanifest?v=2"/>
+  <link rel="icon" href="/static/icons/favicon-32.png?v=2" type="image/png" sizes="32x32"/>
+  <link rel="icon" href="/static/icons/favicon-16.png?v=2" type="image/png" sizes="16x16"/>
+  <link rel="icon" href="/static/app.ico?v=2" sizes="any"/>
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png?v=2"/>
+  <link rel="mask-icon" href="/static/icons/icon-192.png?v=2" color="#141414"/>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -73,13 +73,13 @@
   {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "ЕЦМП — Единый Центр Мониторинга питания",
-    "alternateName": "ЕЦМП",
+    "name": "ЕЦМ — Единый Центр Мониторинга",
+    "alternateName": "ЕЦМ",
     "url": "{{ request.url.scheme }}://{{ request.headers.get('host', request.url.hostname) }}/",
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Web",
     "inLanguage": "ru-RU",
-    "description": "Цифровая платформа мониторинга школьного питания: контроль меню, сроков, СанПиН и отчётности.",
+    "description": "Единый Центр Мониторинга: питание, целевое обучение, аналитика и отчётность для школ и органов управления.",
     "offers": {
       "@type": "Offer",
       "price": "0",
@@ -87,7 +87,7 @@
     },
     "publisher": {
       "@type": "Organization",
-      "name": "ЕЦМП",
+      "name": "ЕЦМ",
       "url": "{{ request.url.scheme }}://{{ request.headers.get('host', request.url.hostname) }}/"
     }
   }
@@ -572,14 +572,14 @@
         </svg>
       </button>
 
-      <a href="/" class="logo" aria-label="ЕЦМП — на главную">
+      <a href="/" class="logo" aria-label="ЕЦМ — Единый Центр Мониторинга, на главную">
         <span class="logo-mark" aria-hidden="true">
           <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4">
             <rect x="2.5" y="2.5" width="23" height="23"/>
             <path d="M9 19V11M14 19v-5M19 19V9" stroke-linecap="square"/>
           </svg>
         </span>
-        <span class="logo-word">ЕЦМП</span>
+        <span class="logo-word">ЕЦМ</span>
       </a>
 
       <div class="nav-links">
@@ -595,7 +595,7 @@
             </svg>
           </button>
           <div class="dropdown-menu" id="monitoring-menu">
-            <div class="dropdown-header">Мониторинг питания</div>
+            <div class="dropdown-header">Единый Центр Мониторинга</div>
             <a href="/analis" class="dropdown-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -607,7 +607,7 @@
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="17 8 12 3 7 8"/>
               </svg>
-              Утилиты ЕЦМП
+              Утилиты ЕЦМ
             </a>
             <div class="dropdown-divider"></div>
             <a href="/register" class="dropdown-item">
@@ -634,7 +634,7 @@
   <div class="page-container">
     {% block content %}{% endblock %}
   </div>
-  <link rel="stylesheet" href="/static/css/glass.css?v=29">
+  <link rel="stylesheet" href="/static/css/glass.css?v=32">
   <link rel="stylesheet" href="/static/css/mobile.css?v=5">
   <link rel="stylesheet" href="/static/css/a11y.css?v=2">
   {% block page_styles %}{% endblock %}

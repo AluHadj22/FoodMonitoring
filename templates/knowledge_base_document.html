@@ -1,5 +1,9 @@
 {% extends "layout.html" %}
 
+{% block page_styles %}
+<link rel="stylesheet" href="/static/css/knowledge-base.css?v=6">
+{% endblock %}
+
 {% block content %}
 <style>
     .doc-page {
@@ -926,16 +930,17 @@
                 <img src="/knowledge-base/cover/{{ document.id }}"
                      alt="Обложка: {{ document.title }}"
                      loading="eager"
-                     decoding="async">
-                {% else %}
-                <div class="doc-cover-placeholder">
+                     decoding="async"
+                     data-kb-cover
+                     onerror="this.classList.add('is-broken'); this.removeAttribute('src'); this.removeAttribute('alt');">
+                {% endif %}
+                <div class="doc-cover-placeholder{% if document.cover_image_path %} is-fallback{% endif %}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <polyline points="14 2 14 8 20 8"/>
                     </svg>
                     <span>{% if document.file_extension %}{{ document.file_extension.replace('.', '')|upper }}{% else %}DOC{% endif %}</span>
                 </div>
-                {% endif %}
             </div>
 
             <div class="doc-hero-body">
@@ -984,6 +989,11 @@
                         <span>{% if is_favorite %}★{% else %}☆{% endif %}</span>
                         <span>{% if is_favorite %}В избранном{% else %}В избранное{% endif %}</span>
                     </button>
+                    {% else %}
+                    <a href="/login" class="doc-btn doc-btn-ghost" title="Войдите, чтобы добавить в избранное">
+                        <span>☆</span>
+                        <span>В избранное</span>
+                    </a>
                     {% endif %}
                     <button type="button" class="doc-btn doc-btn-ai" id="docAiOpen">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -1120,15 +1130,18 @@
             <a href="/knowledge-base/document/{{ doc.id }}" class="similar-card">
                 <div class="similar-cover">
                     {% if doc.cover_image_path %}
-                    <img src="/knowledge-base/cover/{{ doc.id }}" alt="" loading="lazy" decoding="async">
-                    {% else %}
-                    <div class="similar-cover-ph">
+                    <img src="/knowledge-base/cover/{{ doc.id }}"
+                         alt=""
+                         loading="lazy"
+                         decoding="async"
+                         onerror="this.classList.add('is-broken'); this.removeAttribute('src');">
+                    {% endif %}
+                    <div class="similar-cover-ph{% if doc.cover_image_path %} is-fallback{% endif %}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2-2V8z"/>
                             <polyline points="14 2 14 8 20 8"/>
                         </svg>
                     </div>
-                    {% endif %}
                 </div>
                 <div class="similar-body">
                     <div class="similar-title">{{ doc.title }}</div>

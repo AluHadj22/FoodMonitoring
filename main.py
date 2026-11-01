@@ -113,6 +113,88 @@ load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
 # Создаёт таблицы в БД, если их нет
 Base.metadata.create_all(bind=engine)
 
+
+def _ensure_user_direction_column():
+    """Добавляет users.direction на уже существующей БД (create_all колонки не меняет)."""
+    try:
+        from sqlalchemy import text, inspect as sa_inspect
+
+        insp = sa_inspect(engine)
+        cols = {c["name"] for c in insp.get_columns("users")}
+        if "direction" not in cols:
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        "ALTER TABLE users ADD COLUMN direction VARCHAR(50) "
+                        "DEFAULT 'food'"
+                    )
+                )
+                conn.execute(text("UPDATE users SET direction = 'food' WHERE direction IS NULL"))
+            print("✅ Добавлена колонка users.direction")
+    except Exception as exc:
+        print(f"⚠️  users.direction: {exc}")
+
+
+_ensure_user_direction_column()
+
+
+def _ensure_target_application_ppk_column():
+    """Добавляет target_applications.is_ppk на уже существующей БД."""
+    try:
+        from sqlalchemy import text, inspect as sa_inspect
+
+        insp = sa_inspect(engine)
+        if "target_applications" not in insp.get_table_names():
+            return
+        cols = {c["name"] for c in insp.get_columns("target_applications")}
+        if "is_ppk" not in cols:
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        "ALTER TABLE target_applications ADD COLUMN is_ppk BOOLEAN "
+                        "DEFAULT FALSE"
+                    )
+                )
+                conn.execute(
+                    text(
+                        "UPDATE target_applications SET is_ppk = FALSE WHERE is_ppk IS NULL"
+                    )
+                )
+            print("✅ Добавлена колонка target_applications.is_ppk")
+    except Exception as exc:
+        print(f"⚠️  target_applications.is_ppk: {exc}")
+
+
+_ensure_target_application_ppk_column()
+
+
+def _ensure_target_program_enc_column():
+    """Добавляет target_programs.is_enc на уже существующей БД."""
+    try:
+        from sqlalchemy import text, inspect as sa_inspect
+
+        insp = sa_inspect(engine)
+        if "target_programs" not in insp.get_table_names():
+            return
+        cols = {c["name"] for c in insp.get_columns("target_programs")}
+        if "is_enc" not in cols:
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        "ALTER TABLE target_programs ADD COLUMN is_enc BOOLEAN "
+                        "DEFAULT FALSE"
+                    )
+                )
+                conn.execute(
+                    text("UPDATE target_programs SET is_enc = FALSE WHERE is_enc IS NULL")
+                )
+            print("✅ Добавлена колонка target_programs.is_enc")
+    except Exception as exc:
+        print(f"⚠️  target_programs.is_enc: {exc}")
+
+
+_ensure_target_program_enc_column()
+
 # Глобальные кеши для высокой нагрузки
 MANIFEST_CACHE = TTLCache(maxsize=5000, ttl=300)  # Кеш манифестов
 USER_CACHE = TTLCache(maxsize=1000, ttl=180)  # Кеш пользователей
@@ -395,6 +477,20 @@ class CachedStaticFiles(StaticFiles):
 # Подключаем папку static/ с кешированием
 app.mount("/static", CachedStaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+from directions import (  # noqa: E402
+    DEFAULT_DIRECTION,
+    DIRECTION_FOOD,
+    DIRECTION_TARGETED,
+    DIRECTIONS,
+    get_active_direction,
+    home_for_user,
+    normalize_direction,
+    set_active_direction,
+)
+from targeted_routes import router as targeted_router  # noqa: E402
+
+app.include_router(targeted_router)
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -789,20 +885,50 @@ async def build_public_menu_context(
 
     for f in files_sorted:
         file_meta = manifest.get(f.name, {})
-        date_match = re.search(r'(\d{4})-(\d{2})-(\d{2})', f.name)
-        if not date_match and f.name != "findex.xlsx":
-            continue
-
         size = f.stat().st_size
         size_label = _format_file_size(size)
+        name_l = f.name.lower()
+        upload_label = file_meta.get("upload_datetime", "—")
 
         if f.name == "findex.xlsx":
             special_files["findex"].append({
                 "filename": f.name,
-                "date": file_meta.get("upload_datetime", "—"),
+                "date": upload_label,
                 "size": size,
                 "size_label": size_label,
             })
+            continue
+
+        if re.match(r"^tm\d{4}-sm\.xlsx$", name_l) or (name_l.startswith("tm") and name_l.endswith("-sm.xlsx")):
+            year_m = re.search(r"(\d{4})", f.name)
+            year = year_m.group(1) if year_m else "—"
+            special_files["tm"].append({
+                "filename": f.name,
+                "day": "",
+                "month": "",
+                "year": year,
+                "date": upload_label,
+                "size": size,
+                "size_label": size_label,
+            })
+            continue
+
+        if re.match(r"^kp\d{4}\.xlsx$", name_l) or (name_l.startswith("kp") and name_l.endswith(".xlsx")):
+            year_m = re.search(r"(\d{4})", f.name)
+            year = year_m.group(1) if year_m else "—"
+            special_files["kp"].append({
+                "filename": f.name,
+                "day": "",
+                "month": "",
+                "year": year,
+                "date": upload_label,
+                "size": size,
+                "size_label": size_label,
+            })
+            continue
+
+        date_match = re.search(r'(\d{4})-(\d{2})-(\d{2})', f.name)
+        if not date_match:
             continue
 
         year, month, day = date_match.groups()
@@ -815,14 +941,7 @@ async def build_public_menu_context(
             "size": size,
             "size_label": size_label,
         }
-
-        name_l = f.name.lower()
-        if name_l.startswith("tm") and name_l.endswith("-sm.xlsx"):
-            special_files["tm"].append(item)
-        elif name_l.startswith("kp") and name_l.endswith(".xlsx"):
-            special_files["kp"].append(item)
-        else:
-            grouped_all.setdefault(year, {}).setdefault(month, []).append(item)
+        grouped_all.setdefault(year, {}).setdefault(month, []).append(item)
 
     available_years = sorted(grouped_all.keys(), reverse=True)
 
@@ -1120,7 +1239,8 @@ async def register_page(request: Request):
     return templates.TemplateResponse("register.html", {
         "request": request,
         "districts": DISTRICTS,
-        "food_types": FOOD_TYPES
+        "food_types": FOOD_TYPES,
+        "directions": DIRECTIONS,
     })
 
 
@@ -1129,10 +1249,12 @@ async def register(
         email: str = Form(...),
         password: str = Form(...),
         unit_name: str = Form(...),
-        director_name: str = Form(...),
+        director_name: str = Form(""),
         district: str = Form(...),
-        region: str = Form(...),  # ДОБАВИТЬ ЭТО ПОЛЕ
-        food_type: str = Form(...),
+        region: str = Form(...),
+        food_type: Optional[str] = Form(None),
+        direction: str = Form(DEFAULT_DIRECTION),
+        account_role: str = Form("school"),  # school | municipal | regional
         secret_code: Optional[str] = Form(None),
         db: Session = Depends(get_db)
 ):
@@ -1142,22 +1264,44 @@ async def register(
     if existing_user:
         return "Пользователь с таким email уже существует"
 
+    direction_norm = normalize_direction(direction)
     role = "user"
-    if secret_code == REGIONAL_CODE:
+    account_role = (account_role or "school").strip().lower()
+
+    if account_role == "regional":
+        if secret_code != REGIONAL_CODE:
+            return "Неверный код для регионального администратора"
+        role = "regional_admin"
+    elif account_role == "municipal":
+        if secret_code != MUNICIPAL_CODE:
+            return "Неверный код для муниципального ответственного"
+        role = "municipal_admin"
+    elif secret_code == REGIONAL_CODE:
         role = "regional_admin"
     elif secret_code == MUNICIPAL_CODE:
         role = "municipal_admin"
+
+    # Школы работают только по питанию; целевое — у муниципалов
+    if role == "user":
+        direction_norm = DIRECTION_FOOD
+    user_direction = direction_norm
+
+    if direction_norm == DIRECTION_TARGETED:
+        food_type = None
+    elif not (food_type or "").strip():
+        food_type = FOOD_TYPES[0]
 
     hashed_pw = auth.get_password_hash(password)
     new_user = models.User(
         email=email,
         hashed_password=hashed_pw,
         unit_name=unit_name,
-        director_name=director_name,
+        director_name=director_name or None,
         district=district,
-        region=region,  # ДОБАВИТЬ ЭТО
+        region=region,
         food_type=food_type,
-        role=role
+        role=role,
+        direction=user_direction,
     )
 
     await run_in_threadpool(lambda: db.add(new_user))
@@ -1167,7 +1311,7 @@ async def register(
     BASE_DIR = Path(__file__).resolve().parent
     school_dir = BASE_DIR / str(new_user.id)
     food_dir = school_dir / "food"
-    avatar_dir = school_dir / "avatar"  # Создаём папку для аватаров
+    avatar_dir = school_dir / "avatar"
 
     await run_in_threadpool(lambda: food_dir.mkdir(parents=True, exist_ok=True))
     await run_in_threadpool(lambda: avatar_dir.mkdir(parents=True, exist_ok=True))
@@ -1199,9 +1343,9 @@ async def login(
     request.session["user_id"] = user.id
     request.session["user_name"] = user.unit_name
 
-    if "admin" in user.role:
-        return RedirectResponse(f"/admin?admin_id={user.id}", status_code=303)
-    return RedirectResponse(f"/dashboard?uid={user.id}", status_code=303)
+    active = normalize_direction(getattr(user, "direction", None) or DEFAULT_DIRECTION)
+    set_active_direction(request, active)
+    return RedirectResponse(home_for_user(user, active), status_code=303)
 
 
 # --- АДМИН-ПАНЕЛЬ ---
@@ -1912,10 +2056,7 @@ def _header_row_index(rows):
     return 0 if rows else None
 
 
-def _preview_workbook(path: Path):
-    max_sheets = 4
-    max_rows = 80
-    max_cols = 14
+def _preview_workbook(path: Path, max_sheets: int = 4, max_rows: int = 80, max_cols: int = 14):
     wb = load_workbook(path, data_only=True, read_only=True)
     sheets = []
     try:
@@ -1973,6 +2114,290 @@ def _preview_csv(path: Path):
     }]
 
 
+_KP_MONTH_HINTS = (
+    "январ", "феврал", "март", "апрел", "ма", "июн", "июл",
+    "август", "сентябр", "октябр", "ноябр", "декабр",
+)
+_TM_WEEKDAYS = {
+    1: "Понедельник",
+    2: "Вторник",
+    3: "Среда",
+    4: "Четверг",
+    5: "Пятница",
+    6: "Суббота",
+    7: "Воскресенье",
+}
+_TM_SKIP_MARKERS = ("итого", "среднее", "всего")
+
+
+def _detect_preview_file_kind(name: str) -> str:
+    n = (name or "").lower().strip()
+    if re.match(r"^kp\d{4}\.xlsx?$", n) or (n.startswith("kp") and n.endswith(".xlsx")):
+        return "kp"
+    if re.match(r"^tm\d{4}-sm\.xlsx?$", n) or (n.startswith("tm") and n.endswith("-sm.xlsx")):
+        return "tm"
+    return "sheet"
+
+
+def _preview_kp_calendar(path: Path) -> dict:
+    """Календарь питания: месяц × дни месяца → номер дня цикла."""
+    wb = load_workbook(path, data_only=True, read_only=True)
+    try:
+        ws = wb.active
+        rows = list(ws.iter_rows(min_row=1, max_row=40, max_col=40, values_only=True))
+    finally:
+        wb.close()
+
+    school = ""
+    year = None
+    title = "Календарь питания"
+    if rows:
+        first = [_preview_cell(v) for v in rows[0]]
+        for idx, cell in enumerate(first):
+            low = cell.lower()
+            if "школ" in low and idx + 1 < len(first) and first[idx + 1]:
+                school = first[idx + 1].strip('"').strip()
+            if "календар" in low:
+                title = cell or title
+            if low.startswith("год") and idx + 1 < len(first):
+                year_raw = first[idx + 1]
+                try:
+                    year = int(float(str(year_raw).replace(",", ".")))
+                except (TypeError, ValueError):
+                    year = year_raw or year
+        if not school:
+            for cell in first[1:4]:
+                if cell and "календар" not in cell.lower() and "год" not in cell.lower() and "школ" not in cell.lower():
+                    school = cell.strip('"').strip()
+                    break
+
+    if year is None:
+        m = re.search(r"(\d{4})", path.stem)
+        if m:
+            year = int(m.group(1))
+
+    months = []
+    for row in rows[2:]:
+        if not row:
+            continue
+        month_name = _preview_cell(row[0]).strip()
+        if not month_name:
+            continue
+        low = month_name.lower().replace("ё", "е")
+        if low.startswith("месяц"):
+            continue
+        if not any(low.startswith(h) for h in _KP_MONTH_HINTS):
+            continue
+        days = []
+        for day_idx, value in enumerate(row[1:32], start=1):
+            cycle = _preview_cell(value).strip()
+            if not cycle:
+                days.append({"day": day_idx, "cycle": None})
+                continue
+            # В ячейке — номер дня цикла (1..N)
+            days.append({"day": day_idx, "cycle": cycle})
+        if any(d["cycle"] for d in days):
+            months.append({"name": month_name.capitalize(), "days": days})
+
+    if not months:
+        # fallback to raw sheet if structure unexpected
+        return {
+            "kind": "sheet",
+            "sheets": _preview_workbook(path, max_sheets=1, max_rows=40, max_cols=32),
+        }
+
+    return {
+        "kind": "calendar",
+        "title": title,
+        "school": school,
+        "year": year,
+        "months": months,
+        "legend": "В каждой клетке: сверху — число месяца, крупно — день цикла типового меню. Пустая клетка — выходной / нет питания.",
+    }
+
+
+def _preview_tm_menu(path: Path) -> dict:
+    """Типовое меню: дни цикла → приёмы пищи → блюда."""
+    wb = load_workbook(path, data_only=True, read_only=True)
+    try:
+        ws = wb.active
+        rows = list(ws.iter_rows(values_only=True))
+    finally:
+        wb.close()
+
+    if not rows:
+        return {"kind": "sheet", "sheets": []}
+
+    school = ""
+    age = ""
+    title = "Типовое меню"
+    for row in rows[:5]:
+        cells = [_preview_cell(v) for v in (row or [])]
+        joined = " ".join(cells).lower()
+        for idx, cell in enumerate(cells):
+            low = cell.lower()
+            if "школ" in low and idx + 1 < len(cells) and cells[idx + 1]:
+                school = cells[idx + 1].strip('"').strip()
+            if "типов" in low or "примерн" in low:
+                title = cell or title
+            if "возраст" in low:
+                for nxt in cells[idx + 1:]:
+                    if nxt:
+                        age = nxt
+                        break
+        if not school:
+            for cell in cells[1:4]:
+                if cell and "типов" not in cell.lower() and "возраст" not in cell.lower():
+                    school = cell.strip('"').strip()
+                    break
+
+    header_idx = None
+    for i, row in enumerate(rows[:12]):
+        joined = " ".join(_preview_cell(v).lower() for v in (row or []))
+        if "блюд" in joined and ("раздел" in joined or "прием" in joined or "приём" in joined):
+            header_idx = i
+            break
+    if header_idx is None:
+        return {
+            "kind": "sheet",
+            "sheets": _preview_workbook(path, max_sheets=2, max_rows=120, max_cols=12),
+        }
+
+    headers = [_preview_cell(v).lower().replace("ё", "е") for v in (rows[header_idx] or [])]
+    cols = {}
+    for idx, h in enumerate(headers):
+        # «день недели» содержит «недел» — сначала день, потом неделя
+        if "день" in h:
+            cols.setdefault("weekday", idx)
+        elif h == "неделя" or h.startswith("недел"):
+            cols.setdefault("week", idx)
+        elif "прием пищи" in h or h == "пп":
+            cols.setdefault("meal", idx)
+        elif "раздел" in h:
+            cols.setdefault("section", idx)
+        elif h in {"блюда", "блюдо", "наименование"} or ("блюд" in h and "вес" not in h):
+            cols.setdefault("name", idx)
+        elif "вес" in h or "выход" in h:
+            cols.setdefault("exit", idx)
+        elif "белк" in h:
+            cols.setdefault("protein", idx)
+        elif "жир" in h:
+            cols.setdefault("fat", idx)
+        elif "углевод" in h:
+            cols.setdefault("carb", idx)
+        elif "калор" in h:
+            cols.setdefault("calories", idx)
+
+    def cell(row, key):
+        idx = cols.get(key)
+        if idx is None or idx >= len(row):
+            return ""
+        return _preview_cell(row[idx])
+
+    days = []
+    current = None
+    cur_week = ""
+    cur_weekday = ""
+    cur_meal = None
+
+    def ensure_day(week, weekday):
+        nonlocal current
+        key = (str(week), str(weekday))
+        if current and current["_key"] == key:
+            return current
+        label_parts = []
+        if week:
+            label_parts.append(f"Неделя {week}")
+        try:
+            wd_num = int(float(str(weekday).replace(",", ".")))
+            label_parts.append(_TM_WEEKDAYS.get(wd_num, f"День {weekday}"))
+            day_no = wd_num
+        except (TypeError, ValueError):
+            if weekday:
+                label_parts.append(str(weekday))
+            day_no = weekday
+        current = {
+            "_key": key,
+            "week": week,
+            "weekday": weekday,
+            "day_no": day_no,
+            "title": " · ".join(label_parts) or "День меню",
+            "meals": [],
+        }
+        days.append(current)
+        return current
+
+    for row in rows[header_idx + 1:]:
+        if not row or all(v is None or str(v).strip() == "" for v in row):
+            continue
+        week_raw = cell(row, "week")
+        weekday_raw = cell(row, "weekday")
+        meal_raw = cell(row, "meal")
+        section = cell(row, "section")
+        name = cell(row, "name")
+        section_l = section.lower()
+        name_l = name.lower()
+        meal_l = meal_raw.lower()
+
+        if week_raw:
+            cur_week = week_raw
+        if weekday_raw:
+            cur_weekday = weekday_raw
+        if meal_raw:
+            if any(m in meal_l for m in _TM_SKIP_MARKERS):
+                cur_meal = None
+                continue
+            day = ensure_day(cur_week, cur_weekday)
+            cur_meal = {"name": meal_raw, "dishes": []}
+            day["meals"].append(cur_meal)
+
+        if any(m in section_l for m in _TM_SKIP_MARKERS) or any(m in name_l for m in _TM_SKIP_MARKERS):
+            continue
+        if not name and not section:
+            continue
+        if cur_meal is None:
+            day = ensure_day(cur_week, cur_weekday)
+            cur_meal = {"name": "Меню", "dishes": []}
+            day["meals"].append(cur_meal)
+
+        dish = {
+            "section": section,
+            "name": name or "—",
+            "exit": cell(row, "exit"),
+            "protein": cell(row, "protein"),
+            "fat": cell(row, "fat"),
+            "carb": cell(row, "carb"),
+            "calories": cell(row, "calories"),
+        }
+        if any(dish[k] for k in ("section", "name", "exit", "calories")):
+            cur_meal["dishes"].append(dish)
+
+    # drop empty meals/days
+    clean_days = []
+    for day in days:
+        meals = [m for m in day["meals"] if m.get("dishes")]
+        if not meals:
+            continue
+        day = {k: v for k, v in day.items() if k != "_key"}
+        day["meals"] = meals
+        clean_days.append(day)
+
+    if not clean_days:
+        return {
+            "kind": "sheet",
+            "sheets": _preview_workbook(path, max_sheets=2, max_rows=120, max_cols=12),
+        }
+
+    return {
+        "kind": "menu",
+        "title": title,
+        "school": school,
+        "age": age,
+        "days": clean_days,
+        "legend": "Меню по дням цикла. Число в календаре питания (1, 2, 3…) — это день из этого списка: сначала неделя 1 (пн–пт), затем неделя 2.",
+    }
+
+
 def build_school_file_preview(uid: int, name: str):
     path = _safe_school_food_file(uid, name)
     ext = path.suffix.lower()
@@ -1987,8 +2412,14 @@ def build_school_file_preview(uid: int, name: str):
             "message": "Файл слишком большой для предпросмотра",
         }
     if ext in {".xlsx", ".xlsm"}:
+        kind = _detect_preview_file_kind(path.name)
         try:
-            sheets = _preview_workbook(path)
+            if kind == "kp":
+                payload = _preview_kp_calendar(path)
+            elif kind == "tm":
+                payload = _preview_tm_menu(path)
+            else:
+                payload = {"kind": "sheet", "sheets": _preview_workbook(path)}
         except (InvalidFileException, OSError, ValueError) as exc:
             logger.warning("Preview failed for %s: %s", path, exc)
             return {
@@ -1997,12 +2428,9 @@ def build_school_file_preview(uid: int, name: str):
                 "url": download_url,
                 "message": "Не удалось прочитать таблицу",
             }
-        return {
-            "kind": "sheet",
-            "filename": path.name,
-            "url": download_url,
-            "sheets": sheets,
-        }
+        payload.setdefault("filename", path.name)
+        payload.setdefault("url", download_url)
+        return payload
     if ext == ".csv":
         return {
             "kind": "sheet",
@@ -2474,7 +2902,7 @@ async def send_reset_email(email: str, token: str):
                     <p style="font-size: 12px; color: #6b7280;">Email: {safe_email}</p>
                 </div>
                 <div class="footer">
-                    <p>© 2026 ЕЦМП Мониторинг питания</p>
+                    <p>© 2026 ЕЦМ — Единый Центр Мониторинга</p>
                 </div>
             </div>
         </body>

@@ -1,4 +1,4 @@
-/* Service worker for ЕЦМП PWA — cache shell assets, network-first for pages */
+/* Service worker for ЕЦМ PWA — cache shell assets, network-first for pages */
 const CACHE_VERSION = 'ecm-pwa-v1';
 const SHELL = [
   '/static/manifest.webmanifest',

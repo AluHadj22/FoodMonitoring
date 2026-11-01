@@ -1,0 +1,471 @@
+<style>
+    .tg-page {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 1.5rem 1.25rem 3rem;
+    }
+    .tg-hero {
+        background: #141414;
+        color: #f6f6f6;
+        padding: 1.6rem 1.5rem;
+        margin-bottom: 1.25rem;
+        border: 1px solid #141414;
+    }
+    .tg-kicker {
+        font-size: 0.68rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.55);
+        margin-bottom: 0.45rem;
+    }
+    .tg-hero h1 {
+        margin: 0 0 0.45rem;
+        font-size: clamp(1.25rem, 2.2vw, 1.65rem);
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #fff;
+    }
+    .tg-hero p {
+        margin: 0;
+        color: rgba(255,255,255,0.72);
+        max-width: 40rem;
+        line-height: 1.5;
+        font-size: 0.92rem;
+    }
+    .tg-switch {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    .tg-switch form { display: inline; }
+    .tg-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.45rem 0.75rem;
+        border: 1px solid rgba(255,255,255,0.28);
+        background: rgba(255,255,255,0.08);
+        color: #fff;
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        font-family: inherit;
+    }
+    .tg-chip.is-active {
+        background: #fff;
+        color: #141414;
+        border-color: #fff;
+    }
+    .tg-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: 1.2fr 0.8fr;
+    }
+    @media (max-width: 900px) {
+        .tg-grid { grid-template-columns: 1fr; }
+    }
+    .tg-card {
+        background: #fff;
+        border: 1px solid #e2e2e2;
+        padding: 1.25rem 1.2rem;
+    }
+    .tg-card h2 {
+        margin: 0 0 0.85rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #141414;
+    }
+    .tg-stat {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+    .tg-stat-item {
+        min-width: 7rem;
+        border: 1px solid #e2e2e2;
+        padding: 0.7rem 0.8rem;
+        background: #f6f6f6;
+    }
+    .tg-stat-item strong {
+        display: block;
+        font-size: 1.35rem;
+        color: #141414;
+        font-weight: 600;
+        line-height: 1.1;
+    }
+    .tg-stat-item span {
+        font-size: 0.7rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #6e6e6e;
+    }
+    .tg-form {
+        display: grid;
+        gap: 0.75rem;
+    }
+    .tg-form label {
+        display: block;
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #4a4a4a;
+        margin-bottom: 0.35rem;
+    }
+    .tg-form input,
+    .tg-form select,
+    .tg-form textarea {
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid #c8c8c8;
+        border-radius: 0;
+        padding: 0.55rem 0.75rem;
+        font: inherit;
+        background: #fff;
+        color: #141414;
+        box-sizing: border-box;
+    }
+    .tg-form textarea { min-height: 80px; }
+    .tg-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        min-height: 42px;
+        padding: 0.55rem 1rem;
+        background: #141414;
+        color: #fff;
+        border: 1px solid #141414;
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        cursor: pointer;
+        text-decoration: none;
+        font-family: inherit;
+    }
+    .tg-btn.secondary {
+        background: #fff;
+        color: #141414;
+    }
+    .tg-btn.danger {
+        background: #fff;
+        color: #a33b3b;
+        border-color: #a33b3b;
+    }
+    .tg-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+    }
+    .tg-table th,
+    .tg-table td {
+        border-bottom: 1px solid #e2e2e2;
+        padding: 0.7rem 0.45rem;
+        text-align: left;
+        vertical-align: top;
+    }
+    .tg-table th {
+        font-size: 0.68rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #6e6e6e;
+        font-weight: 500;
+    }
+    .tg-muted { color: #6e6e6e; font-size: 0.85rem; }
+    .tg-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.55rem; }
+    .tg-list a {
+        display: block;
+        padding: 0.7rem 0.8rem;
+        border: 1px solid #e2e2e2;
+        color: #141414;
+        text-decoration: none;
+        font-size: 0.88rem;
+    }
+    .tg-list a:hover { border-color: #141414; }
+    .tg-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+    .tg-filters {
+        display: grid;
+        gap: 0.65rem;
+        grid-template-columns: 1.4fr repeat(3, minmax(140px, 1fr)) auto;
+        align-items: end;
+        margin-bottom: 1rem;
+    }
+    @media (max-width: 980px) {
+        .tg-filters { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+        .tg-filters { grid-template-columns: 1fr; }
+    }
+    .tg-filters .tg-btn { width: 100%; }
+    .tg-filter-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 0.85rem;
+    }
+    .tg-count {
+        font-size: 0.8rem;
+        color: #6e6e6e;
+        margin: 0 0 0.75rem;
+    }
+    .tg-quota-panel {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 1.25rem;
+        align-items: center;
+        margin-bottom: 1rem;
+        background: #fff;
+        border: 1px solid #e2e2e2;
+        padding: 1.25rem 1.35rem;
+    }
+    @media (max-width: 720px) {
+        .tg-quota-panel { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+    }
+    .tg-ring {
+        position: relative;
+        width: 148px;
+        height: 148px;
+        flex-shrink: 0;
+    }
+    .tg-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .tg-ring-track { fill: none; stroke: #ececec; stroke-width: 12; }
+    .tg-ring-value {
+        fill: none;
+        stroke: #141414;
+        stroke-width: 12;
+        stroke-linecap: butt;
+        transition: stroke-dashoffset 0.7s ease;
+    }
+    .tg-ring-value.is-over { stroke: #a33b3b; }
+    .tg-ring-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+    .tg-ring-center strong {
+        font-size: 1.55rem;
+        font-weight: 600;
+        color: #141414;
+        line-height: 1;
+    }
+    .tg-ring-center span {
+        margin-top: 0.35rem;
+        font-size: 0.65rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #6e6e6e;
+    }
+    .tg-quota-meta h2 {
+        margin: 0 0 0.35rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #141414;
+    }
+    .tg-quota-meta p {
+        margin: 0 0 0.85rem;
+        color: #6e6e6e;
+        font-size: 0.88rem;
+        line-height: 1.45;
+        max-width: 36rem;
+    }
+    .tg-quota-meta .tg-stat { margin-bottom: 0; }
+    .tg-combo { position: relative; }
+    .tg-combo-results {
+        position: absolute;
+        z-index: 30;
+        left: 0;
+        right: 0;
+        top: calc(100% + 2px);
+        max-height: 260px;
+        overflow: auto;
+        background: #fff;
+        border: 1px solid #141414;
+        display: none;
+    }
+    .tg-combo-results.is-open { display: block; }
+    .tg-combo-item {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 0.65rem 0.8rem;
+        border: 0;
+        border-bottom: 1px solid #ececec;
+        background: #fff;
+        color: #141414;
+        font: inherit;
+        cursor: pointer;
+    }
+    .tg-combo-item:hover,
+    .tg-combo-item.is-active { background: #f6f6f6; }
+    .tg-combo-item small {
+        display: block;
+        margin-top: 0.15rem;
+        color: #6e6e6e;
+        font-size: 0.75rem;
+    }
+    .tg-combo-empty {
+        padding: 0.75rem 0.8rem;
+        color: #6e6e6e;
+        font-size: 0.85rem;
+    }
+    .tg-combo-picked {
+        margin-top: 0.45rem;
+        padding: 0.55rem 0.7rem;
+        background: #f6f6f6;
+        border: 1px solid #e2e2e2;
+        font-size: 0.85rem;
+        color: #141414;
+        display: none;
+    }
+    .tg-combo-picked.is-visible { display: block; }
+    .tg-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.65rem;
+        padding: 0.7rem 0.8rem;
+        border: 1px solid #e2e2e2;
+        background: #f6f6f6;
+        cursor: pointer;
+    }
+    .tg-check input {
+        width: auto;
+        min-height: 0;
+        margin-top: 0.15rem;
+        accent-color: #141414;
+    }
+    .tg-check span {
+        font-size: 0.88rem;
+        color: #141414;
+        line-height: 1.35;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+    .tg-check small {
+        display: block;
+        margin-top: 0.2rem;
+        color: #6e6e6e;
+        font-size: 0.75rem;
+    }
+    .tg-badge {
+        display: inline-block;
+        padding: 0.15rem 0.4rem;
+        border: 1px solid #141414;
+        font-size: 0.65rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #141414;
+        background: #fff;
+        white-space: nowrap;
+    }
+    .tg-badge.is-muted {
+        border-color: #c8c8c8;
+        color: #6e6e6e;
+    }
+    .tg-badge.is-enc {
+        border-color: #2f6b4f;
+        color: #2f6b4f;
+    }
+    .tg-dash {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin: 1rem 0;
+    }
+    @media (max-width: 900px) {
+        .tg-dash { grid-template-columns: 1fr; }
+    }
+    .tg-dash-card {
+        background: #fff;
+        border: 1px solid #e2e2e2;
+        padding: 1.1rem 1.15rem;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.9rem;
+        align-items: center;
+    }
+    .tg-dash-card h3 {
+        margin: 0 0 0.35rem;
+        font-size: 0.72rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #6e6e6e;
+        font-weight: 500;
+    }
+    .tg-dash-card strong {
+        display: block;
+        font-size: 1.45rem;
+        color: #141414;
+        line-height: 1.1;
+    }
+    .tg-dash-card p {
+        margin: 0.35rem 0 0;
+        font-size: 0.82rem;
+        color: #6e6e6e;
+        line-height: 1.4;
+    }
+    .tg-bars {
+        display: grid;
+        gap: 0.65rem;
+        margin-top: 0.85rem;
+    }
+    .tg-bar-row {
+        display: grid;
+        grid-template-columns: minmax(7rem, 11rem) 1fr auto;
+        gap: 0.55rem;
+        align-items: center;
+        font-size: 0.82rem;
+    }
+    .tg-bar-track {
+        height: 10px;
+        background: #ececec;
+        overflow: hidden;
+    }
+    .tg-bar-fill {
+        height: 100%;
+        background: #141414;
+        min-width: 0;
+    }
+    .tg-bar-fill.is-enc { background: #2f6b4f; }
+    .tg-bar-fill.is-ppk { background: #5a5a5a; }
+    .tg-check-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-height: 42px;
+        font-size: 0.85rem;
+        color: #141414;
+    }
+    .tg-check-inline input {
+        width: auto;
+        min-height: 0;
+        accent-color: #141414;
+    }
+</style>
+{% macro direction_switcher(user, active_direction, directions) -%}
+{% if user.role != 'municipal_admin' %}
+<div class="tg-switch">
+  {% for key, meta in directions.items() %}
+  <form method="post" action="/targeted/switch">
+    <input type="hidden" name="direction" value="{{ key }}">
+    {% if 'admin' in user.role %}
+    <input type="hidden" name="admin_id" value="{{ user.id }}">
+    {% else %}
+    <input type="hidden" name="uid" value="{{ user.id }}">
+    {% endif %}
+    <button type="submit" class="tg-chip {% if active_direction == key %}is-active{% endif %}">{{ meta.short }}</button>
+  </form>
+  {% endfor %}
+</div>
+{% endif %}
+{%- endmacro %}

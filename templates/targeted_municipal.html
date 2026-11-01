@@ -1,0 +1,438 @@
+{% extends "layout.html" %}
+{% block title %}Целевое обучение — муниципальный кабинет{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+{% block content %}
+{% include "targeted_base_styles.html" %}
+
+{% set circ = 2 * 3.14159265 * 54 %}
+{% set pct_draw = progress.pct if progress.has_quota else 0 %}
+{% set dash_offset = circ - (circ * pct_draw / 100.0) %}
+
+<div class="tg-page">
+  <header class="tg-hero">
+    <div class="tg-kicker">Муниципальный ответственный · целевое обучение</div>
+    <h1>{{ user.district or user.unit_name }}</h1>
+    <p>Квота от регионального координатора, заявки школ и программы ЧГПУ. Поиск, фильтры и выгрузка в Excel.</p>
+  </header>
+
+  <section class="tg-quota-panel" aria-label="Выполнение квоты">
+    <div class="tg-ring" role="img" aria-label="Выполнено {{ progress.pct_raw }} процентов квоты">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <circle class="tg-ring-track" cx="60" cy="60" r="54"></circle>
+        <circle
+          class="tg-ring-value {% if progress.over %}is-over{% endif %}"
+          cx="60" cy="60" r="54"
+          stroke-dasharray="{{ '%.2f'|format(circ) }}"
+          stroke-dashoffset="{{ '%.2f'|format(dash_offset if progress.has_quota else circ) }}"
+        ></circle>
+      </svg>
+      <div class="tg-ring-center">
+        <strong>{% if progress.has_quota %}{{ progress.pct_raw }}%{% else %}—{% endif %}</strong>
+        <span>выполнено</span>
+      </div>
+    </div>
+    <div class="tg-quota-meta">
+      <h2>Квота района · {{ year }}</h2>
+      {% if progress.has_quota %}
+      <p>Региональный координатор установил для вашего муниципалитета квоту
+        <strong>{{ progress.total }}</strong>
+        {% if progress.ppk %}(из них ППК — психолого-педагогические классы — {{ progress.ppk }}){% endif %}.
+        Сейчас подано {{ progress.used }}{% if progress.ppk_used %}, из них ППК — {{ progress.ppk_used }}{% endif %}, остаток — {{ progress.left }}.
+      </p>
+      {% else %}
+      <p>Региональный координатор ещё не задал квоту для вашего района. Заявки можно готовить, но ориентир появится после установки квоты.</p>
+      {% endif %}
+      <div class="tg-stat">
+        <div class="tg-stat-item">
+          <strong>{{ progress.total if progress.has_quota else "—" }}</strong>
+          <span>Квота региона</span>
+        </div>
+        <div class="tg-stat-item">
+          <strong>{{ progress.ppk if progress.has_quota else "—" }}</strong>
+          <span>квота ППК</span>
+        </div>
+        <div class="tg-stat-item">
+          <strong>{{ progress.used }}</strong>
+          <span>Подано</span>
+        </div>
+        <div class="tg-stat-item">
+          <strong>{{ progress.ppk_used }}</strong>
+          <span>из них ППК</span>
+        </div>
+        <div class="tg-stat-item">
+          <strong>{{ progress.enc_used }}</strong>
+          <span>из них ЕНЦ</span>
+        </div>
+        <div class="tg-stat-item">
+          <strong>{{ progress.left if progress.has_quota else "—" }}</strong>
+          <span>Остаток</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="tg-grid">
+    <section class="tg-card">
+      <h2>Добавить заявку по школе</h2>
+      <form class="tg-form" method="post" action="/targeted/applications/add" id="appForm">
+        <input type="hidden" name="uid" value="{{ user.id }}">
+        <input type="hidden" name="year" value="{{ year }}">
+        <div>
+          <label>Школа</label>
+          <input list="school-list" name="school_name" id="schoolSuggest" placeholder="Начните вводить название школы" autocomplete="off">
+          <datalist id="school-list">
+            {% for s in schools %}
+            <option value="{{ s.unit_name }}"></option>
+            {% endfor %}
+          </datalist>
+          <select name="school_user_id" id="schoolUserId" style="margin-top:0.45rem;">
+            <option value="">— или выбрать из списка —</option>
+            {% for s in schools %}
+            <option value="{{ s.id }}">{{ s.unit_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>Программа ЧГПУ</label>
+          <div class="tg-combo" id="programCombo">
+            <input type="search" id="programSearch" placeholder="Поиск по коду или названию" autocomplete="off" aria-autocomplete="list" aria-controls="programResults">
+            <div class="tg-combo-results" id="programResults" role="listbox"></div>
+          </div>
+          <select name="program_id" id="programSelect" required style="margin-top:0.45rem;">
+            <option value="">— выберите программу —</option>
+            {% for level, items in programs_by_level.items() %}
+            <optgroup label="{{ level_labels.get(level, level) }}">
+              {% for p in items %}
+              <option
+                value="{{ p.id }}"
+                data-search="{{ (p.code ~ ' ' ~ p.name ~ ' ' ~ (p.profile or '') ~ ' ' ~ level_labels.get(level, level))|lower }}"
+              >
+                {{ p.code }} — {{ p.name }}{% if p.profile %}: {{ p.profile }}{% endif %}
+              </option>
+              {% endfor %}
+            </optgroup>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>Количество</label>
+          <input type="number" name="applicants_count" min="1" value="1" required>
+        </div>
+        <div>
+          <label class="tg-check">
+            <input type="checkbox" name="is_ppk" value="1">
+            <span>
+              ППК
+              <small>Психолого-педагогические классы — отметьте, если заявка идёт в квоту ППК</small>
+            </span>
+          </label>
+        </div>
+        <div>
+          <label>Примечание</label>
+          <textarea name="note"></textarea>
+        </div>
+        <button class="tg-btn" type="submit">Сохранить</button>
+      </form>
+    </section>
+
+    <aside class="tg-card">
+      <h2>Материалы от региона</h2>
+      <p class="tg-muted" style="margin:0 0 0.75rem;">Документы, которые загрузил региональный координатор для вашего района.</p>
+      <ul class="tg-list">
+        {% for m in materials if m.available %}
+        <li><a href="{{ m.url }}" target="_blank" rel="noopener">{{ m.title }}</a></li>
+        {% else %}
+        <li class="tg-muted">Пока нет доступных материалов.</li>
+        {% endfor %}
+      </ul>
+    </aside>
+  </div>
+
+  <section class="tg-card" style="margin-top:1rem;">
+    <h2>Заявки района</h2>
+
+    <div class="tg-filter-actions">
+      <a class="tg-btn" href="{{ export_url }}">Скачать Excel</a>
+      <a class="tg-btn" href="{{ export_enc_url }}">Excel ЕНЦ</a>
+      <a class="tg-btn secondary" href="/targeted/admin?admin_id={{ user.id }}">Сбросить фильтры</a>
+    </div>
+
+    <form class="tg-filters" method="get" action="/targeted/admin" style="grid-template-columns: 1.3fr 1fr 1.4fr auto auto auto;">
+      <input type="hidden" name="admin_id" value="{{ user.id }}">
+      <div>
+        <label>Поиск</label>
+        <input type="search" name="q" value="{{ filters.q }}" placeholder="Школа, программа, примечание">
+      </div>
+      <div>
+        <label>Школа</label>
+        <select name="school_name">
+          <option value="">Все школы</option>
+          {% for name in school_options %}
+          <option value="{{ name }}" {% if filters.school_name == name %}selected{% endif %}>{{ name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Программа</label>
+        <select name="program_id">
+          <option value="">Все программы</option>
+          <optgroup label="ЕНЦ (естественно-научный цикл)">
+            {% for p in enc_programs %}
+            <option value="{{ p.id }}" {% if filters.program_id == p.id %}selected{% endif %}>
+              {{ p.code }} — {{ p.name }}{% if p.profile %}: {{ p.profile }}{% endif %}
+            </option>
+            {% endfor %}
+          </optgroup>
+          {% for level, items in programs_by_level.items() %}
+          <optgroup label="{{ level_labels.get(level, level) }}">
+            {% for p in items %}
+            <option value="{{ p.id }}" {% if filters.program_id == p.id %}selected{% endif %}>
+              {{ p.code }} — {{ p.name }}{% if p.profile %}: {{ p.profile }}{% endif %}
+            </option>
+            {% endfor %}
+          </optgroup>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <label class="tg-check-inline"><input type="checkbox" name="enc" value="1" {% if filters.enc %}checked{% endif %}> Только ЕНЦ</label>
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <label class="tg-check-inline"><input type="checkbox" name="ppk" value="1" {% if filters.ppk %}checked{% endif %}> Только ППК</label>
+      </div>
+      <div>
+        <button class="tg-btn" type="submit">Применить</button>
+      </div>
+    </form>
+
+    <p class="tg-count">Найдено заявок: {{ applications|length }}</p>
+
+    {% if applications %}
+    <table class="tg-table">
+      <thead>
+        <tr><th>Школа</th><th>Программа</th><th>Кол-во</th><th>ППК</th><th>ЕНЦ</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for a in applications %}
+        <tr>
+          <td>{{ a.school_name }}</td>
+          <td>{{ a.program_label }}</td>
+          <td>{{ a.applicants_count }}</td>
+          <td>
+            {% if a.is_ppk %}
+            <span class="tg-badge">ППК</span>
+            {% else %}
+            <span class="tg-badge is-muted">нет</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if app_is_enc(a) %}
+            <span class="tg-badge is-enc">ЕНЦ</span>
+            {% else %}
+            <span class="tg-badge is-muted">нет</span>
+            {% endif %}
+          </td>
+          <td>
+            <form method="post" action="/targeted/applications/delete" onsubmit="return confirm('Удалить?');">
+              <input type="hidden" name="uid" value="{{ user.id }}">
+              <input type="hidden" name="app_id" value="{{ a.id }}">
+              <button class="tg-btn danger" type="submit">Удалить</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="tg-muted">По выбранным условиям заявок нет.</p>
+    {% endif %}
+  </section>
+</div>
+
+<script id="programs-data" type="application/json">{{ programs_json | safe }}</script>
+<script>
+(function () {
+  const programs = JSON.parse(document.getElementById('programs-data').textContent || '[]');
+  const search = document.getElementById('programSearch');
+  const select = document.getElementById('programSelect');
+  const results = document.getElementById('programResults');
+  const form = document.getElementById('appForm');
+  let activeIndex = -1;
+  let current = [];
+
+  function normalize(s) {
+    return (s || '').toString().toLowerCase().replace(/ё/g, 'е').trim();
+  }
+
+  function matches(p, needle) {
+    if (!needle) return true;
+    const hay = normalize([p.code, p.name, p.profile, p.label, p.level_label].join(' '));
+    return needle.split(/\s+/).every(function (part) { return hay.indexOf(part) !== -1; });
+  }
+
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function filterSelect(needle) {
+    if (!select) return;
+    Array.from(select.options).forEach(function (opt) {
+      if (!opt.value) {
+        opt.hidden = false;
+        opt.disabled = false;
+        return;
+      }
+      const hay = normalize(opt.getAttribute('data-search') || opt.textContent || '');
+      const ok = !needle || needle.split(/\s+/).every(function (part) { return hay.indexOf(part) !== -1; });
+      opt.hidden = !ok;
+      opt.disabled = !ok;
+    });
+    Array.from(select.querySelectorAll('optgroup')).forEach(function (group) {
+      const visible = Array.from(group.children).some(function (o) { return !o.hidden && !o.disabled; });
+      group.hidden = !visible;
+      group.disabled = !visible;
+    });
+  }
+
+  function renderSuggestions(list) {
+    current = list.slice(0, 40);
+    activeIndex = current.length ? 0 : -1;
+    if (!current.length) {
+      results.innerHTML = '<div class="tg-combo-empty">Ничего не найдено. Уточните код или название.</div>';
+      results.classList.add('is-open');
+      return;
+    }
+    results.innerHTML = current.map(function (p, i) {
+      return '<button type="button" class="tg-combo-item' + (i === activeIndex ? ' is-active' : '') + '" data-idx="' + i + '" role="option">' +
+        '<span>' + escapeHtml(p.label) + '</span>' +
+        '<small>' + escapeHtml(p.level_label || '') + '</small>' +
+        '</button>';
+    }).join('');
+    results.classList.add('is-open');
+  }
+
+  function selectProgram(p) {
+    if (!p || !select) return;
+    select.value = String(p.id);
+    // показать выбранный option, даже если фильтр его скрыл
+    Array.from(select.options).forEach(function (opt) {
+      opt.hidden = false;
+      opt.disabled = false;
+    });
+    Array.from(select.querySelectorAll('optgroup')).forEach(function (group) {
+      group.hidden = false;
+      group.disabled = false;
+    });
+    search.value = p.label;
+    results.classList.remove('is-open');
+    select.focus();
+  }
+
+  function filterNow() {
+    const needle = normalize(search.value);
+    filterSelect(needle);
+    if (!needle) {
+      results.classList.remove('is-open');
+      results.innerHTML = '';
+      return;
+    }
+    renderSuggestions(programs.filter(function (p) { return matches(p, needle); }));
+  }
+
+  if (search) {
+    search.addEventListener('input', filterNow);
+    search.addEventListener('focus', function () {
+      if (normalize(search.value)) filterNow();
+    });
+    search.addEventListener('keydown', function (e) {
+      if (!results.classList.contains('is-open')) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIndex = Math.min(current.length - 1, activeIndex + 1);
+        updateActive();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIndex = Math.max(0, activeIndex - 1);
+        updateActive();
+      } else if (e.key === 'Enter') {
+        if (activeIndex >= 0 && current[activeIndex]) {
+          e.preventDefault();
+          selectProgram(current[activeIndex]);
+        }
+      } else if (e.key === 'Escape') {
+        results.classList.remove('is-open');
+      }
+    });
+  }
+
+  function updateActive() {
+    Array.from(results.querySelectorAll('.tg-combo-item')).forEach(function (el, i) {
+      el.classList.toggle('is-active', i === activeIndex);
+    });
+  }
+
+  if (results) {
+    results.addEventListener('mousedown', function (e) {
+      const btn = e.target.closest('.tg-combo-item');
+      if (!btn) return;
+      e.preventDefault();
+      const idx = parseInt(btn.getAttribute('data-idx'), 10);
+      selectProgram(current[idx]);
+    });
+  }
+
+  if (select) {
+    select.addEventListener('change', function () {
+      const opt = select.options[select.selectedIndex];
+      if (opt && opt.value && search) {
+        search.value = (opt.textContent || '').trim();
+      }
+      results.classList.remove('is-open');
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('#programCombo') && e.target !== select) {
+      results.classList.remove('is-open');
+    }
+  });
+
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      if (!select || !select.value) {
+        e.preventDefault();
+        alert('Выберите программу из списка или через поиск.');
+        if (search) search.focus();
+      }
+    });
+  }
+
+  const suggest = document.getElementById('schoolSuggest');
+  const schoolSelect = document.getElementById('schoolUserId');
+  function syncSchool() {
+    const typed = (suggest && suggest.value || '').trim();
+    if (!schoolSelect || !typed) return;
+    const match = Array.from(schoolSelect.options).find(function (o) {
+      return (o.textContent || '').trim() === typed;
+    });
+    schoolSelect.value = match ? match.value : '';
+  }
+  if (suggest) {
+    suggest.addEventListener('change', syncSchool);
+    suggest.addEventListener('blur', syncSchool);
+  }
+  if (schoolSelect) {
+    schoolSelect.addEventListener('change', function () {
+      const opt = schoolSelect.options[schoolSelect.selectedIndex];
+      if (opt && opt.value && suggest) suggest.value = opt.textContent.trim();
+    });
+  }
+})();
+</script>
+{% endblock %}

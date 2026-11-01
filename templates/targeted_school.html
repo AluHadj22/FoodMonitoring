@@ -1,0 +1,107 @@
+{% extends "layout.html" %}
+{% block title %}Целевое обучение — кабинет школы{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+{% block content %}
+{% include "targeted_base_styles.html" %}
+{% from "targeted_base_styles.html" import direction_switcher %}
+
+<div class="tg-page">
+  <header class="tg-hero">
+    <div class="tg-kicker">Направление · целевое обучение</div>
+    <h1>{{ user.unit_name }}</h1>
+    <p>{{ user.district }}{% if user.region %} · {{ user.region }}{% endif %}. Заявки на целевые места и материалы ЧГПУ.</p>
+    {{ direction_switcher(user, active_direction, directions) }}
+  </header>
+
+  <div class="tg-grid">
+    <section class="tg-card">
+      <h2>Новая заявка</h2>
+      <div class="tg-stat">
+        <div class="tg-stat-item">
+          <strong>{{ quota.quota_total if quota else "—" }}</strong>
+          <span>Квота района</span>
+        </div>
+        <div class="tg-stat-item">
+          <strong>{{ district_used }}</strong>
+          <span>Уже подано по району</span>
+        </div>
+        <div class="tg-stat-item">
+          <strong>{{ applications|length }}</strong>
+          <span>Заявок школы</span>
+        </div>
+      </div>
+
+      <form class="tg-form" method="post" action="/targeted/applications/add">
+        <input type="hidden" name="uid" value="{{ user.id }}">
+        <input type="hidden" name="year" value="{{ year }}">
+        <div>
+          <label>Программа ЧГПУ</label>
+          <select name="program_id" required>
+            <option value="">— выберите программу —</option>
+            {% for level, items in programs_by_level.items() %}
+            <optgroup label="{{ level_labels.get(level, level) }}">
+              {% for p in items %}
+              <option value="{{ p.id }}">{{ p.code }} — {{ p.name }}{% if p.profile %}: {{ p.profile }}{% endif %}</option>
+              {% endfor %}
+            </optgroup>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>Количество заявок</label>
+          <input type="number" name="applicants_count" min="1" value="1" required>
+        </div>
+        <div>
+          <label>Примечание</label>
+          <textarea name="note" placeholder="Необязательно"></textarea>
+        </div>
+        <button class="tg-btn" type="submit">Добавить заявку</button>
+      </form>
+    </section>
+
+    <aside class="tg-card">
+      <h2>Материалы</h2>
+      <ul class="tg-list">
+        {% for m in materials %}
+          {% if m.available %}
+          <li><a href="{{ m.url }}" target="_blank" rel="noopener">{{ m.title }}</a></li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+      <p class="tg-muted" style="margin-top:0.85rem;">В материалах — перечень программ и вступительные испытания.</p>
+    </aside>
+  </div>
+
+  <section class="tg-card" style="margin-top:1rem;">
+    <h2>Заявки школы</h2>
+    {% if applications %}
+    <table class="tg-table">
+      <thead>
+        <tr>
+          <th>Программа</th>
+          <th>Кол-во</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in applications %}
+        <tr>
+          <td>{{ a.program_label or "—" }}</td>
+          <td>{{ a.applicants_count }}</td>
+          <td>
+            <form method="post" action="/targeted/applications/delete" onsubmit="return confirm('Удалить заявку?');">
+              <input type="hidden" name="uid" value="{{ user.id }}">
+              <input type="hidden" name="app_id" value="{{ a.id }}">
+              <button class="tg-btn danger" type="submit">Удалить</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="tg-muted">Пока нет заявок. Выберите программу из списка и добавьте первую.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

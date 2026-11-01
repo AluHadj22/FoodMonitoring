@@ -350,7 +350,7 @@ html.nav-collapsed .page-container {
   .support-container > .channel-card,
   .search-panel
 ),
-body:not(:has(.glass-login)) .page-container :where([class*="-card"], [class*="-panel"]):not([class*="card-"]):not([class*="-title"]):not([class*="-body"]):not([class*="-header"]):not([class*="-icon"]):not([class*="-meta"]):not([class*="-desc"]):not([class*="-cover"]):not([class*="-fav"]):not([class*="-hero"]) {
+body:not(:has(.glass-login)) .page-container :where([class*="-card"], [class*="-panel"]):not([class*="card-"]):not([class*="-title"]):not([class*="-body"]):not([class*="-header"]):not([class*="-icon"]):not([class*="-meta"]):not([class*="-desc"]):not([class*="-cover"]):not([class*="-fav"]):not([class*="-hero"]):not([class*="-chips"]):not([class*="-type"]):not([class*="-placeholder"]) {
   background: #ffffff !important;
   border: 1px solid var(--border) !important;
   border-radius: 0 !important;
@@ -639,52 +639,69 @@ body:not(:has(.glass-login)) .page-container :is(
   font-size: 0.875rem;
 }
 
-/* Inputs with leading icons: keep text clear of the icon */
-.page-container .form-group:has(.form-icon) > input,
-.page-container .form-group:has(.form-icon) > select,
-.page-container .form-group:has(.form-icon) .icon-field > input,
-.page-container .form-group:has(.form-icon) .icon-field > select,
-.page-container #district-container > select,
-.page-container .form-group:has(> .password-toggle) > input {
+/* Inputs with leading icons: keep text clear of the icon.
+   Prefer .icon-field wrapper so hints/extra rows don't shift icons. */
+.page-container .form-group:has(> .form-icon) > input,
+.page-container .form-group:has(> .form-icon) > select,
+.page-container .icon-field > input,
+.page-container .icon-field > select,
+.page-container #district-container > .icon-field > select,
+.page-container #district-container > select {
   padding-left: 2.75rem !important;
 }
 
-.page-container .form-group:has(> .password-toggle) > input {
+.page-container .form-group:has(> .password-toggle) > input,
+.page-container .icon-field:has(> .password-toggle) > input {
   padding-right: 2.75rem !important;
 }
 
 .page-container .form-group,
-.page-container #district-container,
-.page-container .icon-field {
+.page-container #district-container {
   position: relative;
 }
 
-.page-container .form-group > .form-icon,
-.page-container #district-container > .form-icon,
+.page-container .icon-field {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
 .page-container .icon-field > .form-icon {
   position: absolute !important;
   left: 0.9rem !important;
+  top: 50% !important;
+  bottom: auto !important;
+  transform: translateY(-50%);
   width: 16px !important;
   height: 16px !important;
-  top: auto !important;
-  bottom: 0.85rem !important;
   margin: 0 !important;
   color: var(--text-muted, #6e6e6e);
   pointer-events: none;
   z-index: 2;
 }
 
-/* Icon sits on the first control when field has extra rows (e.g. district manual) */
-.page-container #district-container > .form-icon {
-  top: 0.85rem !important;
+/* Legacy: icon as direct child of form-group (no wrapper) — align to control under label */
+.page-container .form-group > .form-icon {
+  position: absolute !important;
+  left: 0.9rem !important;
+  width: 16px !important;
+  height: 16px !important;
+  top: calc(1.05rem + 0.5rem + ((42px - 16px) / 2)) !important;
   bottom: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+  color: var(--text-muted, #6e6e6e);
+  pointer-events: none;
+  z-index: 2;
 }
 
+.page-container .icon-field > .password-toggle,
 .page-container .form-group > .password-toggle {
   position: absolute !important;
   right: 0.65rem !important;
-  top: auto !important;
-  bottom: 0.55rem !important;
+  top: 50% !important;
+  bottom: auto !important;
+  transform: translateY(-50%);
   width: 32px;
   height: 32px;
   z-index: 3;
@@ -693,6 +710,13 @@ body:not(:has(.glass-login)) .page-container :is(
   justify-content: center;
 }
 
+.page-container .form-group > .password-toggle {
+  /* without icon-field: password toggle must sit on the input row under the label */
+  top: calc(1.05rem + 0.5rem + ((42px - 32px) / 2)) !important;
+  transform: none !important;
+}
+
+.page-container .icon-field > .password-toggle svg,
 .page-container .form-group > .password-toggle svg {
   width: 16px !important;
   height: 16px !important;
@@ -741,7 +765,7 @@ body:not(:has(.glass-login)) .page-container :is(
 /* ---------- Buttons ---------- */
 
 .page-container :is(
-  button:not(.nav-btn):not(.a11y-toggle):not(.nav-burger):not(.nav-collapse):not(.password-toggle):not(.ui-select-trigger):not(.ui-select-option),
+  button:not(.nav-btn):not(.a11y-toggle):not(.nav-burger):not(.nav-collapse):not(.password-toggle):not(.ui-select-trigger):not(.ui-select-option):not(.kb-card-fav),
   .btn,
   .ui-btn,
   .submit-btn,
@@ -972,9 +996,13 @@ body:not(:has(.glass-login)) .page-container :is(
 .form-grid .ui-select,
 .fcmp-admin-controls .ui-select,
 .kb-toolbar .ui-select,
-.kb-filters .ui-select {
+.kb-filters .ui-select,
+.kb-main-bar .ui-select,
+.kb-pagination .ui-select {
   width: auto;
   min-width: 160px;
+  max-width: 100%;
+  flex: 0 0 auto;
 }
 
 [data-theme="dark"] .ui-select-trigger {
@@ -1078,7 +1106,7 @@ body:not(:has(.glass-login)) .page-container :is(
 }
 
 /* Don't force uppercase/tracking on tiny icon-only controls */
-.page-container :is(.preview-icon-btn, .password-toggle, .avatar-upload-btn, .a11y-toggle) {
+.page-container :is(.preview-icon-btn, .password-toggle, .avatar-upload-btn, .a11y-toggle, .kb-card-fav) {
   letter-spacing: 0 !important;
   text-transform: none !important;
 }

@@ -1,7 +1,11 @@
 {% extends "layout.html" %}
 {% from "macros/kb_icons.html" import kb_icon %}
-{% block title %}Справочный центр — ЕЦМП{% endblock %}
-{% block meta_description %}Справочный центр ЕЦМП: база знаний, инструкции и материалы по мониторингу школьного питания.{% endblock %}
+{% block title %}Справочный центр — ЕЦМ{% endblock %}
+{% block meta_description %}Справочный центр ЕЦМ: база знаний, инструкции и материалы Единого Центра Мониторинга.{% endblock %}
+
+{% block page_styles %}
+<link rel="stylesheet" href="/static/css/knowledge-base.css?v=6">
+{% endblock %}
 
 {% block content %}
 <style>
@@ -665,39 +669,50 @@
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
     }
 
+    .kb-card-link {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        color: inherit;
+        text-decoration: none;
+    }
+
     .kb-card-fav {
         position: absolute;
         top: 0.55rem;
         right: 0.55rem;
-        z-index: 3;
-        width: 32px;
-        height: 32px;
-        display: flex;
+        z-index: 5;
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: rgba(255, 255, 255, 0.94);
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-sm);
-        color: var(--text-muted);
+        background: #141414;
+        border: 1px solid #141414;
+        border-radius: 0;
+        color: #fff;
         cursor: pointer;
-        font-size: 0.95rem;
+        font-size: 1.05rem;
         line-height: 1;
         padding: 0;
-        box-shadow: var(--shadow-sm);
-        transition: color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+        letter-spacing: 0;
+        text-transform: none;
+        box-shadow: none;
+        transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
     }
 
     [data-theme="dark"] .kb-card-fav {
-        background: rgba(22, 32, 51, 0.92);
-    }
-
-    .kb-card-fav:hover {
-        transform: scale(1.06);
+        background: #f2f2f2;
+        border-color: #f2f2f2;
+        color: #141414;
     }
 
     .kb-card-fav:hover,
     .kb-card-fav.active {
-        color: #d97706;
+        background: #fff;
+        color: #141414;
+        border-color: #141414;
     }
 
     .kb-card-body {
@@ -784,39 +799,43 @@
     .kb-pagination {
         display: flex;
         justify-content: center;
-        gap: 0.35rem;
+        align-items: center;
+        gap: 0.4rem;
         padding: 0.9rem 1.15rem 1.2rem;
         flex-wrap: wrap;
         border-top: 1px solid var(--border-light);
-        background: linear-gradient(180deg, transparent, rgba(91, 159, 212, 0.04));
+        background: #f6f6f6;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .kb-page-link {
-        min-width: 2rem;
-        height: 2rem;
+        min-width: 2.1rem;
+        width: auto;
+        height: 2.1rem;
+        flex: 0 0 auto;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         padding: 0 0.55rem;
-        background: var(--bg-muted);
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-sm);
-        color: var(--text-secondary);
+        background: #fff;
+        border: 1px solid #141414;
+        border-radius: 0;
+        color: #141414;
         text-decoration: none;
         font-size: 0.78rem;
-        font-weight: 600;
-        transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
-    }
-
-    .kb-page-link:hover {
-        transform: translateY(-1px);
+        font-weight: 500;
+        letter-spacing: 0;
+        text-transform: none;
+        transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
     }
 
     .kb-page-link:hover,
     .kb-page-link.active {
-        background: var(--primary);
-        border-color: var(--primary);
+        background: #141414;
+        border-color: #141414;
         color: #fff;
+        transform: none;
     }
 
     @media (max-width: 960px) {
@@ -1287,11 +1306,11 @@
                     {% endif %}
                 </div>
                 <select class="kb-sort" onchange="window.location.href=this.value" aria-label="Сортировка">
-                    <option value="?sort=newest{% if category %}&category={{ category }}{% endif %}{% if search %}&search={{ search }}{% endif %}"
+                    <option value="?sort=newest{% if category %}&category={{ category }}{% endif %}{% if search %}&search={{ search }}{% endif %}{% if per_page != 12 %}&per_page={{ per_page }}{% endif %}"
                             {% if sort == 'newest' %}selected{% endif %}>Сначала новые</option>
-                    <option value="?sort=popular{% if category %}&category={{ category }}{% endif %}{% if search %}&search={{ search }}{% endif %}"
+                    <option value="?sort=popular{% if category %}&category={{ category }}{% endif %}{% if search %}&search={{ search }}{% endif %}{% if per_page != 12 %}&per_page={{ per_page }}{% endif %}"
                             {% if sort == 'popular' %}selected{% endif %}>Популярные</option>
-                    <option value="?sort=title{% if category %}&category={{ category }}{% endif %}{% if search %}&search={{ search }}{% endif %}"
+                    <option value="?sort=title{% if category %}&category={{ category }}{% endif %}{% if search %}&search={{ search }}{% endif %}{% if per_page != 12 %}&per_page={{ per_page }}{% endif %}"
                             {% if sort == 'title' %}selected{% endif %}>По алфавиту</option>
                 </select>
             </div>
@@ -1299,77 +1318,97 @@
             {% if documents %}
             <div class="kb-grid">
                 {% for doc in documents %}
-                <a href="/knowledge-base/document/{{ doc.id }}" class="kb-card">
+                <article class="kb-card">
                     {% if user_email %}
                     <button type="button"
                             class="kb-card-fav {% if doc.id in favorites %}active{% endif %}"
-                            onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite({{ doc.id }})"
+                            onclick="toggleFavorite({{ doc.id }})"
                             id="fav-{{ doc.id }}"
                             title="{% if doc.id in favorites %}Убрать из избранного{% else %}В избранное{% endif %}"
                             aria-label="Избранное">
                         {% if doc.id in favorites %}★{% else %}☆{% endif %}
                     </button>
+                    {% else %}
+                    <button type="button"
+                            class="kb-card-fav"
+                            onclick="window.location.href='/login'"
+                            title="Войдите, чтобы добавить в избранное"
+                            aria-label="Войти для избранного">☆</button>
                     {% endif %}
-                    <div class="kb-card-cover">
-                        {% if doc.cover_image_path %}
-                        <img src="/knowledge-base/cover/{{ doc.id }}"
-                             alt=""
-                             loading="lazy"
-                             decoding="async">
-                        {% else %}
-                        <div class="kb-card-placeholder">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                <polyline points="14 2 14 8 20 8"/>
-                            </svg>
-                            <span>{% if doc.file_extension %}{{ doc.file_extension.replace('.', '')|upper }}{% else %}DOC{% endif %}</span>
+                    <a href="/knowledge-base/document/{{ doc.id }}" class="kb-card-link">
+                        <div class="kb-card-cover">
+                            {% if doc.cover_image_path %}
+                            <img src="/knowledge-base/cover/{{ doc.id }}"
+                                 alt=""
+                                 loading="lazy"
+                                 decoding="async"
+                                 data-kb-cover
+                                 onerror="kbCoverFallback(this)">
+                            {% endif %}
+                            <div class="kb-card-placeholder{% if doc.cover_image_path %} is-fallback{% endif %}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                </svg>
+                            </div>
                         </div>
-                        {% endif %}
-                        <span class="kb-card-type">{{ document_types[doc.document_type] }}</span>
-                    </div>
-                    <div class="kb-card-body">
-                        <div class="kb-card-title">{{ doc.title }}</div>
-                        {% if doc.description %}
-                        <div class="kb-card-desc">{{ doc.description[:120] }}{% if doc.description|length > 120 %}…{% endif %}</div>
-                        {% endif %}
-                        <div class="kb-card-meta">
-                            <span>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="3" y="4" width="18" height="18" rx="2"/>
-                                    <line x1="16" y1="2" x2="16" y2="6"/>
-                                    <line x1="8" y1="2" x2="8" y2="6"/>
-                                    <line x1="3" y1="10" x2="21" y2="10"/>
-                                </svg>
-                                {{ doc.created_at.strftime('%d.%m.%Y') }}
-                            </span>
-                            <span>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                    <polyline points="7 10 12 15 17 10"/>
-                                    <line x1="12" y1="15" x2="12" y2="3"/>
-                                </svg>
-                                {{ doc.downloads_count }}
-                            </span>
-                            <span>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                    <circle cx="12" cy="12" r="3"/>
-                                </svg>
-                                {{ doc.views_count }}
-                            </span>
+                        <div class="kb-card-body">
+                            <div class="kb-card-chips">
+                                <span class="kb-chip">{{ document_types[doc.document_type] }}</span>
+                                <span class="kb-chip kb-chip-ext">{% if doc.file_extension %}{{ doc.file_extension.replace('.', '')|upper }}{% else %}DOC{% endif %}</span>
+                            </div>
+                            <div class="kb-card-title">{{ doc.title }}</div>
+                            {% if doc.description %}
+                            <div class="kb-card-desc">{{ doc.description[:120] }}{% if doc.description|length > 120 %}…{% endif %}</div>
+                            {% endif %}
+                            <div class="kb-card-meta">
+                                <span>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                        <line x1="16" y1="2" x2="16" y2="6"/>
+                                        <line x1="8" y1="2" x2="8" y2="6"/>
+                                        <line x1="3" y1="10" x2="21" y2="10"/>
+                                    </svg>
+                                    {{ doc.created_at.strftime('%d.%m.%Y') }}
+                                </span>
+                                <span>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                    {{ doc.downloads_count }}
+                                </span>
+                                <span>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                    {{ doc.views_count }}
+                                </span>
+                            </div>
                         </div>
-                    </div>
-                </a>
+                    </a>
+                </article>
                 {% endfor %}
             </div>
 
-            {% if total > per_page %}
-            <div class="kb-pagination">
+            {% if total_pages > 1 %}
+            <nav class="kb-pagination" aria-label="Страницы">
+                {% if page > 1 %}
+                <a href="?page={{ page - 1 }}{% if category %}&category={{ category }}{% endif %}{% if search %}&search={{ search }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if per_page != 12 %}&per_page={{ per_page }}{% endif %}"
+                   class="kb-page-link kb-page-nav" aria-label="Предыдущая страница">‹</a>
+                {% endif %}
                 {% for p in range(1, total_pages + 1) %}
-                <a href="?page={{ p }}{% if category %}&category={{ category }}{% endif %}{% if search %}&search={{ search }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
-                   class="kb-page-link {% if p == page %}active{% endif %}">{{ p }}</a>
+                <a href="?page={{ p }}{% if category %}&category={{ category }}{% endif %}{% if search %}&search={{ search }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if per_page != 12 %}&per_page={{ per_page }}{% endif %}"
+                   class="kb-page-link {% if p == page %}active{% endif %}"
+                   {% if p == page %}aria-current="page"{% endif %}>{{ p }}</a>
                 {% endfor %}
-            </div>
+                {% if page < total_pages %}
+                <a href="?page={{ page + 1 }}{% if category %}&category={{ category }}{% endif %}{% if search %}&search={{ search }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if per_page != 12 %}&per_page={{ per_page }}{% endif %}"
+                   class="kb-page-link kb-page-nav" aria-label="Следующая страница">›</a>
+                {% endif %}
+            </nav>
             {% endif %}
 
             {% else %}
@@ -1415,6 +1454,12 @@
 </div>
 
 <script>
+function kbCoverFallback(img) {
+    if (!img) return;
+    img.classList.add('is-broken');
+    img.removeAttribute('src');
+}
+
 function toggleFavorite(docId) {
     fetch(`/knowledge-base/favorite/${docId}`, {
         method: 'POST',

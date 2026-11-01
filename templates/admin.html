@@ -818,8 +818,8 @@
         margin-bottom: 0.75rem;
         min-height: 1.1em;
     }
-    .fcmp-admin-status.error { color: var(--danger, #d46565); }
-    .fcmp-admin-status.ok { color: var(--success, #3d9a78); }
+    .fcmp-admin-status.error { color: #a33b3b; }
+    .fcmp-admin-status.ok { color: #2f6b4f; }
     .fcmp-admin-metrics {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -873,7 +873,7 @@
         justify-content: center;
         font-size: 0.95rem;
         font-weight: 650;
-        color: #3d9a78;
+        color: #2f6b4f;
         background: transparent;
         pointer-events: none;
         z-index: 2;
@@ -1042,8 +1042,22 @@
                 <h2>Панель администратора</h2>
                 <div class="admin-role">
                     {{ 'Региональный уровень' if admin.role == 'regional_admin' else 'Районный уровень (' +
-                    admin.district + ')' }}
+                    admin.district + ')' }} · питание
                 </div>
+                {% if admin.role == 'regional_admin' %}
+                <div style="display:flex;flex-wrap:wrap;gap:0.45rem;margin-top:0.85rem;">
+                    <form method="post" action="/targeted/switch">
+                        <input type="hidden" name="direction" value="food">
+                        <input type="hidden" name="admin_id" value="{{ admin.id }}">
+                        <button type="submit" style="min-height:36px;padding:0.4rem 0.7rem;border:1px solid #141414;background:#141414;color:#fff;font:inherit;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">Питание</button>
+                    </form>
+                    <form method="post" action="/targeted/switch">
+                        <input type="hidden" name="direction" value="targeted">
+                        <input type="hidden" name="admin_id" value="{{ admin.id }}">
+                        <button type="submit" style="min-height:36px;padding:0.4rem 0.7rem;border:1px solid #141414;background:#fff;color:#141414;font:inherit;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">Целевое обучение</button>
+                    </form>
+                </div>
+                {% endif %}
             </div>
 
             <!-- Кнопка 1С: показываем только региональному администратору -->
@@ -1563,6 +1577,39 @@
             if (typesChart) { typesChart.destroy(); typesChart = null; }
         }
 
+        function chartPalette() {
+            const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+            return {
+                ink: dark ? '#f2f2f2' : '#141414',
+                ok: '#2f6b4f',
+                muted: dark ? '#8a8a8a' : '#c8c8c8',
+                danger: '#a33b3b',
+                fill: dark ? 'rgba(242,242,242,0.12)' : 'rgba(20,20,20,0.10)',
+                tick: dark ? '#8a8a8a' : '#6e6e6e',
+                grid: dark ? 'rgba(255,255,255,0.08)' : 'rgba(20,20,20,0.08)',
+                series: dark
+                    ? ['#2f6b4f', '#f2f2f2', '#c8c8c8', '#9a9a9a', '#a33b3b', '#7a7a7a', '#d4d4d4', '#5a5a5a']
+                    : ['#2f6b4f', '#141414', '#5a5a5a', '#7a7a7a', '#9a9a9a', '#b0b0b0', '#c8c8c8', '#a33b3b'],
+            };
+        }
+
+        function chartScaleOptions() {
+            const p = chartPalette();
+            return {
+                x: {
+                    ticks: { color: p.tick, font: { size: 10 } },
+                    grid: { color: p.grid },
+                    border: { color: p.grid },
+                },
+                y: {
+                    ticks: { color: p.tick, font: { size: 10 } },
+                    grid: { color: p.grid },
+                    border: { color: p.grid },
+                    beginAtZero: true,
+                },
+            };
+        }
+
         function fillTable(tbodyId, rows) {
             const tbody = document.getElementById(tbodyId);
             if (!tbody) return;
@@ -1592,6 +1639,8 @@
             fillTable('fcmpOutsidersBody', data.outsiders);
 
             destroyCharts();
+            const palette = chartPalette();
+            const scales = chartScaleOptions();
             const chart = data.chart || [];
             const hasDayErrors = chart.some((r) => Number(r.errors) > 0);
             const errorsEmptyEl = document.getElementById('fcmpAdminErrorsEmpty');
@@ -1611,15 +1660,19 @@
                         datasets: [{
                             label: 'Ошибки',
                             data: chart.map((r) => r.errors),
-                            borderColor: '#5b9fd4',
-                            backgroundColor: 'rgba(91,159,212,0.15)',
+                            borderColor: palette.ink,
+                            backgroundColor: palette.fill,
+                            pointBackgroundColor: palette.ink,
+                            pointBorderColor: palette.ink,
+                            pointRadius: 2,
+                            borderWidth: 2,
                             tension: 0.25,
                             fill: true,
                         }],
                     },
                     options: {
                         plugins: { legend: { display: false } },
-                        scales: { y: { beginAtZero: true } },
+                        scales: { x: scales.x, y: scales.y },
                     },
                 });
             }
@@ -1627,14 +1680,13 @@
             const types = (data.error_types || []).slice(0, 8);
             const typesCanvas = document.getElementById('fcmpAdminErrorTypesChart');
             if (!types.length) {
-                // Зелёное кольцо + подпись «нет ошибок» в центре
                 typesChart = new Chart(typesCanvas, {
                     type: 'doughnut',
                     data: {
                         labels: ['нет ошибок'],
                         datasets: [{
                             data: [1],
-                            backgroundColor: ['#3d9a78'],
+                            backgroundColor: [palette.ok],
                             borderWidth: 0,
                         }],
                     },
@@ -1653,8 +1705,8 @@
                             const cx = (chartArea.left + chartArea.right) / 2;
                             const cy = (chartArea.top + chartArea.bottom) / 2;
                             ctx.save();
-                            ctx.fillStyle = '#3d9a78';
-                            ctx.font = '650 14px system-ui, sans-serif';
+                            ctx.fillStyle = palette.ok;
+                            ctx.font = '650 14px Outfit, system-ui, sans-serif';
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';
                             ctx.fillText('нет ошибок', cx, cy);
@@ -1669,17 +1721,15 @@
                         labels: types.map((t) => (t.text || t.meal || '—').slice(0, 42)),
                         datasets: [{
                             data: types.map((t) => t.count),
-                            backgroundColor: [
-                                '#5b9fd4', '#3d9a78', '#d4a15b', '#d46565',
-                                '#7f9bb8', '#8b5cf6', '#10b981', '#f59e0b',
-                            ],
+                            backgroundColor: palette.series.slice(0, Math.max(types.length, 1)),
+                            borderWidth: 0,
                         }],
                     },
                     options: {
                         plugins: {
                             legend: {
                                 position: 'bottom',
-                                labels: { boxWidth: 10, font: { size: 10 } },
+                                labels: { boxWidth: 10, font: { size: 10 }, color: palette.tick },
                             },
                         },
                     },

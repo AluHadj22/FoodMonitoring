@@ -1,0 +1,261 @@
+{% extends "layout.html" %}
+{% block title %}Целевое обучение — региональный кабинет{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+{% block content %}
+{% include "targeted_base_styles.html" %}
+{% from "targeted_base_styles.html" import direction_switcher %}
+
+{% set circ = 2 * 3.14159265 * 42 %}
+
+<div class="tg-page">
+  <header class="tg-hero">
+    <div class="tg-kicker">Региональный кабинет · целевое обучение</div>
+    <h1>Сводка по муниципалитетам</h1>
+    <p>Дашборд по квотам, ППК и ЕНЦ, фильтры и выгрузка свода в Excel.</p>
+    {{ direction_switcher(user, active_direction, directions) }}
+  </header>
+
+  <div class="tg-actions" style="margin-top:0;">
+    <a class="tg-btn" href="/targeted/quotas?admin_id={{ user.id }}">Установка квот</a>
+    <a class="tg-btn" href="{{ export_url }}">Скачать Excel</a>
+    <a class="tg-btn" href="{{ export_enc_url }}">Excel ЕНЦ</a>
+  </div>
+
+  <div class="tg-dash" aria-label="Дашборд исполнения">
+    <div class="tg-dash-card">
+      <div class="tg-ring" style="width:112px;height:112px;" role="img" aria-label="Квота выполнена на {{ dash.pct }} процентов">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="tg-ring-track" cx="60" cy="60" r="42"></circle>
+          <circle
+            class="tg-ring-value"
+            cx="60" cy="60" r="42"
+            stroke-dasharray="{{ '%.2f'|format(circ) }}"
+            stroke-dashoffset="{{ '%.2f'|format(circ - (circ * (dash.pct or 0) / 100.0)) }}"
+          ></circle>
+        </svg>
+        <div class="tg-ring-center"><strong>{{ dash.pct }}%</strong><span>квота</span></div>
+      </div>
+      <div>
+        <h3>Исполнение квот</h3>
+        <strong>{{ dash.used }} / {{ dash.quota_total }}</strong>
+        <p>Подано заявок по всем муниципалитетам. Остаток — {{ dash.left }}.</p>
+      </div>
+    </div>
+
+    <div class="tg-dash-card">
+      <div class="tg-ring" style="width:112px;height:112px;" role="img" aria-label="ППК {{ dash.used_ppk }} из {{ dash.quota_ppk }}">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="tg-ring-track" cx="60" cy="60" r="42"></circle>
+          <circle
+            class="tg-ring-value"
+            cx="60" cy="60" r="42"
+            stroke-dasharray="{{ '%.2f'|format(circ) }}"
+            stroke-dashoffset="{{ '%.2f'|format(circ - (circ * (dash.pct_ppk or 0) / 100.0)) }}"
+            style="stroke:#5a5a5a;"
+          ></circle>
+        </svg>
+        <div class="tg-ring-center"><strong>{{ dash.pct_ppk }}%</strong><span>ППК</span></div>
+      </div>
+      <div>
+        <h3>Психолого-педагогические классы</h3>
+        <strong>{{ dash.used_ppk }} / {{ dash.quota_ppk }}</strong>
+        <p>Заявки с отметкой ППК относительно квоты ППК.</p>
+      </div>
+    </div>
+
+    <div class="tg-dash-card">
+      <div class="tg-ring" style="width:112px;height:112px;" role="img" aria-label="ЕНЦ {{ dash.used_enc }} из {{ dash.used }}">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="tg-ring-track" cx="60" cy="60" r="42"></circle>
+          <circle
+            class="tg-ring-value"
+            cx="60" cy="60" r="42"
+            stroke-dasharray="{{ '%.2f'|format(circ) }}"
+            stroke-dashoffset="{{ '%.2f'|format(circ - (circ * (dash.pct_enc or 0) / 100.0)) }}"
+            style="stroke:#2f6b4f;"
+          ></circle>
+        </svg>
+        <div class="tg-ring-center"><strong>{{ dash.pct_enc }}%</strong><span>ЕНЦ</span></div>
+      </div>
+      <div>
+        <h3>Естественно-научный цикл</h3>
+        <strong>{{ dash.used_enc }}</strong>
+        <p>Из {{ dash.used }} поданных мест — по профилям ЕНЦ ({{ dash.enc_program_count }} программ).</p>
+      </div>
+    </div>
+  </div>
+
+  <section class="tg-card">
+    <h2>Исполнение по районам</h2>
+    <div class="tg-bars">
+      {% for row in dash.by_district %}
+      <div class="tg-bar-row">
+        <div>{{ row.district }}</div>
+        <div class="tg-bar-track" title="{{ row.used }} из {{ row.quota_total }}">
+          <div class="tg-bar-fill" style="width: {{ row.pct }}%;"></div>
+        </div>
+        <div>{{ row.used }}/{{ row.quota_total }} · ЕНЦ {{ row.used_enc }} · ППК {{ row.used_ppk }}</div>
+      </div>
+      {% else %}
+      <p class="tg-muted">Квоты ещё не заданы.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="tg-card" style="margin-top:1rem;">
+    <h2>Квоты и исполнение {{ year }}</h2>
+    <table class="tg-table">
+      <thead>
+        <tr>
+          <th>Муниципалитет</th>
+          <th>Квота</th>
+          <th>Квота ППК</th>
+          <th>Подано</th>
+          <th>ППК</th>
+          <th>ЕНЦ</th>
+          <th>Остаток</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in progress %}
+        <tr>
+          <td>{{ row.quota.district }}</td>
+          <td>{{ row.quota.quota_total }}</td>
+          <td>{{ row.quota.quota_ppk }}</td>
+          <td>{{ row.used }}</td>
+          <td>{{ row.used_ppk }}</td>
+          <td>{{ row.used_enc }}</td>
+          <td>{{ row.left }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="tg-muted">Квоты ещё не заданы. Откройте «Установка квот».</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="tg-card" style="margin-top:1rem;">
+    <h2>Профили ЕНЦ</h2>
+    <p class="tg-muted" style="margin:0 0 0.75rem;">По приложению к приказу № 1081-п о стипендиях Главы ЧР (предметы естественно-научного цикла).</p>
+    <ul class="tg-list">
+      {% for p in enc_programs %}
+      <li><span class="tg-badge is-enc">ЕНЦ</span> {{ p.code }} — {{ p.name }}{% if p.profile %}: {{ p.profile }}{% endif %}</li>
+      {% else %}
+      <li class="tg-muted">Профили ЕНЦ не найдены.</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="tg-card" style="margin-top:1rem;">
+    <h2>Заявки</h2>
+
+    <form class="tg-filters" method="get" action="/targeted/admin" style="grid-template-columns: 1.2fr repeat(3, minmax(120px, 1fr)) auto auto auto;">
+      <input type="hidden" name="admin_id" value="{{ user.id }}">
+      <div>
+        <label>Поиск</label>
+        <input type="search" name="q" value="{{ filters.q }}" placeholder="Школа, программа, район">
+      </div>
+      <div>
+        <label>Район</label>
+        <select name="district">
+          <option value="">Все районы</option>
+          {% for d in district_options %}
+          <option value="{{ d }}" {% if filters.district == d %}selected{% endif %}>{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Школа</label>
+        <select name="school_name">
+          <option value="">Все школы</option>
+          {% for name in school_options %}
+          <option value="{{ name }}" {% if filters.school_name == name %}selected{% endif %}>{{ name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Программа</label>
+        <select name="program_id">
+          <option value="">Все программы</option>
+          <optgroup label="ЕНЦ">
+            {% for p in enc_programs %}
+            <option value="{{ p.id }}" {% if filters.program_id == p.id %}selected{% endif %}>
+              {{ p.code }} — {{ p.profile or p.name }}
+            </option>
+            {% endfor %}
+          </optgroup>
+          {% for level, items in programs_by_level.items() %}
+          <optgroup label="{{ level_labels.get(level, level) }}">
+            {% for p in items %}
+            <option value="{{ p.id }}" {% if filters.program_id == p.id %}selected{% endif %}>
+              {{ p.code }} — {{ p.name }}{% if p.profile %}: {{ p.profile }}{% endif %}
+            </option>
+            {% endfor %}
+          </optgroup>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <label class="tg-check-inline"><input type="checkbox" name="enc" value="1" {% if filters.enc %}checked{% endif %}> ЕНЦ</label>
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <label class="tg-check-inline"><input type="checkbox" name="ppk" value="1" {% if filters.ppk %}checked{% endif %}> ППК</label>
+      </div>
+      <div>
+        <button class="tg-btn" type="submit">Применить</button>
+      </div>
+    </form>
+
+    <div class="tg-filter-actions">
+      <a class="tg-btn secondary" href="/targeted/admin?admin_id={{ user.id }}">Сбросить</a>
+      <a class="tg-btn" href="{{ export_url }}">Excel по фильтру</a>
+      <a class="tg-btn" href="{{ export_enc_url }}">Excel ЕНЦ</a>
+    </div>
+
+    <p class="tg-count">Найдено заявок: {{ applications|length }}</p>
+
+    {% if applications %}
+    <table class="tg-table">
+      <thead><tr><th>Район</th><th>Школа</th><th>Программа</th><th>Кол-во</th><th>ППК</th><th>ЕНЦ</th></tr></thead>
+      <tbody>
+        {% for a in applications %}
+        <tr>
+          <td>{{ a.district }}</td>
+          <td>{{ a.school_name }}</td>
+          <td>{{ a.program_label }}</td>
+          <td>{{ a.applicants_count }}</td>
+          <td>
+            {% if a.is_ppk %}
+            <span class="tg-badge">ППК</span>
+            {% else %}
+            <span class="tg-badge is-muted">нет</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if app_is_enc(a) %}
+            <span class="tg-badge is-enc">ЕНЦ</span>
+            {% else %}
+            <span class="tg-badge is-muted">нет</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="tg-muted">По выбранным условиям заявок нет.</p>
+    {% endif %}
+  </section>
+
+  <aside class="tg-card" style="margin-top:1rem;">
+    <h2>Материалы</h2>
+    <ul class="tg-list">
+      {% for m in materials if m.available %}
+      <li><a href="{{ m.url }}" target="_blank" rel="noopener">{{ m.title }}</a></li>
+      {% endfor %}
+    </ul>
+  </aside>
+</div>
+{% endblock %}

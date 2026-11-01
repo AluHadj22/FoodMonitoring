@@ -140,15 +140,15 @@
               {
                 label: 'План',
                 data: [12, 19, 14, 22],
-                backgroundColor: '#60a5fa',
-                borderColor: '#3b82f6',
+                backgroundColor: '#141414',
+                borderColor: '#141414',
                 borderWidth: 1,
               },
               {
                 label: 'Факт',
                 data: [8, 11, 9, 15],
-                backgroundColor: '#34d399',
-                borderColor: '#10b981',
+                backgroundColor: '#7a7a7a',
+                borderColor: '#7a7a7a',
                 borderWidth: 1,
               },
             ],
@@ -159,8 +159,8 @@
           datasets: [{
             label: 'Значения',
             data: [12, 19, 14, 22],
-            backgroundColor: ['#60a5fa', '#34d399', '#fbbf24', '#f87171'],
-            borderColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+            backgroundColor: ['#141414', '#3a3a3a', '#7a7a7a', '#a33b3b'],
+            borderColor: ['#141414', '#3a3a3a', '#7a7a7a', '#a33b3b'],
             borderWidth: 2,
           }],
         };
@@ -175,11 +175,11 @@
           tableStyle: 'striped',
         };
       case 'gauge':
-        return { value: 76, max: 100, label: 'Выполнение', color: '#10b981' };
+        return { value: 76, max: 100, label: 'Выполнение', color: '#141414' };
       case 'progress':
-        return { color: '#10b981', items: [{ label: 'Меню загружено', value: 80 }, { label: 'Проверено', value: 55 }] };
+        return { color: '#141414', items: [{ label: 'Меню загружено', value: 80 }, { label: 'Проверено', value: 55 }] };
       case 'sparkline':
-        return { data: [5, 8, 6, 12, 9, 14, 11], labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'], color: '#10b981', showArea: true };
+        return { data: [5, 8, 6, 12, 9, 14, 11], labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'], color: '#141414', showArea: true };
       case 'slicer':
         return { name: 'Период', values: ['Все', 'Янв', 'Фев', 'Мар', 'Апр'], activeValue: 'Все', connections: [] };
       case 'matrix':
@@ -189,24 +189,24 @@
       case 'statistics':
         return { data: '12, 45, 67, 23, 89, 34, 56' };
       case 'percentage':
-        return { part: 25, whole: 100, color: '#10b981' };
+        return { part: 25, whole: 100, color: '#141414' };
       case 'ratio':
-        return { a: 3, b: 2, color: '#10b981' };
+        return { a: 3, b: 2, color: '#141414' };
       case 'function':
-        return { expression: 'sin(x)', xMin: -5, xMax: 5, color: '#10b981' };
+        return { expression: 'sin(x)', xMin: -5, xMax: 5, color: '#141414' };
       case 'comparison':
         return {
-          color1: '#60a5fa',
-          color2: '#f59e0b',
+          color1: '#141414',
+          color2: '#7a7a7a',
           items: [
             { label: 'Школа A', value1: 85, value2: 70 },
             { label: 'Школа B', value1: 60, value2: 75 },
           ],
         };
       case 'timeline':
-        return { items: [{ label: 'Янв', value: 10 }, { label: 'Фев', value: 18 }, { label: 'Мар', value: 14 }], color: '#10b981' };
+        return { items: [{ label: 'Янв', value: 10 }, { label: 'Фев', value: 18 }, { label: 'Мар', value: 14 }], color: '#141414' };
       case 'icon':
-        return { name: 'fa-utensils', size: 42, color: '#10b981' };
+        return { name: 'fa-utensils', size: 42, color: '#141414' };
       case 'badge':
         return { text: 'Норма', type: 'success', size: 14 };
       default:
@@ -215,7 +215,7 @@
   }
 
   function defaultSettings() {
-    return { textSize: '14px', textColor: '#475569', backgroundColor: '#ffffff', borderColor: '#e2e8f0' };
+    return { textSize: '14px', textColor: '#6e6e6e', backgroundColor: '#ffffff', borderColor: '#e2e2e2' };
   }
 
   function defaultOptions() {
@@ -325,7 +325,7 @@
       <div class="grid-stack-item-content db-widget ${sameId(state.selectedId, el.id) ? 'selected' : ''}" data-id="${el.id}">
         <div class="db-widget-head">
           <i class="fas fa-grip-vertical" style="color:#94a3b8"></i>
-          <i class="fas ${iconFor(el.type, el.chartType)}" style="color:var(--primary,#10b981)"></i>
+          <i class="fas ${iconFor(el.type, el.chartType)}" style="color:var(--primary,#141414)"></i>
           <span class="title">${W.esc(el.title)}</span>
           <button type="button" title="Удалить" data-action="delete" data-id="${el.id}"><i class="fas fa-trash"></i></button>
         </div>
@@ -462,10 +462,10 @@
 
     if (el.type === 'chart') {
       const ds = (c.datasets || [])[0] || {};
-      const colors = [].concat(ds.backgroundColor || ['#60a5fa', '#34d399', '#fbbf24', '#f87171']);
+      const colors = [].concat(ds.backgroundColor || ['#141414', '#3a3a3a', '#7a7a7a', '#a33b3b']);
       const colorInputs = [0, 1, 2, 3, 4, 5].map((i) => {
-        const val = colors[i] || colors[i % Math.max(colors.length, 1)] || '#60a5fa';
-        const hex = typeof val === 'string' && val.startsWith('#') ? val : '#60a5fa';
+        const val = colors[i] || colors[i % Math.max(colors.length, 1)] || '#141414';
+        const hex = typeof val === 'string' && val.startsWith('#') ? val : '#141414';
         return `<input type="color" class="pChartColor" data-idx="${i}" value="${W.esc(hex)}" title="Цвет ${i + 1}">`;
       }).join('');
       const chartTypes = [
@@ -536,7 +536,7 @@
           ${field('Максимум', `<input id="pMax" type="number" value="${W.esc(c.max ?? 100)}">`)}
         </div>
         ${field('Подпись', `<input id="pLabel" value="${W.esc(c.label || '')}">`)}
-        ${field('Цвет', `<input id="pColor" type="color" value="${W.esc(c.color || '#10b981')}">`)}`;
+        ${field('Цвет', `<input id="pColor" type="color" value="${W.esc(c.color || '#141414')}">`)}`;
     } else if (el.type === 'progress' || el.type === 'timeline' || el.type === 'comparison') {
       extra = field(
         'Данные JSON',
@@ -546,7 +546,7 @@
     } else if (el.type === 'sparkline') {
       extra = `
         ${field('Значения', `<input id="pSpark" value="${W.esc((c.data || []).join(', '))}">`)}
-        ${field('Цвет', `<input id="pColor" type="color" value="${W.esc(c.color || '#10b981')}">`)}`;
+        ${field('Цвет', `<input id="pColor" type="color" value="${W.esc(c.color || '#141414')}">`)}`;
     } else if (el.type === 'slicer') {
       extra = field('Значения фильтра (через запятую)', `<input id="pSlicer" value="${W.esc((c.values || []).join(', '))}">`);
     } else if (el.type === 'statistics') {
@@ -568,7 +568,7 @@
     } else if (el.type === 'icon') {
       extra = `
         ${field('Иконка Font Awesome', `<input id="pIcon" value="${W.esc(c.name || 'fa-star')}">`, 'Например fa-utensils')}
-        <div class="db-field-row">${field('Размер', `<input id="pSize" type="number" value="${W.esc(c.size || 42)}">`)}${field('Цвет', `<input id="pColor" type="color" value="${W.esc(c.color || '#10b981')}">`)}</div>`;
+        <div class="db-field-row">${field('Размер', `<input id="pSize" type="number" value="${W.esc(c.size || 42)}">`)}${field('Цвет', `<input id="pColor" type="color" value="${W.esc(c.color || '#141414')}">`)}</div>`;
     } else if (el.type === 'badge') {
       extra = `
         ${field('Текст', `<input id="pBadgeText" value="${W.esc(c.text || '')}">`)}
@@ -684,13 +684,13 @@
       const series = document.getElementById('pSeries').value.trim() || 'Значения';
       const chartType = document.getElementById('pChartType')?.value || el.chartType || 'bar';
       const picked = Array.from(document.querySelectorAll('.pChartColor')).map((inp) => inp.value);
-      const fallback = ['#60a5fa', '#34d399', '#fbbf24', '#f87171', '#a78bfa', '#f472b6'];
+      const fallback = ['#141414', '#3a3a3a', '#5a5a5a', '#7a7a7a', '#9a9a9a', '#a33b3b'];
       const n = Math.max(labels.length, values.length, 1);
       const backgroundColor = Array.from({ length: n }, (_, i) => picked[i] || fallback[i % fallback.length]);
       const borderColor = backgroundColor.map((hex) => hex);
       el.chartType = chartType;
       if (chartType === 'bar-stacked' && (c.datasets || []).length > 1) {
-        const firstBg = backgroundColor[0] || '#60a5fa';
+        const firstBg = backgroundColor[0] || '#141414';
         el.content = {
           labels,
           datasets: [

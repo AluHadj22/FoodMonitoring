@@ -86,7 +86,7 @@
       case 'area':
         type = 'line';
         datasets = datasets.map((ds, i) => {
-          const color = Array.isArray(ds.borderColor) ? ds.borderColor[0] : (ds.borderColor || ds.backgroundColor || '#60a5fa');
+          const color = Array.isArray(ds.borderColor) ? ds.borderColor[0] : (ds.borderColor || ds.backgroundColor || '#141414');
           const solid = Array.isArray(color) ? color[0] : color;
           return {
             ...ds,
@@ -94,7 +94,7 @@
             tension: 0.35,
             backgroundColor: typeof solid === 'string' && solid.startsWith('#')
               ? `${solid}55`
-              : 'rgba(96,165,250,0.35)',
+              : 'rgba(20,20,20,0.18)',
             borderColor: solid,
             pointRadius: 2,
           };
@@ -114,7 +114,7 @@
           fill: true,
           backgroundColor: Array.isArray(ds.backgroundColor)
             ? `${String(ds.backgroundColor[0])}44`
-            : 'rgba(16,185,129,0.25)',
+            : 'rgba(20,20,20,0.18)',
         }));
         break;
       case 'polarArea':
@@ -134,7 +134,7 @@
             data: points,
             showLine: false,
             pointRadius: 5,
-            backgroundColor: Array.isArray(ds.backgroundColor) ? ds.backgroundColor[0] : (ds.backgroundColor || '#60a5fa'),
+            backgroundColor: Array.isArray(ds.backgroundColor) ? ds.backgroundColor[0] : (ds.backgroundColor || '#141414'),
           };
         });
         labels = [];
@@ -295,12 +295,12 @@
         const value = Number(c.value || 0);
         const max = Number(c.max || 100) || 100;
         const pct = Math.max(0, Math.min(100, (value / max) * 100));
-        return `<div><div class="dw-gauge-value" style="color:${esc(c.color || '#10b981')}">${esc(value)}</div><div class="dw-gauge-label">${esc(c.label || '')}</div><div class="dw-bar"><span style="width:${pct}%;background:${esc(c.color || '#10b981')}"></span></div></div>`;
+        return `<div><div class="dw-gauge-value" style="color:${esc(c.color || '#141414')}">${esc(value)}</div><div class="dw-gauge-label">${esc(c.label || '')}</div><div class="dw-bar"><span style="width:${pct}%;background:${esc(c.color || '#141414')}"></span></div></div>`;
       }
       case 'progress':
-        return `<div>${(c.items || []).map((it) => `<div class="dw-progress-item"><div class="dw-progress-head"><span>${esc(it.label || '')}</span><span>${esc(it.value || 0)}%</span></div><div class="dw-bar"><span style="width:${Number(it.value) || 0}%;background:${esc(c.color || '#10b981')}"></span></div></div>`).join('')}</div>`;
+        return `<div>${(c.items || []).map((it) => `<div class="dw-progress-item"><div class="dw-progress-head"><span>${esc(it.label || '')}</span><span>${esc(it.value || 0)}%</span></div><div class="dw-bar"><span style="width:${Number(it.value) || 0}%;background:${esc(c.color || '#141414')}"></span></div></div>`).join('')}</div>`;
       case 'sparkline':
-        return sparklineSvg(c.data || [], c.color || '#10b981', !!c.showArea);
+        return sparklineSvg(c.data || [], c.color || '#141414', !!c.showArea);
       case 'slicer':
         return `<div class="dw-slicer" data-slicer-id="${esc(element.id)}">${(c.values || []).map((v) => `<button type="button" data-value="${esc(v)}" class="${v === c.activeValue ? 'active' : ''}">${esc(v)}</button>`).join('')}</div>`;
       case 'matrix': {
@@ -326,7 +326,7 @@
         const part = Number(c.part || 25);
         const whole = Number(c.whole || 100) || 1;
         const result = ((part / whole) * 100).toFixed(1);
-        return `<div class="dw-center" style="flex-direction:column;gap:0.4rem"><div class="dw-text">${esc(part)} из ${esc(whole)}</div><div class="dw-gauge-value" style="color:${esc(c.color || '#10b981')}">${result}%</div></div>`;
+        return `<div class="dw-center" style="flex-direction:column;gap:0.4rem"><div class="dw-text">${esc(part)} из ${esc(whole)}</div><div class="dw-gauge-value" style="color:${esc(c.color || '#141414')}">${result}%</div></div>`;
       }
       case 'ratio': {
         const a = Number(c.a || 1);
@@ -339,12 +339,12 @@
       case 'comparison':
         return `<div>${(c.items || []).map((it) => {
           const max = Math.max(Number(it.value1) || 0, Number(it.value2) || 0, 1);
-          return `<div class="dw-compare-row"><div class="dw-compare-label">${esc(it.label || '')}</div><div class="dw-compare-bars"><span style="width:${((Number(it.value1) || 0) / max) * 100}%;background:${esc(c.color1 || '#60a5fa')}"></span><span style="width:${((Number(it.value2) || 0) / max) * 100}%;background:${esc(c.color2 || '#f59e0b')}"></span></div></div>`;
+          return `<div class="dw-compare-row"><div class="dw-compare-label">${esc(it.label || '')}</div><div class="dw-compare-bars"><span style="width:${((Number(it.value1) || 0) / max) * 100}%;background:${esc(c.color1 || '#141414')}"></span><span style="width:${((Number(it.value2) || 0) / max) * 100}%;background:${esc(c.color2 || '#7a7a7a')}"></span></div></div>`;
         }).join('')}</div>`;
       case 'timeline':
         return `<div>${(c.items || []).map((it) => `<div class="dw-timeline-row"><div class="dw-timeline-label">${esc(it.label || '')}</div><div class="dw-timeline-line" style="opacity:${0.35 + Math.min(1, (Number(it.value) || 0) / 40)}"></div><div class="dw-timeline-label">${esc(it.value || 0)}</div></div>`).join('')}</div>`;
       case 'icon':
-        return `<div class="dw-center"><i class="fas ${esc(c.name || 'fa-star')}" style="font-size:${Number(c.size) || 48}px;color:${esc(c.color || '#10b981')}"></i></div>`;
+        return `<div class="dw-center"><i class="fas ${esc(c.name || 'fa-star')}" style="font-size:${Number(c.size) || 48}px;color:${esc(c.color || '#141414')}"></i></div>`;
       case 'badge':
         return `<div class="dw-center"><span class="dw-badge ${esc(c.type || 'primary')}" style="font-size:${Number(c.size) || 14}px">${esc(c.text || 'Бейдж')}</span></div>`;
       default:
@@ -378,7 +378,7 @@
         return NaN;
       }
     };
-    ctx.strokeStyle = c.color || '#10b981';
+    ctx.strokeStyle = c.color || '#141414';
     ctx.lineWidth = 2;
     ctx.beginPath();
     let started = false;

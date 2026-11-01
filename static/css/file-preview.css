@@ -1,0 +1,244 @@
+/* Shared KP calendar + TM menu preview */
+.pv-special {
+  padding: 0.85rem 1rem 1.1rem;
+  color: #141414;
+}
+
+.pv-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.85rem;
+  align-items: baseline;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e2e2e2;
+}
+
+.pv-meta strong {
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pv-meta span {
+  font-size: 0.82rem;
+  color: #6e6e6e;
+}
+
+.pv-legend {
+  flex-basis: 100%;
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  color: #6e6e6e;
+  line-height: 1.4;
+}
+
+.pv-empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: #6e6e6e;
+}
+
+.pv-cal-month {
+  margin-bottom: 1rem;
+}
+
+.pv-cal-month h4 {
+  margin: 0 0 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #141414;
+}
+
+.pv-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 0.3rem;
+}
+
+.pv-cal-day {
+  min-height: 52px;
+  border: 1px solid #e2e2e2;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 0.3rem 0.15rem;
+}
+
+.pv-cal-day.has-cycle {
+  background: #fff;
+  border-color: #141414;
+}
+
+.pv-cal-num {
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  color: #8a8a8a;
+}
+
+.pv-cal-day.has-cycle .pv-cal-num {
+  color: #6e6e6e;
+}
+
+.pv-cal-cycle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #141414;
+  line-height: 1;
+  min-height: 1em;
+}
+
+.pv-menu-day {
+  border: 1px solid #e2e2e2;
+  background: #fff;
+  margin-bottom: 0.55rem;
+}
+
+.pv-menu-day[open] {
+  border-color: #141414;
+}
+
+.pv-menu-day summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  background: #f6f6f6;
+  color: #141414;
+}
+
+.pv-menu-day summary::-webkit-details-marker {
+  display: none;
+}
+
+.pv-menu-day summary::after {
+  content: "+";
+  float: right;
+  color: #6e6e6e;
+  font-weight: 400;
+}
+
+.pv-menu-day[open] summary::after {
+  content: "–";
+}
+
+.pv-menu-day-body {
+  padding: 0.35rem 0.9rem 0.9rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pv-meal h5 {
+  margin: 0 0 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #2f6b4f;
+}
+
+.pv-meal ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.pv-meal li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.55rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #ececec;
+  background: #fafafa;
+  font-size: 0.86rem;
+}
+
+.pv-dish-sec {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6e6e6e;
+  min-width: 5.5rem;
+}
+
+.pv-dish-name {
+  flex: 1 1 10rem;
+  color: #141414;
+  font-weight: 500;
+}
+
+.pv-dish-exit,
+.pv-dish-kcal {
+  font-size: 0.75rem;
+  color: #6e6e6e;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .pv-cal-grid {
+    grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+  }
+
+  .pv-cal-day {
+    min-height: 46px;
+  }
+
+  .pv-dish-sec {
+    min-width: 100%;
+  }
+}
+
+[data-theme="dark"] .pv-special,
+[data-theme="dark"] .pv-menu-day,
+[data-theme="dark"] .pv-cal-day.has-cycle,
+[data-theme="dark"] .pv-meal li {
+  background: #1a1a1a;
+  color: #f2f2f2;
+  border-color: #2e2e2e;
+}
+
+[data-theme="dark"] .pv-meta,
+[data-theme="dark"] .pv-menu-day summary {
+  background: #141414;
+  border-color: #2e2e2e;
+  color: #f2f2f2;
+}
+
+[data-theme="dark"] .pv-cal-day {
+  background: #121212;
+  border-color: #2e2e2e;
+}
+
+[data-theme="dark"] .pv-cal-cycle,
+[data-theme="dark"] .pv-dish-name,
+[data-theme="dark"] .pv-cal-month h4 {
+  color: #f2f2f2;
+}
+
+[data-theme="dark"] .pv-meta span,
+[data-theme="dark"] .pv-legend,
+[data-theme="dark"] .pv-cal-num,
+[data-theme="dark"] .pv-dish-sec,
+[data-theme="dark"] .pv-dish-exit,
+[data-theme="dark"] .pv-dish-kcal {
+  color: #8a8a8a;
+}
+
+[data-theme="dark"] .pv-meal h5 {
+  color: #6fa88a;
+}
+
+[data-theme="dark"] .pv-menu-day[open] {
+  border-color: #f2f2f2;
+}

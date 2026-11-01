@@ -1,5 +1,9 @@
 {% extends "layout.html" %}
 
+{% block page_styles %}
+<link rel="stylesheet" href="/static/css/knowledge-base.css?v=1">
+{% endblock %}
+
 {% block content %}
 <style>
     .edit-container {
@@ -9,10 +13,10 @@
     }
     
     .edit-header {
-        background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+        background: #141414;
         color: white;
         padding: 40px;
-        border-radius: var(--radius-lg);
+        border-radius: 0;
         margin-bottom: 30px;
         box-shadow: var(--shadow-xl);
         text-align: center;
@@ -61,8 +65,8 @@
     
     .form-control:focus {
         outline: none;
-        border-color: #8b5cf6;
-        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+        border-color: #141414;
+        box-shadow: none;
     }
     
     textarea.form-control {
@@ -90,8 +94,8 @@
     }
     
     .checkbox-item:hover {
-        border-color: #8b5cf6;
-        background: var(--blue-light);
+        border-color: #141414;
+        background: #f6f6f6;
     }
     
     .checkbox-item input[type="checkbox"] {
@@ -107,51 +111,59 @@
     }
     
     .btn {
-        padding: 15px 30px;
-        border: none;
-        border-radius: var(--radius-md);
-        font-size: 1.1em;
-        font-weight: 700;
+        padding: 0.85rem 1.25rem;
+        border: 1px solid #141414;
+        border-radius: 0;
+        font-size: 0.78rem;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: background 0.15s ease, color 0.15s ease;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
+        gap: 0.45rem;
         flex: 1;
+        box-shadow: none;
     }
     
     .btn-primary {
-        background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+        background: #141414;
         color: white;
     }
     
     .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
+        background: #2a2a2a;
+        color: #fff;
+        transform: none;
+        box-shadow: none;
     }
     
     .btn-secondary {
-        background: var(--surface);
-        border: 2px solid var(--border);
-        color: var(--slate-700);
+        background: #fff;
+        border: 1px solid #141414;
+        color: #141414;
     }
     
     .btn-secondary:hover {
-        border-color: #8b5cf6;
-        color: #8b5cf6;
+        background: #f6f6f6;
+        border-color: #141414;
+        color: #141414;
     }
     
     .btn-danger {
-        background: #ef4444;
-        color: white;
+        background: #fff;
+        border-color: #a33b3b;
+        color: #a33b3b;
     }
     
     .btn-danger:hover {
-        background: #dc2626;
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
+        background: #a33b3b;
+        color: #fff;
+        transform: none;
+        box-shadow: none;
     }
     
     .preview-section {

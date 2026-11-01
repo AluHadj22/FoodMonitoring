@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
-{% block title %}Вход — ЕЦМП{% endblock %}
-{% block meta_description %}Вход в Единый Центр Мониторинга питания. Личный кабинет школы и администратора.{% endblock %}
+{% block title %}Вход — ЕЦМ{% endblock %}
+{% block meta_description %}Вход в ЕЦМ — Единый Центр Мониторинга. Личный кабинет школы и администратора.{% endblock %}
 {% block meta_robots %}noindex, follow{% endblock %}
 {% block content %}
 <style>
@@ -59,19 +59,33 @@
         flex-direction: column;
         justify-content: center;
         align-items: flex-start;
-        background: #141414;
+        background:
+            radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.05), transparent 55%),
+            #141414;
         color: #f6f6f6;
         position: relative;
         overflow: hidden;
+    }
+
+    .glass-visual::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image:
+            linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+        background-size: 28px 28px;
+        mask-image: radial-gradient(ellipse at 40% 35%, #000 20%, transparent 72%);
+        pointer-events: none;
+        opacity: 0.55;
     }
 
     .glass-visual::after {
         content: '';
         position: absolute;
         inset: auto 0 0 0;
-        height: 40%;
-        background:
-            linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.04));
+        height: 42%;
+        background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.35));
         pointer-events: none;
     }
 
@@ -84,6 +98,8 @@
     }
 
     .brand-pill {
+        position: relative;
+        z-index: 1;
         display: inline-flex;
         align-items: center;
         gap: 0.55rem;
@@ -106,27 +122,41 @@
     }
 
     .art-frame {
-        width: 100%;
-        max-width: 420px;
-        background: transparent;
+        position: relative;
+        z-index: 1;
+        width: min(100%, 380px);
+        aspect-ratio: 1 / 1;
+        background: #0a0a0a;
         border-radius: 0;
         padding: 0;
-        margin-bottom: 2rem;
+        margin-bottom: 1.75rem;
         box-shadow: none;
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.16);
         overflow: hidden;
+    }
+
+    .art-frame::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        box-shadow: inset 0 0 48px rgba(0, 0, 0, 0.45);
+        pointer-events: none;
     }
 
     .art-frame img {
         display: block;
         width: 100%;
-        height: auto;
+        height: 100%;
         object-fit: cover;
-        filter: grayscale(0.35) contrast(1.05);
-        opacity: 0.92;
+        object-position: center;
+        filter: contrast(1.08) brightness(1.02);
+        opacity: 1;
+        mix-blend-mode: normal;
     }
 
     .chip-row {
+        position: relative;
+        z-index: 1;
         display: flex;
         flex-wrap: wrap;
         gap: 0.55rem;
@@ -155,6 +185,8 @@
     }
 
     .kicker {
+        position: relative;
+        z-index: 1;
         margin: 0;
         color: rgba(255, 255, 255, 0.45);
         font-size: 0.68rem;
@@ -168,6 +200,8 @@
     }
 
     .glass-visual h1 {
+        position: relative;
+        z-index: 1;
         margin: 0.85rem 0 1rem;
         color: #ffffff;
         font-size: clamp(1.6rem, 3vw, 2.35rem);
@@ -178,6 +212,8 @@
     }
 
     .lead {
+        position: relative;
+        z-index: 1;
         margin: 0;
         max-width: 26rem;
         color: rgba(255, 255, 255, 0.58);
@@ -454,27 +490,27 @@
                     <path d="M4 19V5M4 19h16"/>
                     <path d="M8 15v-3M12 15V8M16 15v-5"/>
                 </svg>
-                ЕЦМП
+                ЕЦМ
             </div>
 
             <div class="art-frame">
                 <img
-                    src="/static/9762667.png"
-                    alt="Иллюстрация мониторинга питания"
-                    width="720"
-                    height="480"
+                    src="/static/art-analytics.png"
+                    alt="Аналитика Единого Центра Мониторинга"
+                    width="1200"
+                    height="1200"
                 >
             </div>
 
             <div class="chip-row">
-                <span class="chip">Режим питания</span>
-                <span class="chip">Рацион</span>
-                <span class="chip">Отчёты</span>
+                <span class="chip">Аналитика</span>
+                <span class="chip">Своды</span>
+                <span class="chip">Направления</span>
             </div>
 
-            <p class="kicker">Мониторинг питания</p>
-            <h1>Питание — наглядно<br>и вовремя</h1>
-            <p class="lead">Режим приёмов пищи, состав рациона и отчёты учреждений в одном кабинете.</p>
+            <p class="kicker">Единый Центр Мониторинга</p>
+            <h1>Данные — наглядно<br>и вовремя</h1>
+            <p class="lead">Питание, целевое обучение и отчётность учреждений в одном контуре мониторинга.</p>
         </section>
 
         <section class="glass-form">
@@ -490,7 +526,7 @@
                     <h2>Вход в систему</h2>
                 </div>
             </div>
-            <p class="form-sub">ЕЦМП · Единый центр мониторинга питания</p>
+            <p class="form-sub">ЕЦМ · Единый Центр Мониторинга</p>
 
             {% if error %}
             <div class="alert alert-error">

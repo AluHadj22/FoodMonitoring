@@ -1,16 +1,16 @@
 {
   "id": "/",
-  "name": "ЕЦМП — Единый Центр Мониторинга питания",
-  "short_name": "ЕЦМП",
-  "description": "Цифровая платформа мониторинга школьного питания: контроль меню, сроков, СанПиН и отчётности для школ и органов управления.",
+  "name": "ЕЦМ — Единый Центр Мониторинга",
+  "short_name": "ЕЦМ",
+  "description": "Единый Центр Мониторинга: питание, целевое обучение, аналитика и отчётность для школ и органов управления.",
   "lang": "ru",
   "dir": "ltr",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#d7eefb",
-  "theme_color": "#1d6cb8",
+  "background_color": "#141414",
+  "theme_color": "#141414",
   "categories": ["education", "productivity", "business"],
   "icons": [
     {

@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+{% block title %}Установка квот — целевое обучение{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+{% block content %}
+{% include "targeted_base_styles.html" %}
+{% from "targeted_base_styles.html" import direction_switcher %}
+
+<div class="tg-page">
+  <header class="tg-hero">
+    <div class="tg-kicker">Региональный кабинет</div>
+    <h1>Установка квот {{ year }}</h1>
+    <p>Задайте каждому муниципалитету квоту. После сохранения она сразу видна в кабинете муниципального ответственного.</p>
+    {{ direction_switcher(user, active_direction, directions) }}
+  </header>
+
+  {% if saved %}
+  <div class="tg-card" style="margin-bottom:1rem;border-color:#141414;background:#f6f6f6;">
+    <p style="margin:0;font-size:0.92rem;">Квоты сохранены и доступны муниципалитетам.</p>
+  </div>
+  {% endif %}
+
+  <section class="tg-card">
+    <form method="post" action="/targeted/quotas/save" id="quotasForm">
+      <input type="hidden" name="admin_id" value="{{ user.id }}">
+      <input type="hidden" name="year" value="{{ year }}">
+      <table class="tg-table">
+        <thead>
+          <tr>
+            <th>Муниципалитет</th>
+            <th>Квота</th>
+            <th>Из них ППК <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#6e6e6e;">(психолого-педагогические классы)</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for q in quotas %}
+          <tr>
+            <td>{{ q.district }}</td>
+            <td>
+              <input
+                type="number"
+                name="quota_d_{{ q.district }}"
+                min="0"
+                step="1"
+                value="{{ q.quota_total or 0 }}"
+                required
+                style="width:6.5rem;min-height:38px;border:1px solid #c8c8c8;padding:0.4rem;"
+              >
+            </td>
+            <td>
+              <input
+                type="number"
+                name="ppk_d_{{ q.district }}"
+                min="0"
+                step="1"
+                value="{{ q.quota_ppk or 0 }}"
+                style="width:6.5rem;min-height:38px;border:1px solid #c8c8c8;padding:0.4rem;"
+              >
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3" class="tg-muted">Список муниципалитетов пуст.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="tg-actions">
+        <button class="tg-btn" type="submit">Сохранить квоты</button>
+        <a class="tg-btn secondary" href="/targeted/admin?admin_id={{ user.id }}">К сводке</a>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}

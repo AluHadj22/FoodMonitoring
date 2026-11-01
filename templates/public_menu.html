@@ -3,20 +3,34 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>Ежедневное меню — {{ school_name }}</title>
-  <meta name="description" content="Актуальное меню питания обучающихся: {{ school_name }}. Скачать меню на сегодня и архив по датам."/>
+  <title>Ежедневное меню — {{ school_name }} · ЕЦМ</title>
+  <meta name="description" content="ЕЦМ — ежедневное меню питания обучающихся: {{ school_name }}. Скачать меню на сегодня и архив по датам."/>
   <meta name="robots" content="index, follow"/>
   <meta name="theme-color" content="#141414"/>
   <meta name="color-scheme" content="light"/>
+  <meta name="application-name" content="ЕЦМ"/>
+  <meta name="apple-mobile-web-app-title" content="ЕЦМ"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta property="og:site_name" content="ЕЦМ"/>
   <meta property="og:title" content="Ежедневное меню — {{ school_name }}"/>
-  <meta property="og:description" content="Актуальное меню питания обучающихся"/>
+  <meta property="og:description" content="Единый Центр Мониторинга: актуальное меню питания обучающихся"/>
   <meta property="og:type" content="website"/>
-  <link rel="icon" href="/static/icons/favicon-32.png" type="image/png"/>
+  <meta property="og:image" content="/static/icons/og-cover.jpg"/>
+  <meta property="og:image:alt" content="ЕЦМ — Единый Центр Мониторинга"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Ежедневное меню — {{ school_name }}"/>
+  <meta name="twitter:description" content="ЕЦМ: меню питания обучающихся"/>
+  <meta name="twitter:image" content="/static/icons/og-cover.jpg"/>
+  <link rel="manifest" href="/manifest.webmanifest"/>
+  <link rel="icon" href="/static/icons/favicon-32.png" type="image/png" sizes="32x32"/>
+  <link rel="icon" href="/static/icons/favicon-16.png" type="image/png" sizes="16x16"/>
   <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="/static/css/public-menu.css?v=1"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/css/public-menu.css?v=5"/>
+  <link rel="stylesheet" href="/static/css/file-preview.css?v=1"/>
   <script>
     (function () {
       try {
@@ -32,19 +46,8 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: #d7eefb;
-      color: #1e4f86;
-    }
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      background:
-        radial-gradient(ellipse 48% 42% at 12% 16%, rgba(255, 255, 255, 0.9), transparent 62%),
-        radial-gradient(ellipse 36% 32% at 90% 8%, rgba(255, 255, 255, 0.55), transparent 60%),
-        linear-gradient(155deg, #bfe3f8 0%, #e8f6fd 46%, #cfe8f7 100%);
+      background: #f6f6f6;
+      color: #141414;
     }
     .pm-a11y {
       position: fixed;
@@ -63,18 +66,16 @@
       gap: 0.4rem;
       cursor: pointer;
       z-index: 20;
-      font: 600 0.78rem/1 inherit;
-      letter-spacing: 0.04em;
+      font: 500 0.78rem/1 Outfit, sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
     .pm-a11y svg { width: 17px; height: 17px; stroke: currentColor; }
-    html[data-a11y="on"] {
-      font-size: 125%;
-    }
+    html[data-a11y="on"] { font-size: 125%; }
     html[data-a11y="on"] body {
       background: #ffffff !important;
       color: #000000 !important;
     }
-    html[data-a11y="on"] body::before { display: none; }
     html[data-a11y="on"] .pm-a11y {
       background: #000000;
       color: #ffff00;
@@ -84,12 +85,52 @@
     html[data-a11y="on"] .pm-page,
     html[data-a11y="on"] .pm-shell,
     html[data-a11y="on"] .pm-hero,
-    html[data-a11y="on"] .pm-card,
+    html[data-a11y="on"] .pm-panel,
+    html[data-a11y="on"] .pm-month,
+    html[data-a11y="on"] .pm-aside-card,
+    html[data-a11y="on"] .pm-note,
+    html[data-a11y="on"] .pm-survey,
     html[data-a11y="on"] aside {
       background: #ffffff !important;
       color: #000000 !important;
       border-color: #000000 !important;
       box-shadow: none !important;
+    }
+    html[data-a11y="on"] .pm-hero,
+    html[data-a11y="on"] .pm-brand-mark {
+      background: #000000 !important;
+      color: #ffff00 !important;
+      border-color: #000000 !important;
+    }
+    html[data-a11y="on"] .pm-btn,
+    html[data-a11y="on"] a.pm-btn {
+      background: #ffffff !important;
+      color: #000000 !important;
+      border-color: #000000 !important;
+      text-decoration: none !important;
+      font-weight: 700 !important;
+    }
+    html[data-a11y="on"] .pm-btn-primary,
+    html[data-a11y="on"] .pm-btn-solid {
+      background: #000000 !important;
+      color: #ffff00 !important;
+      border-color: #000000 !important;
+    }
+    html[data-a11y="on"] .pm-preview-overlay,
+    html[data-a11y="on"] .pm-preview-dialog,
+    html[data-a11y="on"] .pm-preview-head,
+    html[data-a11y="on"] .pm-preview-body,
+    html[data-a11y="on"] .pm-faq,
+    html[data-a11y="on"] .pm-faq-item {
+      background: #ffffff !important;
+      color: #000000 !important;
+      border-color: #000000 !important;
+    }
+    html[data-a11y="on"] .pm-faq-answer p,
+    html[data-a11y="on"] .pm-faq-answer li,
+    html[data-a11y="on"] .pm-faq-lead,
+    html[data-a11y="on"] .pm-faq-note {
+      color: #000000 !important;
     }
     html[data-a11y="on"] a {
       color: #0000ee !important;
@@ -109,9 +150,14 @@
 
   <main class="pm-page">
     <div class="pm-shell">
-      <a class="pm-brand" href="/">
-        <img src="/static/icons/icon-96.png" alt="" width="36" height="36"/>
-        <span>ЕЦМП</span>
+      <a class="pm-brand" href="/" aria-label="ЕЦМ — Единый Центр Мониторинга">
+        <span class="pm-brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6">
+            <rect x="2.5" y="2.5" width="23" height="23"/>
+            <path d="M9 19V11M14 19v-5M19 19V9" stroke-linecap="square"/>
+          </svg>
+        </span>
+        <span>ЕЦМ</span>
       </a>
 
       <header class="pm-hero">
@@ -121,7 +167,7 @@
             <path d="M5 6h14v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6z"/>
             <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/>
           </svg>
-          Ежедневное меню
+          Единый Центр Мониторинга · ежедневное меню
         </div>
         <h1>{{ school_name }}</h1>
         <p class="pm-sub">Актуальное меню питания обучающихся</p>
@@ -135,6 +181,10 @@
             <strong>{{ years_count }}</strong>&nbsp;{{ years_label }}
           </div>
         </div>
+        <a class="pm-btn pm-btn-ghost pm-faq-jump" href="#pm-faq">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Частые вопросы
+        </a>
       </header>
 
       <div class="pm-grid">
@@ -158,10 +208,16 @@
                   <div class="pm-file-sub">{{ today_file.size_label }} · {{ today_file.date }}</div>
                 </div>
               </div>
-              <a class="pm-btn pm-btn-primary" href="/{{ uid }}/food/{{ today_file.filename }}" download>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Скачать меню
-              </a>
+              <div class="pm-actions">
+                <button type="button" class="pm-btn pm-btn-primary" data-preview-file="{{ today_file.filename }}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                  Смотреть
+                </button>
+                <a class="pm-btn pm-btn-ghost" href="/{{ uid }}/food/{{ today_file.filename }}" download>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Скачать
+                </a>
+              </div>
             </div>
             {% else %}
             <div class="pm-empty">Меню на сегодня пока не загружено. Выберите другую дату ниже.</div>
@@ -225,10 +281,10 @@
                             <div class="pm-file-name" title="{{ f.filename }}">{{ f.filename }}</div>
                             <div class="pm-file-sub">{{ f.size_label }} · {{ f.date }}</div>
                           </div>
-                          <a class="pm-btn pm-btn-ghost pm-btn-sm" href="/{{ uid }}/food/{{ f.filename }}" download>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            Скачать
-                          </a>
+                          <div class="pm-actions">
+                            <button type="button" class="pm-btn pm-btn-primary pm-btn-sm" data-preview-file="{{ f.filename }}">Смотреть</button>
+                            <a class="pm-btn pm-btn-ghost pm-btn-sm" href="/{{ uid }}/food/{{ f.filename }}" download>Скачать</a>
+                          </div>
                         </div>
                         {% endfor %}
                       </div>
@@ -257,9 +313,10 @@
                 <div class="pm-file-name">{{ fi.filename }}</div>
                 <div class="pm-file-sub">{{ fi.size_label }} · {{ fi.date }}</div>
               </div>
-              <a class="pm-btn pm-btn-ghost pm-btn-sm" href="/{{ uid }}/food/{{ fi.filename }}" download aria-label="Скачать {{ fi.filename }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              </a>
+              <div class="pm-actions">
+                <button type="button" class="pm-btn pm-btn-primary pm-btn-sm" data-preview-file="{{ fi.filename }}" aria-label="Смотреть {{ fi.filename }}">Смотреть</button>
+                <a class="pm-btn pm-btn-ghost pm-btn-sm" href="/{{ uid }}/food/{{ fi.filename }}" download aria-label="Скачать {{ fi.filename }}">Скачать</a>
+              </div>
             </div>
             {% endfor %}
           </div>
@@ -277,9 +334,10 @@
                 <div class="pm-file-name">{{ fi.filename }}</div>
                 <div class="pm-file-sub">{{ fi.size_label }} · {{ fi.year }}</div>
               </div>
-              <a class="pm-btn pm-btn-ghost pm-btn-sm" href="/{{ uid }}/food/{{ fi.filename }}" download aria-label="Скачать {{ fi.filename }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              </a>
+              <div class="pm-actions">
+                <button type="button" class="pm-btn pm-btn-primary pm-btn-sm" data-preview-file="{{ fi.filename }}" aria-label="Смотреть {{ fi.filename }}">Смотреть</button>
+                <a class="pm-btn pm-btn-ghost pm-btn-sm" href="/{{ uid }}/food/{{ fi.filename }}" download aria-label="Скачать {{ fi.filename }}">Скачать</a>
+              </div>
             </div>
             {% endfor %}
           </div>
@@ -297,15 +355,110 @@
                 <div class="pm-file-name">{{ fi.filename }}</div>
                 <div class="pm-file-sub">{{ fi.size_label }} · {{ fi.year }}</div>
               </div>
-              <a class="pm-btn pm-btn-ghost pm-btn-sm" href="/{{ uid }}/food/{{ fi.filename }}" download aria-label="Скачать {{ fi.filename }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              </a>
+              <div class="pm-actions">
+                <button type="button" class="pm-btn pm-btn-primary pm-btn-sm" data-preview-file="{{ fi.filename }}" aria-label="Смотреть {{ fi.filename }}">Смотреть</button>
+                <a class="pm-btn pm-btn-ghost pm-btn-sm" href="/{{ uid }}/food/{{ fi.filename }}" download aria-label="Скачать {{ fi.filename }}">Скачать</a>
+              </div>
             </div>
             {% endfor %}
           </div>
           {% endif %}
         </aside>
       </div>
+
+      <section class="pm-faq" id="pm-faq" aria-labelledby="pm-faq-title">
+        <div class="pm-faq-head">
+          <p class="pm-faq-kicker">Для родителей</p>
+          <h2 id="pm-faq-title">Частые вопросы о школьном питании</h2>
+          <p class="pm-faq-lead">Краткие ответы на основе регионального стандарта горячего питания, СанПиН и порядка обеспечения отдельных категорий обучающихся в Чеченской Республике. Точные условия в вашей школе уточняйте у администрации.</p>
+        </div>
+
+        <div class="pm-faq-list">
+          <details class="pm-faq-item" open>
+            <summary>Кто получает бесплатное горячее питание?</summary>
+            <div class="pm-faq-answer">
+              <p>Для обучающихся 1–4 классов государственных и муниципальных школ республики предусмотрено бесплатное горячее питание с охватом всех таких детей. Организация питания опирается на региональный стандарт и федеральные требования к здоровому и горячему питанию.</p>
+              <p>Отдельные категории обучающихся (в том числе из малоимущих и многодетных семей, дети с ОВЗ, дети-сироты, дети из семей участников СВО и другие группы, указанные в региональных актах) дополнительно обеспечиваются мерами поддержки по установленным нормативам.</p>
+            </div>
+          </details>
+
+          <details class="pm-faq-item">
+            <summary>Завтрак или обед — что именно получают дети?</summary>
+            <div class="pm-faq-answer">
+              <p>Это зависит от смены. Обучающиеся первой смены обеспечиваются завтраком: горячее блюдо и напиток. Обучающиеся второй смены — обедом: закуска (салат или свежие овощи), горячее первое и второе блюдо, напиток.</p>
+              <p>Заменять обед завтраком нельзя. Домашний завтрак перед первой сменой по-прежнему важен: в среднем на него может приходиться до около 10% суточной энергетической ценности.</p>
+            </div>
+          </details>
+
+          <details class="pm-faq-item">
+            <summary>Какой должна быть калорийность и состав рациона?</summary>
+            <div class="pm-faq-answer">
+              <p>По региональному стандарту для 1–4 классов:</p>
+              <ul>
+                <li><strong>Завтрак</strong> — ориентир 400–550 ккал (около 20–25% суточной калорийности); белки 12–16 г, жиры 12–16 г, углеводы 48–60 г.</li>
+                <li><strong>Обед</strong> — ориентир 600–750 ккал (около 30–35% суточной калорийности); белки 20–25 г, жиры 20–25 г, углеводы 80–100 г.</li>
+              </ul>
+              <p>В рацион включают разнообразные блюда: крупы и творог, мясо или рыбу, молочные продукты, яйца, овощи, макаронные изделия, напитки; рекомендуется добавлять фрукты и ягоды. Содержание соли на приём пищи рекомендуется не более 1 г на человека.</p>
+            </div>
+          </details>
+
+          <details class="pm-faq-item">
+            <summary>Как составляется меню и чем типовое меню отличается от меню на день?</summary>
+            <div class="pm-faq-answer">
+              <p><strong>Типовое (цикличное) меню</strong> разрабатывается минимум на две учебные недели с учётом сезонности, калорийности и БЖУ. Оно согласовывается в установленном порядке и служит основой для ежедневного рациона.</p>
+              <p><strong>Календарь питания</strong> показывает, какой день цикла приходится на конкретную дату. <strong>Ежедневное меню</strong> на этой странице — фактическое меню школы на выбранный день: его можно посмотреть без скачивания.</p>
+              <p>Блюда готовят по технологическим картам; при замене продукт должен быть сопоставим по пищевой ценности.</p>
+            </div>
+          </details>
+
+          <details class="pm-faq-item">
+            <summary>Что видно на этой странице и зачем здесь файлы «tm» и «kp»?</summary>
+            <div class="pm-faq-answer">
+              <p>Здесь публикуются документы организации питания школы:</p>
+              <ul>
+                <li><strong>Меню на сегодня и архив</strong> — фактические ежедневные меню;</li>
+                <li><strong>Типовое меню (tm…)</strong> — цикличный рацион по дням недели;</li>
+                <li><strong>Календарь питания (kp…)</strong> — соответствие дат дням цикла.</li>
+              </ul>
+              <p>Файлы можно открыть кнопкой «Смотреть»: календарь показывается по месяцам, типовое меню — по дням с завтраком и обедом. Это сделано, чтобы родитель мог быстро проверить рацион без установки программ.</p>
+            </div>
+          </details>
+
+          <details class="pm-faq-item">
+            <summary>Если у ребёнка аллергия или особое заболевание?</summary>
+            <div class="pm-faq-answer">
+              <p>При заболеваниях, требующих индивидуального подхода (в том числе сахарный диабет, целиакия, пищевая аллергия и другие случаи, указанные в стандарте), родителям рекомендуется письменно обратиться в школу и приложить медицинские документы.</p>
+              <p>Администрация совместно с родителями прорабатывает меню и организацию питания, информирует работников столовой. Для аллергии к цикличному меню готовится приложение с заменой продуктов, исключающих аллергены. Индивидуальные решения принимаются по представленным медицинским основаниям, а не «по умолчанию» для всех детей с ОВЗ.</p>
+            </div>
+          </details>
+
+          <details class="pm-faq-item">
+            <summary>Как организовано питание детей с ОВЗ и обучающихся на дому?</summary>
+            <div class="pm-faq-answer">
+              <p>Обучающиеся с ОВЗ имеют право на обеспечение питанием в порядке, установленном региональным законодательством. Если ребёнок осваивает программу на дому, питание может предоставляться в форме <strong>набора пищевых продуктов</strong> либо <strong>денежной компенсации</strong> стоимости питания за учебный день — форму выбирают родители (законные представители) по заявлению.</p>
+              <p>Продуктовый набор формируется на основе типового цикличного меню и требований СанПиН с учётом возрастных потребностей. Базовый состав набора единый для категорий, имеющих право на продуктовый набор; отдельная «особая» комплектация только из‑за статуса ОВЗ не предусматривается, кроме случаев индивидуальной диеты по медицинским показаниям.</p>
+            </div>
+          </details>
+
+          <details class="pm-faq-item">
+            <summary>Кто контролирует качество питания?</summary>
+            <div class="pm-faq-answer">
+              <p>Контроль многоуровневый: входной контроль продуктов, соблюдение условий хранения, производственный и лабораторный контроль, санитарные требования к пищеблоку и персоналу. Информация о питании должна быть доступна родителям — на стенде, в столовой и на сайте школы.</p>
+              <p>Региональный стандарт прямо предусматривает <strong>родительский (общественный) контроль</strong>: представители родительской общественности могут участвовать в организации и контроле школьного питания в порядке, закреплённом локальными актами школы. Если есть замечания по рациону или условиям приёма пищи, прежде всего обращайтесь к классному руководителю и администрации образовательной организации.</p>
+            </div>
+          </details>
+
+          <details class="pm-faq-item">
+            <summary>Почему блюда в меню иногда меняются?</summary>
+            <div class="pm-faq-answer">
+              <p>Цикличное меню — это план. На практике возможны замены равноценными блюдами по пищевой ценности, а также корректировки из‑за поставки продуктов, сезонности или технического состояния оборудования. Такие изменения должны сохранять безопасность и соответствие санитарным требованиям.</p>
+              <p>Если замена кажется существенной или повторяется слишком часто, это повод уточнить у школы фактическое меню дня и основания для изменения — на этой странице как раз можно сверить опубликованный файл с тем, что ожидали по календарю и типовому меню.</p>
+            </div>
+          </details>
+        </div>
+
+        <p class="pm-faq-note">Ответы носят справочный характер и не заменяют официальные разъяснения школы, учредителя или органов власти. Актуальные документы и нормы уточняйте в образовательной организации.</p>
+      </section>
 
       <div class="pm-foot">
         <div class="pm-note">
@@ -327,11 +480,27 @@
     </div>
   </main>
 
+  <div class="pm-preview-overlay" id="pmPreview" hidden>
+    <div class="pm-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="pmPreviewTitle">
+      <div class="pm-preview-head">
+        <h3 id="pmPreviewTitle">Предпросмотр</h3>
+        <div class="pm-preview-tools">
+          <a class="pm-btn pm-btn-ghost pm-btn-sm" id="pmPreviewDownload" href="#" download>Скачать</a>
+          <button type="button" class="pm-btn pm-btn-solid pm-btn-sm" id="pmPreviewClose">Закрыть</button>
+        </div>
+      </div>
+      <div class="pm-preview-tabs" id="pmPreviewTabs" hidden></div>
+      <div class="pm-preview-body" id="pmPreviewBody"></div>
+    </div>
+  </div>
+
+  <script src="/static/js/file-preview-render.js?v=1"></script>
   <script>
     (function () {
       const html = document.documentElement;
       const btn = document.getElementById('pm-a11y');
       const label = document.getElementById('pm-a11y-label');
+      const schoolUid = {{ uid|tojson }};
 
       function setA11y(on) {
         html.setAttribute('data-theme', 'light');
@@ -360,6 +529,168 @@
           year.classList.toggle('is-open', open);
           toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
         });
+      });
+
+      const overlay = document.getElementById('pmPreview');
+      const previewTitle = document.getElementById('pmPreviewTitle');
+      const previewBody = document.getElementById('pmPreviewBody');
+      const previewTabs = document.getElementById('pmPreviewTabs');
+      const previewDownload = document.getElementById('pmPreviewDownload');
+      const previewClose = document.getElementById('pmPreviewClose');
+      let previewSheets = [];
+
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function closePreview() {
+        if (!overlay) return;
+        overlay.classList.remove('is-open');
+        overlay.hidden = true;
+        document.body.style.overflow = '';
+        if (previewBody) previewBody.innerHTML = '';
+        if (previewTabs) {
+          previewTabs.hidden = true;
+          previewTabs.innerHTML = '';
+        }
+        previewSheets = [];
+      }
+
+      function openOverlay(filename) {
+        if (!overlay) return;
+        if (previewTitle) previewTitle.textContent = filename || 'Предпросмотр';
+        if (previewDownload) {
+          previewDownload.href = '/' + schoolUid + '/food/' + encodeURIComponent(filename);
+          previewDownload.setAttribute('download', filename || '');
+        }
+        overlay.hidden = false;
+        overlay.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function renderSheet(sheet) {
+        const rows = (sheet && sheet.rows) || [];
+        if (!rows.length) {
+          return '<div class="pm-preview-fallback"><p>В таблице нет данных для показа</p></div>';
+        }
+        const headerIdx = Number.isInteger(sheet.header) ? sheet.header : 0;
+        let html = '<div class="pm-preview-table-wrap"><table class="pm-preview-table">';
+        rows.forEach(function (row, idx) {
+          const tag = idx === headerIdx ? 'th' : 'td';
+          html += '<tr>';
+          (row || []).forEach(function (cell) {
+            html += '<' + tag + '>' + escapeHtml(cell) + '</' + tag + '>';
+          });
+          html += '</tr>';
+        });
+        html += '</table>';
+        if (sheet.truncated) {
+          html += '<p class="pm-file-sub" style="margin:0.65rem 0 0;">Показана часть таблицы</p>';
+        }
+        html += '</div>';
+        return html;
+      }
+
+      function renderPreview(data) {
+        if (!previewBody) return;
+        previewSheets = [];
+        if (previewTabs) {
+          previewTabs.hidden = true;
+          previewTabs.innerHTML = '';
+        }
+
+        if (data.kind === 'calendar' && window.FilePreviewRender) {
+          previewBody.innerHTML = FilePreviewRender.renderCalendar(data, escapeHtml);
+          return;
+        }
+
+        if (data.kind === 'menu' && window.FilePreviewRender) {
+          previewBody.innerHTML = FilePreviewRender.renderMenu(data, escapeHtml);
+          return;
+        }
+
+        if (data.kind === 'sheet') {
+          previewSheets = data.sheets || [];
+          if (previewTabs && previewSheets.length > 1) {
+            previewTabs.hidden = false;
+            previewTabs.innerHTML = previewSheets.map(function (sheet, i) {
+              return '<button type="button" class="pm-preview-tab' + (i === 0 ? ' is-active' : '') + '" data-sheet-index="' + i + '">' +
+                escapeHtml(sheet.name || ('Лист ' + (i + 1))) +
+                '</button>';
+            }).join('');
+          }
+          previewBody.innerHTML = renderSheet(previewSheets[0] || { rows: [] });
+          return;
+        }
+
+        if (data.kind === 'pdf') {
+          previewBody.innerHTML = '<iframe class="pm-preview-frame" title="PDF" src="' + escapeHtml(data.inline || data.url) + '"></iframe>';
+          return;
+        }
+
+        if (data.kind === 'image') {
+          previewBody.innerHTML = '<img class="pm-preview-image" alt="' + escapeHtml(data.filename || '') + '" src="' + escapeHtml(data.inline || data.url) + '">';
+          return;
+        }
+
+        previewBody.innerHTML =
+          '<div class="pm-preview-fallback">' +
+          '<p>' + escapeHtml(data.message || 'Для этого формата доступно только скачивание') + '</p>' +
+          '<a class="pm-btn pm-btn-primary" href="' + escapeHtml(data.url || '#') + '" download>Скачать файл</a>' +
+          '</div>';
+      }
+
+      async function openPreview(filename) {
+        if (!filename) return;
+        openOverlay(filename);
+        if (previewBody) previewBody.innerHTML = '<div class="pm-preview-fallback"><p>Загрузка предпросмотра…</p></div>';
+        try {
+          const response = await fetch('/api/school/' + schoolUid + '/file-preview?name=' + encodeURIComponent(filename));
+          if (!response.ok) throw new Error('preview failed');
+          const data = await response.json();
+          renderPreview(data);
+        } catch (err) {
+          if (previewBody) {
+            previewBody.innerHTML =
+              '<div class="pm-preview-fallback">' +
+              '<p>Не удалось открыть предпросмотр</p>' +
+              '<a class="pm-btn pm-btn-primary" href="/' + schoolUid + '/food/' + encodeURIComponent(filename) + '" download>Скачать файл</a>' +
+              '</div>';
+          }
+        }
+      }
+
+      document.addEventListener('click', function (e) {
+        const trigger = e.target.closest('[data-preview-file]');
+        if (!trigger) return;
+        e.preventDefault();
+        openPreview(trigger.getAttribute('data-preview-file'));
+      });
+
+      if (previewTabs) {
+        previewTabs.addEventListener('click', function (e) {
+          const tab = e.target.closest('.pm-preview-tab');
+          if (!tab) return;
+          const index = Number(tab.getAttribute('data-sheet-index') || 0);
+          previewTabs.querySelectorAll('.pm-preview-tab').forEach(function (node) {
+            node.classList.toggle('is-active', node === tab);
+          });
+          if (previewSheets[index]) previewBody.innerHTML = renderSheet(previewSheets[index]);
+        });
+      }
+
+      if (previewClose) previewClose.addEventListener('click', closePreview);
+      if (overlay) {
+        overlay.addEventListener('click', function (e) {
+          if (e.target === overlay) closePreview();
+        });
+      }
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay && overlay.classList.contains('is-open')) closePreview();
       });
     })();
   </script>

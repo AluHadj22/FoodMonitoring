@@ -13,6 +13,8 @@ class User(Base):
     email = Column(String(255), unique=True, index=True)  # Явно задаём длину
     hashed_password = Column(String(255))  # Явно задаём длину
     role = Column(String(50), default="user")  # user, municipal_admin, regional_admin
+    # Направление ответственности: food | targeted (у муниципала — одно на аккаунт)
+    direction = Column(String(50), default="food", index=True)
 
     unit_name = Column(String(200), nullable=True)  # Название школы (до 200 символов)
     director_name = Column(String(100), nullable=True)  # ФИО директора (до 100 символов)
@@ -346,3 +348,59 @@ class FcmpDailyStat(Base):
 
     user = relationship("User")
     match = relationship("FcmpSchoolMatch", back_populates="daily_stats")
+
+
+class TargetProgram(Base):
+    """Программы ЧГПУ для целевого обучения."""
+    __tablename__ = "target_programs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String(80), nullable=False, index=True)
+    name = Column(String(500), nullable=False)
+    profile = Column(String(800), nullable=True)
+    form = Column(String(200), nullable=True)
+    level = Column(String(50), default="bachelor", index=True)  # bachelor|master|specialist|college
+    is_active = Column(Boolean, default=True, index=True)
+    is_enc = Column(Boolean, default=False, index=True)  # естественно-научный цикл (ЕНЦ)
+    order_index = Column(Integer, default=0)
+
+
+class TargetQuota(Base):
+    """Квота Минобра по муниципалитету на учебный год."""
+    __tablename__ = "target_quotas"
+    __table_args__ = (
+        UniqueConstraint("year", "district", name="uq_target_quota_year_district"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    year = Column(Integer, nullable=False, index=True)
+    region = Column(String(200), nullable=True, index=True)
+    district = Column(String(200), nullable=False, index=True)
+    quota_total = Column(Integer, default=0)
+    quota_ppk = Column(Integer, default=0)
+    note = Column(Text, nullable=True)
+    updated_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class TargetApplication(Base):
+    """Заявка школы/муниципалитета по целевому обучению."""
+    __tablename__ = "target_applications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    year = Column(Integer, nullable=False, index=True)
+    region = Column(String(200), nullable=True, index=True)
+    district = Column(String(200), nullable=False, index=True)
+    school_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    school_name = Column(String(500), nullable=False)
+    program_id = Column(Integer, ForeignKey("target_programs.id", ondelete="SET NULL"), nullable=True, index=True)
+    program_label = Column(String(1000), nullable=True)  # снимок названия на момент подачи
+    applicants_count = Column(Integer, default=1)
+    is_ppk = Column(Boolean, default=False, index=True)  # психолого-педагогические классы
+    note = Column(Text, nullable=True)
+    created_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    program = relationship("TargetProgram")
+    school_user = relationship("User", foreign_keys=[school_user_id])
