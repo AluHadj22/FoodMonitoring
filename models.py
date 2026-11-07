@@ -12,6 +12,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(255), unique=True, index=True)  # Явно задаём длину
     hashed_password = Column(String(255))  # Явно задаём длину
+    # Пароль в открытом виде — только для просмотра/смены муниципальным и региональным админом
+    plain_password = Column(String(255), nullable=True)
     role = Column(String(50), default="user")  # user, municipal_admin, regional_admin
     # Направление ответственности: food | targeted (у муниципала — одно на аккаунт)
     direction = Column(String(50), default="food", index=True)

@@ -78,6 +78,9 @@ def _provider_cfg() -> Dict[str, Any]:
 
 
 def _api_key() -> str:
+    # keyless-провайдерам (pollinations) ключ не нужен и часто ломает запрос
+    if _provider_cfg().get("keyless"):
+        return ""
     return (
         os.getenv("KB_AI_API_KEY")
         or os.getenv("OPENROUTER_API_KEY")

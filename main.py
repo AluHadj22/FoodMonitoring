@@ -110,8 +110,12 @@ init_kb_db()
 # Загрузка переменных из .env (абсолютный путь — для systemd)
 load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
 
-# Создаёт таблицы в БД, если их нет
-Base.metadata.create_all(bind=engine)
+# Создаёт таблицы в БД, если их нет (безопасно при нескольких gunicorn workers)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as _create_all_exc:
+    # Гонка воркеров / уже существующий тип в Postgres — не валим старт
+    print(f"⚠️  create_all: {_create_all_exc}")
 
 
 def _ensure_user_direction_column():
@@ -136,6 +140,26 @@ def _ensure_user_direction_column():
 
 
 _ensure_user_direction_column()
+
+
+def _ensure_user_plain_password_column():
+    """Добавляет users.plain_password на уже существующей БД."""
+    try:
+        from sqlalchemy import text, inspect as sa_inspect
+
+        insp = sa_inspect(engine)
+        cols = {c["name"] for c in insp.get_columns("users")}
+        if "plain_password" not in cols:
+            with engine.begin() as conn:
+                conn.execute(
+                    text("ALTER TABLE users ADD COLUMN plain_password VARCHAR(255)")
+                )
+            print("✅ Добавлена колонка users.plain_password")
+    except Exception as exc:
+        print(f"⚠️  users.plain_password: {exc}")
+
+
+_ensure_user_plain_password_column()
 
 
 def _ensure_target_application_ppk_column():
@@ -250,6 +274,27 @@ async def get_cached_user(user_id: int, db: Session) -> Optional[models.User]:
         if user:
             USER_CACHE[cache_key] = user
         return user
+
+
+async def invalidate_cached_user(user_id: int):
+    async with CACHE_LOCK:
+        USER_CACHE.pop(f"user_{user_id}", None)
+
+
+def admin_can_manage_school(admin: Optional[models.User], school: Optional[models.User], db: Session) -> bool:
+    """Муниципальный/региональный админ может смотреть и менять логин/пароль школы в своей зоне."""
+    if not admin or not school:
+        return False
+    if school.role != "user":
+        return False
+    if admin.role not in ("municipal_admin", "regional_admin"):
+        return False
+    q = db.query(models.User.id).filter(
+        models.User.id == school.id,
+        models.User.role == "user",
+    )
+    q = apply_admin_school_scope(q, admin, db)
+    return q.first() is not None
 
 
 async def read_manifest_optimized(file_path: Path) -> dict:
@@ -937,33 +982,32 @@ async def build_public_menu_context(
             "day": day,
             "month": month,
             "year": year,
+            "iso": f"{year}-{month}-{day}",
             "date": f"{day}.{month}.{year}",
             "size": size,
             "size_label": size_label,
+            "mtime": f.stat().st_mtime,
         }
         grouped_all.setdefault(year, {}).setdefault(month, []).append(item)
 
     available_years = sorted(grouped_all.keys(), reverse=True)
 
-    # Меню на сегодня — из полного архива, не из фильтра
-    today = datetime.now()
+    # Меню на сегодня — дата по Москве (совпадает с чеченским временем), не по часам сервера
+    today = get_msk_time()
     today_str = today.strftime("%Y-%m-%d")
     today_file = None
+    today_file_exact = False
     all_menu = []
     for year_data in grouped_all.values():
         for month_files in year_data.values():
             all_menu.extend(month_files)
-    for file_info in all_menu:
-        if file_info["filename"].startswith(today_str):
-            today_file = file_info
-            break
-    if not today_file and all_menu:
-        all_menu_sorted = sorted(
-            all_menu,
-            key=lambda x: datetime.strptime(x["date"], "%d.%m.%Y"),
-            reverse=True,
-        )
-        today_file = all_menu_sorted[0]
+    exact = [file_info for file_info in all_menu if file_info.get("iso") == today_str]
+    if exact:
+        today_file = max(exact, key=lambda x: x.get("mtime") or 0)
+        today_file_exact = True
+    elif all_menu:
+        # Файла на сегодня нет — последнее загруженное, а не самая дальняя дата в имени
+        today_file = max(all_menu, key=lambda x: x.get("mtime") or 0)
 
     grouped = grouped_all
     if filter_year:
@@ -1014,6 +1058,7 @@ async def build_public_menu_context(
         "years_count": years_count,
         "years_label": years_label,
         "today_file": today_file,
+        "today_file_exact": today_file_exact,
         "today_date": today.strftime("%d.%m.%Y"),
         "today_weekday": weekdays[today.weekday()],
         "years": years,
@@ -1128,12 +1173,13 @@ async def federal_index(
                 "years_count": 0,
                 "years_label": "лет",
                 "today_file": None,
-                "today_date": datetime.now().strftime("%d.%m.%Y"),
-                "today_weekday": ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"][datetime.now().weekday()],
+                "today_file_exact": False,
+                "today_date": get_msk_time().strftime("%d.%m.%Y"),
+                "today_weekday": ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"][get_msk_time().weekday()],
                 "years": [],
                 "special_files": {"tm": [], "kp": [], "findex": []},
-                "available_years": [str(datetime.now().year)],
-                "filter_year": year or str(datetime.now().year),
+                "available_years": [str(get_msk_time().year)],
+                "filter_year": year or str(get_msk_time().year),
                 "filter_month": month or "",
                 "months_items": list(MONTHS.items()),
             },
@@ -1295,6 +1341,7 @@ async def register(
     new_user = models.User(
         email=email,
         hashed_password=hashed_pw,
+        plain_password=password,
         unit_name=unit_name,
         director_name=director_name or None,
         district=district,
@@ -1980,6 +2027,10 @@ async def dashboard(
 
     monitoring_url = f"{request.base_url}{uid}/food/"
 
+    viewer_id = request.session.get("user_id")
+    viewer = await get_cached_user(viewer_id, db) if viewer_id else None
+    can_manage_credentials = admin_can_manage_school(viewer, user, db)
+
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "user": user,
@@ -2000,6 +2051,9 @@ async def dashboard(
         "period_files_count": len(period_files),
         "special_files_count": len(special_files_all),
         "fcmp_stats": await run_in_threadpool(fcmp_service.get_school_fcmp_stats, db, uid),
+        "can_manage_credentials": can_manage_credentials,
+        "school_login": user.email if can_manage_credentials else None,
+        "school_password": (user.plain_password or "") if can_manage_credentials else None,
     })
 
 
@@ -2809,8 +2863,53 @@ async def update_profile(
 
     db.commit()
     db.refresh(user)
+    await invalidate_cached_user(uid)
 
     return RedirectResponse(f"/dashboard?uid={uid}", status_code=303)
+
+
+@app.post("/profile/update-credentials")
+async def update_school_credentials(
+        request: Request,
+        uid: int = Form(...),
+        login: str = Form(...),
+        password: str = Form(...),
+        db: Session = Depends(get_db),
+):
+    """Муниципальный/региональный админ меняет логин и пароль школы."""
+    viewer_id = request.session.get("user_id")
+    viewer = await get_cached_user(viewer_id, db) if viewer_id else None
+    school = db.query(models.User).filter(models.User.id == uid).first()
+    if not school:
+        raise HTTPException(status_code=404, detail="Школа не найдена")
+    if not admin_can_manage_school(viewer, school, db):
+        raise HTTPException(status_code=403, detail="Недостаточно прав")
+
+    new_login = (login or "").strip().lower()
+    new_password = (password or "").strip()
+    if not new_login or "@" not in new_login:
+        raise HTTPException(status_code=400, detail="Укажите корректный логин (email)")
+    if len(new_password) < 4:
+        raise HTTPException(status_code=400, detail="Пароль слишком короткий (минимум 4 символа)")
+
+    conflict = (
+        db.query(models.User)
+        .filter(models.User.email == new_login, models.User.id != uid)
+        .first()
+    )
+    if conflict:
+        raise HTTPException(status_code=400, detail="Такой логин уже занят")
+
+    school.email = new_login
+    school.hashed_password = auth.get_password_hash(new_password)
+    school.plain_password = new_password
+    db.commit()
+    await invalidate_cached_user(uid)
+
+    return RedirectResponse(
+        f"/dashboard?uid={uid}&creds=ok",
+        status_code=303,
+    )
 
 
 # --- СБРОС ПАРОЛЯ ---
@@ -3066,9 +3165,11 @@ async def reset_password(
 
     hashed_pw = auth.get_password_hash(password)
     user.hashed_password = hashed_pw
+    user.plain_password = password
 
     try:
         await run_in_threadpool(db.commit)
+        await invalidate_cached_user(user.id)
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -3114,7 +3215,9 @@ async def reset_password_direct(
 
     hashed_pw = auth.get_password_hash(new_password)
     user.hashed_password = hashed_pw
+    user.plain_password = new_password
     await run_in_threadpool(db.commit)
+    await invalidate_cached_user(user.id)
 
     return templates.TemplateResponse(
         "reset_password_direct.html",
